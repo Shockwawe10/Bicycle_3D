@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const URL = 'https://engine.needle.tools/samples/bike-scrollytelling-responsive-3d/?room=needle358';
+const b = await chromium.launch({ channel: 'chrome', args: ['--enable-gpu', '--use-angle=d3d11', '--ignore-gpu-blocklist'] });
+const p = await (await b.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+await p.goto(URL, { waitUntil: 'networkidle', timeout: 90000 });
+await p.waitForTimeout(8000);
+console.log(await p.evaluate(() => [...document.querySelectorAll('iframe')].map(f => f.src + ' ' + JSON.stringify(f.getBoundingClientRect().toJSON()))));
+console.log(p.frames().map(f => f.url()));
+console.log(await p.evaluate(() => [...document.querySelectorAll('a')].map(a => a.href).filter(h => /github|live|open/i.test(h)).slice(0, 10)));
+await b.close();

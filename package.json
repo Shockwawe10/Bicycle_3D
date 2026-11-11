@@ -1,0 +1,11 @@
+{
+  "name": "bicycle-3d-landing",
+  "private": true,
+  "description": "Dev tooling only (QA scripts). The deliverable index.html has no build step and no runtime dependencies besides vendored three.js.",
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "lighthouse": "^13.6.0",
+    "playwright": "^1.62.1"
+  }
+}
