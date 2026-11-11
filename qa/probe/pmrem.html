@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><canvas id="c" width="400" height="300"></canvas>
+<script type="importmap">{ "imports": { "three": "../../vendor/three@0.185.1/three.module.min.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from '../../vendor/three@0.185.1/RoomEnvironment.js';
+const T = {}, t = (k, f) => { const a = performance.now(); const r = f(); T[k] = Math.round(performance.now() - a); return r; };
+const S = location.search; const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: S.includes('aa'), alpha: S.includes('alpha'), powerPreference: S.includes('hp') ? 'high-performance' : 'default' }); if (S.includes('tm')) r.toneMapping = THREE.NeutralToneMapping;
+const room = t('room', () => new RoomEnvironment());
+const mats = new Set(); room.traverse(o => o.material && mats.add(o.material.type)); T.roomMaterials = [...mats].join(',');
+const cam = new THREE.PerspectiveCamera();
+if (location.search.includes('warm')) { const a = performance.now(); await r.compileAsync(room, cam); T.warmRoomAsync = Math.round(performance.now() - a); }
+const pm = t('generator', () => new THREE.PMREMGenerator(r));
+t('compileCubemap', () => pm.compileCubemapShader?.());
+const rt = t('fromScene', () => pm.fromScene(room, 0.04, 0.1, 100, { size: 128 }));
+const rt2 = t('fromScene2', () => pm.fromScene(room, 0.04, 0.1, 100, { size: 128 }));
+window.T = T;
+</script>

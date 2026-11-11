@@ -181,3 +181,13 @@ Voice card, from the design skill's copy layer:
 
 The main action, **Book a fitting**, reads the same in the header, the hero and the close
 (copy.md, rule 5).
+
+## 9. Changed during the build (Phase 3)
+
+| Planned | Built | Why |
+|---|---|---|
+| A dimension line labelled "991 mm wheelbase" under the bike | Dropped | It is a label on a visual (design-skill house rule 1), it repeats the hero's fact, and it adds text that could collide with the bike or the beat on short phones. The construction circles carry the drawing idea. |
+| Camera fits the whole bike's travel volume from the start | The camera fits **framing volumes** that grow as parts arrive and tighten to the finished bike (STORYBOARD.md 3a) | Against the full volume, the hero frame rendered at about 15% of the rect width. Now it fills the rect, and the camera eases back as parts arrive. |
+| A faint contact shadow under the floating frame | The shadow appears with the wheels (0.8 × the mean wheel progress) | A shadow under a frame hanging in mid-air read as a smear. |
+| A "Book a fitting" button on the finish beat | Header, hero and close only | The design skill's copy rule: the main action appears in the nav, the hero and the close, and nowhere else. |
+| Bike rect at a fixed 55% of the small viewport | Bike rect derived from where the beat panel actually is (its tallest beat), minus 14 px | Text and bike cannot overlap at any viewport or font size. |
