@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bike geometry check</title>
+<link rel="icon" href="data:,">
+<style>
+  html, body { margin: 0; height: 100%; background: #eceae4; color: #1b1d1f; font: 16px/1.4 system-ui, sans-serif; }
+  canvas { display: block; width: 100%; height: 100%; }
+  #status { position: fixed; left: 16px; bottom: 16px; font-size: 13px; }
+</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three@0.185.1/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="gl" aria-label="Road bike, built from its geometry chart"></canvas>
+<p id="status"></p>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from './vendor/three@0.185.1/RoomEnvironment.js';
+
+/* =====================================================================================
+   1. GEOMETRY: pure. Chart numbers in, joint coordinates (mm) out.
+   Source: Specialized Tarmac SL7 frameset, size 56 (specialized.com via bikeinsights.com). See GEOMETRY.md.
+   Frame: x forward, y up, z rider's right (drive side); origin = bottom-bracket centre.
+   ===================================================================================== */
+const CHART = {
+  stack: 555, reach: 398, headTube: 151, headAngle: 73.5, seatAngle: 73.5, seatTube: 496,
+  chainstay: 410, bbDrop: 72, forkOffset: 44.4, axleToCrown: 366,
+  wheelbase: 991, frontCenter: 592, trail: 53.5, tyreWidth: 26, tyreOD: 674, bsd: 622,
+};
+const CHART_RANGE = { // across the chart's sizes 44-61
+  wheelbase: [970, 1013], headAngle: [70.5, 74], wheelDiameter: [674 * 0.995, 674 * 1.005], ratio: [970 / 674, 1013 / 674],
+};
+const BUILD = {
+  rimDepth: 45, rimFlange: 6, crank: 170, stemLength: 100, stemAngle: -6, stackAboveHT: 35, saddleHeight: 725,
+  ringTeeth: [52, 36], cassette: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30], chainCog: 4,
+  pitch: 12.7, frontOLD: 100, rearOLD: 142, crankDeg: -35,
+};
+const rad = d => d * Math.PI / 180, TAU = Math.PI * 2, MM = 0.001;
+
+function deriveJoints(c = CHART, b = BUILD) {
+  const d = [Math.cos(rad(c.headAngle)), -Math.sin(rad(c.headAngle))];
+  const n = [Math.sin(rad(c.headAngle)), Math.cos(rad(c.headAngle))];
+  const s = [-Math.cos(rad(c.seatAngle)), Math.sin(rad(c.seatAngle))];
+  const add = (p, v, k) => [p[0] + v[0] * k, p[1] + v[1] * k];
+  const HTT = [c.reach, c.stack];
+  const HTB = add(HTT, d, c.headTube);
+  const STT = add([0, 0], s, c.seatTube);
+  const STEM = add(HTT, d, -b.stackAboveHT);
+  const a = rad(90 - c.headAngle + b.stemAngle);
+  const j = {
+    BB: [0, 0], RA: [-Math.sqrt(c.chainstay ** 2 - c.bbDrop ** 2), c.bbDrop],
+    FA: add(add(HTT, d, c.headTube + c.axleToCrown), n, c.forkOffset),
+    HTT, HTB, STT, DTH: add(HTB, d, -25), SSJ: add(STT, s, -30), CROWN: HTB,
+    STEM, BAR: add(STEM, [Math.cos(a), Math.sin(a)], b.stemLength),
+    SADDLE: add([0, 0], s, b.saddleHeight), POST_TOP: add([0, 0], s, b.saddleHeight - 40),
+  };
+  for (const k in j) j[k] = j[k].map(x => Math.round(x * 100) / 100);
+  return { j, d, n, s };
+}
+
+/** Pure check of measured numbers against the chart. Returns a list of violations (empty = pass). */
+function validateGeometry(m, c = CHART, R = CHART_RANGE) {
+  const v = [];
+  const inRange = (k, x, [lo, hi], label) => { if (!(x >= lo && x <= hi)) v.push(`${label} ${x.toFixed(2)} outside chart range ${lo.toFixed(2)}..${hi.toFixed(2)}`); };
+  inRange('wheelbase', m.wheelbase, R.wheelbase, 'wheelbase (mm)');
+  inRange('wheelDiameter', m.wheelDiameter, R.wheelDiameter, 'wheel diameter (mm)');
+  inRange('ratio', m.wheelbase / m.wheelDiameter, R.ratio, 'wheelbase / wheel diameter');
+  inRange('headAngle', m.headAngle, R.headAngle, 'head angle (deg)');
+  if (Math.abs(m.frontCenter - c.frontCenter) > 1) v.push(`front centre ${m.frontCenter.toFixed(2)} differs from chart ${c.frontCenter} by > 1 mm`);
+  if (Math.abs(m.trail - c.trail) > 1) v.push(`trail ${m.trail.toFixed(2)} differs from chart ${c.trail} by > 1 mm`);
+  return v;
+}
+
+/* =====================================================================================
+   2. MATERIALS: one shared instance per surface.
+   ===================================================================================== */
+function makeMaterials() {
+  return {
+    paint: new THREE.MeshPhysicalMaterial({ color: 0x2b3a33, roughness: 0.38, metalness: 0.0, clearcoat: 1, clearcoatRoughness: 0.12 }),
+    carbon: new THREE.MeshStandardMaterial({ color: 0x17181a, roughness: 0.42, metalness: 0.15 }),
+    rim: new THREE.MeshPhysicalMaterial({ color: 0x26282c, roughness: 0.3, metalness: 0.1, clearcoat: 0.6, clearcoatRoughness: 0.2 }),
+    alloy: new THREE.MeshStandardMaterial({ color: 0x9ea3a8, roughness: 0.32, metalness: 1 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0xc9ccd0, roughness: 0.22, metalness: 1 }),
+    dark: new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.5, metalness: 0.6 }),
+    rubber: new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.92, metalness: 0 }),
+    tape: new THREE.MeshStandardMaterial({ color: 0x1d1e20, roughness: 0.78, metalness: 0 }),
+  };
+}
+
+/* =====================================================================================
+   3. PARTS: procedural builders. Every part is a Group whose origin is its mounting joint.
+   ===================================================================================== */
+const V = (x, y, z = 0) => new THREE.Vector3(x * MM, y * MM, z * MM);   // mm -> metres
+const UP = new THREE.Vector3(0, 1, 0);
+const mesh = (g, m, name = '') => { const o = new THREE.Mesh(g, m); o.name = name; return o; };
+
+function tube(a, b, r0, r1, mat, name = '', seg = 22) {     // cylinder from a (radius r0) to b (radius r1), metres
+  const dir = new THREE.Vector3().subVectors(b, a), len = dir.length();
+  const o = mesh(new THREE.CylinderGeometry(r1, r0, len, seg, 1), mat, name);
+  o.position.copy(a).addScaledVector(dir, 0.5);
+  o.quaternion.setFromUnitVectors(UP, dir.normalize());
+  return o;
+}
+function ball(p, r, mat) { const o = mesh(new THREE.SphereGeometry(r, 18, 12), mat); o.position.copy(p); return o; }
+function box(w, h, dpt, mat, name = '') { return mesh(new THREE.BoxGeometry(w, h, dpt), mat, name); }
+function axleCyl(r, len, mat, name = '', seg = 24) { const g = new THREE.CylinderGeometry(r, r, len, seg); g.rotateX(Math.PI / 2); return mesh(g, mat, name); }
+
+function gearGeometry(teeth, pitchR, thick, holeR) {          // toothed ring in the XY plane, axis z (metres)
+  const s = new THREE.Shape(), tip = pitchR + 0.0032, root = pitchR - 0.0036, step = TAU / teeth;
+  for (let i = 0; i < teeth; i++) {
+    const a = i * step;
+    const pts = [[root, a], [tip, a + step * 0.32], [tip, a + step * 0.58], [root, a + step * 0.9]];
+    pts.forEach(([r, t], k) => (i === 0 && k === 0 ? s.moveTo : s.lineTo).call(s, r * Math.cos(t), r * Math.sin(t)));
+  }
+  const hole = new THREE.Path(); hole.absarc(0, 0, holeR, 0, TAU, true); s.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(s, { depth: thick, bevelEnabled: false, curveSegments: 24 });
+  g.translate(0, 0, -thick / 2);
+  return g;
+}
+const pitchRadius = (teeth, pitch = BUILD.pitch) => pitch / (2 * Math.sin(Math.PI / teeth)) * MM;
+
+function buildFrame(J, M) {
+  const g = new THREE.Group(); g.name = 'frame';
+  const P = k => V(...J[k]);
+  const along = (k, mm) => V(J[k][0] + G0.d[0] * mm, J[k][1] + G0.d[1] * mm);      // move along the steering axis
+  const ht = tube(along('HTB', 10), along('HTT', -8), 0.025, 0.021, M.paint, 'headTube');
+  g.add(ht,
+    tube(V(J.STT[0], J.STT[1]).lerp(P('BB'), 0.05), P('HTT').lerp(P('HTB'), 0.09), 0.0175, 0.016, M.paint, 'topTube'),
+    tube(P('DTH'), P('BB'), 0.024, 0.026, M.paint, 'downTube'),
+    tube(P('BB'), V(J.STT[0], J.STT[1]), 0.0175, 0.0158, M.paint, 'seatTube'),
+    axleCyl(0.023, 0.086, M.carbon, 'bbShell'), ball(P('STT'), 0.0158, M.paint), ball(P('DTH'), 0.0235, M.paint));
+  for (const side of [1, -1]) {
+    g.add(tube(V(0, 0, 35 * side), V(J.RA[0], J.RA[1], 65 * side), 0.012, 0.0085, M.paint, 'chainstay'),
+      tube(V(J.SSJ[0], J.SSJ[1], 12 * side), V(J.RA[0], J.RA[1], 65 * side), 0.0085, 0.0075, M.paint, 'seatstay'));
+    const drop = box(0.03, 0.026, 0.008, M.carbon, 'dropout'); drop.position.copy(V(J.RA[0], J.RA[1], 67 * side)); g.add(drop);
+  }
+  const cal = box(0.05, 0.026, 0.022, M.dark, 'rearCaliper'); cal.position.copy(V(J.RA[0] + 40, J.RA[1] + 52, -58)); cal.rotation.z = rad(-35); g.add(cal);
+  const fd = box(0.06, 0.02, 0.006, M.dark, 'frontDerailleur'); fd.position.copy(V(-38, 128, 52)); fd.rotation.z = rad(-20); g.add(fd);
+  return g;
+}
+
+function buildFork(J, G, M) {                     // local origin = CROWN
+  const g = new THREE.Group(); g.name = 'fork';
+  const c = J.CROWN, dV = new THREE.Vector3(G.d[0], G.d[1], 0), nV = new THREE.Vector3(G.n[0], G.n[1], 0);
+  const L = (x, y, z = 0) => V(x - c[0], y - c[1], z);
+  const up = dV.clone().multiplyScalar(-(CHART.headTube + BUILD.stackAboveHT + 18) * MM);
+  g.add(tube(new THREE.Vector3(), up, 0.019, 0.0143, M.carbon, 'steerer'));
+  const crown = box(0.04, 0.03, 0.105, M.paint, 'crown'); crown.position.copy(nV.clone().multiplyScalar(0.008)); crown.rotation.z = Math.atan2(G.d[0], -G.d[1]); g.add(crown);
+  for (const side of [1, -1]) {
+    g.add(tube(nV.clone().multiplyScalar(0.012).add(new THREE.Vector3(0, -0.012, 0.046 * side)), L(J.FA[0], J.FA[1], 50 * side), 0.0165, 0.0095, M.paint, 'forkLeg'));
+    const tip = box(0.022, 0.026, 0.008, M.carbon); tip.position.copy(L(J.FA[0], J.FA[1], 50 * side)); g.add(tip);
+  }
+  const cal = box(0.05, 0.026, 0.022, M.dark, 'frontCaliper'); cal.position.copy(L(J.FA[0] - 26, J.FA[1] + 50, -58)); cal.rotation.z = rad(70); g.add(cal);
+  return g;
+}
+
+function spokeMatrices(list) {                    // list of [a, b] Vector3 pairs -> matrices for a unit cylinder along y
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), d = new THREE.Vector3(), mid = new THREE.Vector3();
+  return list.map(([a, b]) => { d.subVectors(b, a); const len = d.length(); mid.copy(a).addScaledVector(d, 0.5); q.setFromUnitVectors(UP, d.normalize()); s.set(1, len, 1); return m.clone().compose(mid, q, s); });
+}
+
+function buildWheel(rear, M, spokeGeo) {          // local origin = axle; wheel plane = XY, axle = z
+  const g = new THREE.Group(); g.name = rear ? 'wheelR' : 'wheelF';
+  const spin = new THREE.Group(); spin.name = 'spin'; g.add(spin);
+  const R = CHART.bsd / 2 * MM, tyreR = (CHART.bsd / 2 + CHART.tyreWidth / 2) * MM, tyreT = CHART.tyreWidth / 2 * MM;
+  spin.add(mesh(new THREE.TorusGeometry(tyreR, tyreT, 18, 128), M.rubber, rear ? 'tyreR' : 'tyreF'));
+  const flange = R + BUILD.rimFlange * MM, bed = flange - BUILD.rimDepth * MM;
+  const prof = [[bed, -0.005], [bed + 0.012, -0.011], [flange - 0.012, -0.0138], [flange, -0.014], [flange, 0.014], [flange - 0.012, 0.0138], [bed + 0.012, 0.011], [bed, 0.005], [bed, -0.005]]
+    .map(([r, z]) => new THREE.Vector2(r, z));
+  const rim = new THREE.LatheGeometry(prof, 96); rim.rotateX(Math.PI / 2);
+  spin.add(mesh(rim, M.rim, 'rim'));
+  const old = (rear ? BUILD.rearOLD : BUILD.frontOLD) * MM;
+  spin.add(axleCyl(0.017, old - 0.012, M.alloy, 'hub'));
+  const fl = rear ? [[0.020, 0.024], [-0.030, 0.024]] : [[0.032, 0.022], [-0.032, 0.022]];
+  for (const [z, r] of fl) { const f = axleCyl(r, 0.003, M.alloy, 'flange'); f.position.z = z; spin.add(f); }
+  const pairs = [], N = 12, spokeR = bed + 0.002;
+  fl.forEach(([z, r], side) => {
+    for (let k = 0; k < N; k++) {
+      const th = (k / N) * TAU + side * (TAU / (2 * N));
+      const rimTh = rear ? th + (k % 2 ? 1 : -1) * rad(60) : th;          // rear 2-cross: 720 * 2 / 24 = 60 deg
+      pairs.push([new THREE.Vector3(r * Math.cos(th), r * Math.sin(th), z), new THREE.Vector3(spokeR * Math.cos(rimTh), spokeR * Math.sin(rimTh), side ? -0.002 : 0.002)]);
+    }
+  });
+  const spokes = new THREE.InstancedMesh(spokeGeo, M.steel, pairs.length); spokes.name = rear ? 'spokesR' : 'spokesF';
+  spokeMatrices(pairs).forEach((m, i) => spokes.setMatrixAt(i, m)); spokes.instanceMatrix.needsUpdate = true; spokes.computeBoundingSphere();
+  spin.add(spokes);
+  const rotorR = (rear ? 70 : 80) * MM, rotor = mesh(new THREE.RingGeometry(rotorR - 0.016, rotorR, 64), M.steel, 'rotor');
+  rotor.material = M.steel; rotor.position.z = rear ? -0.055 : -0.042; spin.add(rotor);
+  const carrier = mesh(new THREE.RingGeometry(0.018, rotorR - 0.016, 6, 1), M.dark); carrier.position.z = rotor.position.z; spin.add(carrier);
+  return g;
+}
+
+/* Chain path: circles in travel order with signed radii (+ counter-clockwise, - clockwise, seen from the drive side). */
+function chainPath(circles, step = 0.0015) {
+  const tang = (A, B) => {                         // straight run leaving A, arriving at B
+    const D = new THREE.Vector2().subVectors(B.c, A.c), L = D.length(), beta = Math.asin((A.r - B.r) / L);
+    const u = D.clone().normalize().rotateAround(new THREE.Vector2(), beta), n = new THREE.Vector2(u.y, -u.x);
+    return [A.c.clone().addScaledVector(n, A.r), B.c.clone().addScaledVector(n, B.r)];
+  };
+  const runs = circles.map((A, i) => tang(A, circles[(i + 1) % circles.length]));
+  const pts = [];
+  circles.forEach((C, i) => {
+    const pin = runs[(i - 1 + circles.length) % circles.length][1], pout = runs[i][0];
+    let a0 = Math.atan2(pin.y - C.c.y, pin.x - C.c.x), a1 = Math.atan2(pout.y - C.c.y, pout.x - C.c.x);
+    const ccw = C.r > 0; let sweep = ccw ? a1 - a0 : a0 - a1; while (sweep < 0) sweep += TAU;
+    const r = Math.abs(C.r), n = Math.max(2, Math.ceil(sweep * r / step));
+    for (let k = 0; k <= n; k++) { const a = a0 + (ccw ? 1 : -1) * sweep * k / n; pts.push(new THREE.Vector2(C.c.x + r * Math.cos(a), C.c.y + r * Math.sin(a))); }
+    const q = runs[i][1], m = Math.ceil(pout.distanceTo(q) / step);
+    for (let k = 1; k < m; k++) pts.push(pout.clone().lerp(q, k / m));
+  });
+  return pts;
+}
+
+function buildDrivetrain(J, M) {                  // local origin = BB
+  const g = new THREE.Group(); g.name = 'drivetrain';
+  const crank = new THREE.Group(); crank.name = 'crankset'; g.add(crank);
+  const z52 = 0.0455, z36 = 0.0405;
+  crank.add(axleCyl(0.012, 0.14, M.alloy, 'spindle'));
+  const r52 = pitchRadius(52), r36 = pitchRadius(36);
+  const ring52 = mesh(gearGeometry(52, r52, 0.004, r52 - 0.016), M.dark, 'ring52'); ring52.position.z = z52;
+  const ring36 = mesh(gearGeometry(36, r36, 0.004, r36 - 0.014), M.alloy, 'ring36'); ring36.position.z = z36;
+  crank.add(ring52, ring36);
+  for (let k = 0; k < 4; k++) { const a = box(0.085, 0.014, 0.006, M.dark); const t = rad(BUILD.crankDeg) + k * TAU / 4 + TAU / 8; a.position.set(Math.cos(t) * 0.05, Math.sin(t) * 0.05, 0.043); a.rotation.z = t; crank.add(a); }
+  for (const side of [1, -1]) {
+    const t = rad(BUILD.crankDeg) + (side > 0 ? 0 : Math.PI), L = BUILD.crank * MM;
+    const arm = box(L + 0.03, 0.03, 0.012, M.carbon, 'crankArm'); arm.position.set(Math.cos(t) * L / 2, Math.sin(t) * L / 2, 0.072 * side); arm.rotation.z = t;
+    const pedal = box(0.09, 0.014, 0.07, M.dark, 'pedal'); pedal.position.set(Math.cos(t) * L, Math.sin(t) * L, 0.118 * side);
+    crank.add(arm, pedal);
+  }
+  // cassette at the rear axle
+  const RA = V(...J.RA), cas = new THREE.Group(); cas.name = 'cassette'; cas.position.copy(RA); g.add(cas);
+  BUILD.cassette.forEach((t, i) => { const cog = mesh(gearGeometry(t, pitchRadius(t), 0.0018, 0.011), M.steel, 'cog'); cog.position.z = 0.060 - i * 0.0036; cas.add(cog); });
+  // chain on 52 x 15
+  const zc = 0.060 - BUILD.chainCog * 0.0036;
+  const U = new THREE.Vector2(RA.x + 0.006, RA.y - 0.058), Lw = new THREE.Vector2(RA.x - 0.008, RA.y - 0.128), jr = pitchRadius(11);
+  const path = chainPath([
+    { c: new THREE.Vector2(0, 0), r: r52 }, { c: new THREE.Vector2(RA.x, RA.y), r: pitchRadius(BUILD.cassette[BUILD.chainCog]) },
+    { c: U, r: -jr }, { c: Lw, r: jr }]);
+  const linkPts = []; let acc = 0; const pitch = BUILD.pitch * MM;
+  for (let i = 1; i < path.length; i++) { acc += path[i].distanceTo(path[i - 1]); if (acc >= pitch) { linkPts.push([path[i - 1], path[i]]); acc -= pitch; } }
+  const links = new THREE.InstancedMesh(new THREE.BoxGeometry(pitch * 0.96, 0.0075, 0.0072), M.dark, linkPts.length); links.name = 'chain';
+  const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+  linkPts.forEach(([a, b], i) => { q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.atan2(b.y - a.y, b.x - a.x)); links.setMatrixAt(i, mtx.compose(new THREE.Vector3(b.x, b.y, zc), q, one)); });
+  links.instanceMatrix.needsUpdate = true; links.computeBoundingSphere(); g.add(links);
+  // rear derailleur: pulleys + cage + body
+  for (const [c, nm] of [[U, 'pulleyU'], [Lw, 'pulleyL']]) { const p = mesh(gearGeometry(11, jr, 0.004, 0.004), M.dark, nm); p.position.set(c.x, c.y, zc); g.add(p); }
+  for (const side of [1, -1]) {
+    const mid = U.clone().add(Lw).multiplyScalar(0.5), len = U.distanceTo(Lw) + 0.05;
+    const plate = box(0.03, len, 0.002, M.alloy, 'cage'); plate.position.set(mid.x, mid.y, zc + 0.006 * side); plate.rotation.z = Math.atan2(U.x - Lw.x, Lw.y - U.y) * -1; g.add(plate);
+  }
+  const body = box(0.022, 0.06, 0.024, M.dark, 'rdBody'); body.position.set(RA.x + 0.005, RA.y - 0.022, zc + 0.024); body.rotation.z = rad(25); g.add(body);
+  g.userData.crankset = crank;
+  return g;
+}
+
+function buildHandlebar(J, M) {                   // local origin = STEM
+  const g = new THREE.Group(); g.name = 'handlebar';
+  const S = V(...J.STEM), B = V(...J.BAR), Bl = B.clone().sub(S);
+  g.add(tube(new THREE.Vector3(), Bl, 0.017, 0.016, M.carbon, 'stem'));
+  const steerUp = new THREE.Vector3(-G0.d[0], -G0.d[1], 0);           // up the steering axis
+  g.add(tube(steerUp.clone().multiplyScalar(-0.021), steerUp.clone().multiplyScalar(0.021), 0.0205, 0.0205, M.carbon, 'stemClamp'));
+  g.add(tube(steerUp.clone().multiplyScalar(0.021), steerUp.clone().multiplyScalar(0.03), 0.016, 0.016, M.carbon, 'topCap'));
+  const clampB = axleCyl(0.019, 0.05, M.carbon); clampB.position.copy(Bl); g.add(clampB);
+  for (const side of [1, -1]) {
+    const pts = [[0, 0, 0], [0, 0, 0.1], [0.004, 0, 0.165], [0.035, -0.008, 0.2], [0.072, -0.03, 0.21], [0.08, -0.07, 0.21], [0.062, -0.108, 0.21], [0.02, -0.124, 0.21], [-0.045, -0.13, 0.21]]
+      .map(([x, y, z]) => new THREE.Vector3(x, y, z * side).add(Bl));
+    g.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, 0.0118, 14, false), M.tape, 'bar'));
+    const hood = box(0.052, 0.026, 0.024, M.dark, 'hood'); hood.position.copy(new THREE.Vector3(0.066, -0.012, 0.21 * side).add(Bl)); hood.rotation.z = rad(18); g.add(hood);
+    const lever = box(0.011, 0.075, 0.009, M.dark, 'lever'); lever.position.copy(new THREE.Vector3(0.094, -0.058, 0.212 * side).add(Bl)); lever.rotation.z = rad(-6); g.add(lever);
+  }
+  return g;
+}
+
+function buildSaddle(J, G, M) {                   // local origin = STT
+  const g = new THREE.Group(); g.name = 'saddle';
+  const T = V(...J.STT), sV = new THREE.Vector3(G.s[0], G.s[1], 0);
+  const top = V(...J.POST_TOP).sub(T);
+  g.add(tube(sV.clone().multiplyScalar(-0.06), top, 0.0136, 0.0136, M.carbon, 'seatpost'));
+  const clamp = box(0.05, 0.016, 0.03, M.dark, 'postClamp'); clamp.position.copy(top); g.add(clamp);
+  const shape = new THREE.Shape(), Lh = 0.13, outline = [];
+  for (let i = 0; i <= 24; i++) {                // half-width along the length: wide tail, narrow nose
+    const x = -Lh + (2 * Lh) * i / 24, t = (x + Lh) / (2 * Lh);
+    const w = t < 0.12 ? 0.0715 * Math.sqrt(t / 0.12) : 0.0715 - (0.0715 - 0.017) * Math.min(1, Math.pow((t - 0.12) / 0.62, 1.4));
+    outline.push([x, Math.max(w, 0.004)]);
+  }
+  outline.forEach(([x, w], i) => (i ? shape.lineTo(x, w) : shape.moveTo(x, w)));
+  [...outline].reverse().forEach(([x, w]) => shape.lineTo(x, -w));
+  const sg = new THREE.ExtrudeGeometry(shape, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.006, bevelSegments: 4, curveSegments: 8 });
+  sg.rotateX(-Math.PI / 2); sg.translate(0, -0.006, 0);
+  const pa = sg.attributes.position;
+  for (let i = 0; i < pa.count; i++) {                 // profile: tail kicks up, nose dips, nose thinner
+    const x = pa.getX(i) / Lh, y = pa.getY(i), t = (x + 1) / 2;
+    pa.setY(i, y * (1 - 0.35 * t) + 0.011 * x * x - 0.004 * x);
+  }
+  sg.computeVertexNormals();
+  const shell = mesh(sg, M.tape, 'saddleShell'); shell.position.copy(V(...J.SADDLE).sub(T)).add(new THREE.Vector3(0.012, -0.014, 0)); shell.rotation.z = rad(1.5); g.add(shell);
+  for (const side of [1, -1]) g.add(tube(top.clone().add(new THREE.Vector3(-0.07, 0.012, 0.022 * side)), top.clone().add(new THREE.Vector3(0.08, 0.02, 0.016 * side)), 0.0035, 0.0035, M.steel, 'rail'));
+  return g;
+}
+
+let G0;                                            // derived geometry, set once at startup
+function buildBike(M) {
+  G0 = deriveJoints(); const J = G0.j;
+  const root = new THREE.Group(); root.name = 'bike';
+  const spokeGeo = new THREE.CylinderGeometry(0.001, 0.001, 1, 5, 1, true);
+  const parts = {
+    frame: buildFrame(J, M), fork: buildFork(J, G0, M), wheelF: buildWheel(false, M, spokeGeo), wheelR: buildWheel(true, M, spokeGeo),
+    drivetrain: buildDrivetrain(J, M), handlebar: buildHandlebar(J, M), saddle: buildSaddle(J, G0, M),
+  };
+  const mount = { frame: 'BB', fork: 'CROWN', wheelF: 'FA', wheelR: 'RA', drivetrain: 'BB', handlebar: 'STEM', saddle: 'STT' };
+  for (const [k, part] of Object.entries(parts)) { part.userData.home = V(...J[mount[k]]); part.position.copy(part.userData.home); root.add(part); }
+  // ground the bike: tyres touch y = 0, wheelbase centred on x = 0
+  root.position.set(-(J.FA[0] + J.RA[0]) / 2 * MM, (CHART.bsd / 2 + CHART.tyreWidth - CHART.bbDrop) * MM, 0);
+  return { root, parts, J };
+}
+
+/** Measure the built (assembled) scene, in mm, for the startup assertion. */
+function measureBuilt(bike) {
+  const { root, parts } = bike; root.updateMatrixWorld(true);
+  const local = o => root.worldToLocal(o.getWorldPosition(new THREE.Vector3())).multiplyScalar(1000);
+  const FA = local(parts.wheelF), RA = local(parts.wheelR), BB = local(parts.frame.getObjectByName('bbShell'));
+  const tyre = parts.wheelF.getObjectByName('tyreF'); tyre.geometry.computeBoundingBox();
+  const bbx = tyre.geometry.boundingBox, wheelDiameter = (bbx.max.x - bbx.min.x) * 1000;
+  const ht = parts.frame.getObjectByName('headTube');
+  const axis = new THREE.Vector3(0, 1, 0).applyQuaternion(ht.getWorldQuaternion(new THREE.Quaternion()));
+  const headAngle = Math.atan2(axis.y, -axis.x) * 180 / Math.PI;
+  const c = local(ht), groundY = FA.y - wheelDiameter / 2;
+  const tGround = (groundY - c.y) / axis.y, trail = c.x + axis.x * tGround - FA.x;
+  return { wheelbase: FA.x - RA.x, wheelDiameter, headAngle, frontCenter: Math.hypot(FA.x - BB.x, FA.y - BB.y), trail };
+}
+
+/* =====================================================================================
+   4. RENDER (Phase 1 viewer: static assembled bike)
+   ===================================================================================== */
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.toneMapping = THREE.NeutralToneMapping;
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+const room = new RoomEnvironment();
+scene.environment = pmrem.fromScene(room, 0.04).texture; room.dispose();
+const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(-2, 4, 3); scene.add(key);
+const M = makeMaterials();
+const bike = buildBike(M); scene.add(bike.root);
+const measures = measureBuilt(bike), violations = validateGeometry(measures);
+if (violations.length) console.error('Geometry assertion failed:', violations);
+const camera = new THREE.PerspectiveCamera(24, 1, 0.05, 50);
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  const dist = 2.0 / Math.tan(rad(12)) * Math.max(1, 1.1 / camera.aspect) * 0.52;
+  camera.position.set(0.9, 0.75, dist); camera.lookAt(0, 0.45, 0); camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+}
+addEventListener('resize', resize); resize();
+document.getElementById('status').textContent = violations.length ? 'Geometry FAILED: ' + violations.join('; ') :
+  `Geometry OK - wheelbase ${measures.wheelbase.toFixed(1)} mm, head angle ${measures.headAngle.toFixed(2)} deg, wheel ${measures.wheelDiameter.toFixed(1)} mm, trail ${measures.trail.toFixed(1)} mm`;
+window.__bike = { ready: true, joints: bike.J, measures, violations, geometryOK: violations.length === 0, validateGeometry, parts: bike.parts, scene, renderer, camera, THREE };
+</script>
+</body>
+</html>

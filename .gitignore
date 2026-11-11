@@ -6,3 +6,5 @@ qa/tmp/
 .claude/skills/design-taste-frontend/
 .claude/skills/ub-mode/
 .claude/settings.local.json
+test-results/
+playwright-report/
