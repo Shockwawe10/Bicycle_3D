@@ -21,8 +21,9 @@ two differ, this file wins and the page is wrong.
 ## 2. Stages
 
 Coordinates follow GEOMETRY.md: metres in the bike's frame (x forward, y up, z to the drive side).
-Each part group's origin is its mounting joint. A start pose is the home position plus the
-offset, rotated by axis-angle about that joint. A part's local progress is
+Each part group's origin is its mounting joint (GEOMETRY.md §2): frame BB, fork CROWN, wheelF FA,
+wheelR RA, drivetrain BB, handlebar STEM, saddle STT. The home position is that joint, in metres. A
+start pose is the home position plus the offset, rotated by axis-angle about that joint. A part's local progress is
 t = clamp((p − start) / (end − start)). Position and rotation follow e = ease(t), where
 rotation(e) = slerp(start rotation, identity, e). Opacity is smoothstep(0, 0.3, t) for parts that
 start at 0.

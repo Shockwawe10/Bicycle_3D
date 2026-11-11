@@ -1,0 +1,19 @@
+{
+ "mode": "desktop",
+ "proxy": "Chrome headless, desktop GPU (ANGLE D3D11), CPU throttled 4x",
+ "viewport": {
+  "width": 1440,
+  "height": 900
+ },
+ "deviceDpr": 1,
+ "frames": 600,
+ "under20": 1,
+ "p50": 16.7,
+ "p95": 17,
+ "p99": 17.2,
+ "max": 17.4,
+ "rendered": 652,
+ "qualityLevel": 0,
+ "rendererDpr": 1,
+ "pShown": 1
+}

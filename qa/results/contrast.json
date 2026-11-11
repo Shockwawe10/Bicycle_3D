@@ -1,0 +1,979 @@
+{
+ "checked": 108,
+ "min": 5.03,
+ "fails": [],
+ "rows": [
+  {
+   "run": "webkit-390x844",
+   "where": "hero",
+   "text": "Varsen",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 24,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "hero",
+   "text": "Carbon road bike for racing and ",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 33.540001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "hero",
+   "text": "Scroll to build it, part by part",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "hero",
+   "text": "Book a fitting",
+   "ratio": 5.71,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "Stage 1 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "Frame: 555 mm stack, 398 mm reac",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "Head tube and seat tube both sit",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "Top tube",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "563 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "Seat tube",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "frame",
+   "text": "496 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "Stage 2 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "Fork: 44.4 mm offset",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "On the 73.5° head angle it gives",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "Axle to crown",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "366 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "Head tube",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "fork",
+   "text": "151 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "Stage 3 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "Wheels: 45 mm rims, 26 mm tyres",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "700c rims on a 622 mm bead seat,",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "Tyre diameter",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "674 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "Disc rotors",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "wheels",
+   "text": "160 / 140 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "Stage 4 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "Drivetrain: 52/36 rings, 11–30 c",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "Twelve speeds on 170 mm cranks. ",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "Chain pitch",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "12.7 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "Chainstay",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "drivetrain",
+   "text": "410 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "Stage 5 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "Cockpit: 100 mm stem, 420 mm bar",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "A −6° stem on 35 mm of stack, an",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "Stem angle",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "−6°",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "Bar drop",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "handlebar",
+   "text": "125 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "Stage 6 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "Saddle height: 725 mm",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "Measured from the bottom bracket",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "Seat angle",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "73.5°",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "Saddle",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "saddle",
+   "text": "260 × 143 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "finish",
+   "text": "Seven frame sizes, 44 to 61",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 28.860001,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "finish",
+   "text": "This one is the 56. We fit you t",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "close",
+   "text": "Fittings and orders by message",
+   "ratio": 12.65,
+   "need": 3,
+   "size": 32,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "close",
+   "text": "Send your height and inseam on T",
+   "ratio": 5.03,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "close",
+   "text": "Email the workshop",
+   "ratio": 12.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "close",
+   "text": "© 2026 Varsen. A concept brand, ",
+   "ratio": 5.03,
+   "need": 4.5,
+   "size": 14,
+   "pass": true
+  },
+  {
+   "run": "webkit-390x844",
+   "where": "close",
+   "text": "Frame geometry from the publishe",
+   "ratio": 5.03,
+   "need": 4.5,
+   "size": 14,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "hero",
+   "text": "Varsen",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 24,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "hero",
+   "text": "Book a fitting",
+   "ratio": 5.71,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "hero",
+   "text": "Carbon road bike for racing and ",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 57.6,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "hero",
+   "text": "Scroll to build it, part by part",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "Stage 1 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "Frame: 555 mm stack, 398 mm reac",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "Head tube and seat tube both sit",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "Top tube",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "563 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "Seat tube",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "496 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "Size",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "frame",
+   "text": "56",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "Stage 2 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "Fork: 44.4 mm offset",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "On the 73.5° head angle it gives",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "Axle to crown",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "366 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "Head tube",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "fork",
+   "text": "151 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "Stage 3 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "Wheels: 45 mm rims, 26 mm tyres",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "700c rims on a 622 mm bead seat,",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "Tyre diameter",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "674 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "Disc rotors",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "wheels",
+   "text": "160 / 140 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "Stage 4 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "Drivetrain: 52/36 rings, 11–30 c",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "Twelve speeds on 170 mm cranks. ",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "Chain pitch",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "12.7 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "Chainstay",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "drivetrain",
+   "text": "410 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "Stage 5 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "Cockpit: 100 mm stem, 420 mm bar",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "A −6° stem on 35 mm of stack, an",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "Stem angle",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "−6°",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "Bar drop",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "handlebar",
+   "text": "125 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "Stage 6 of 6",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "Saddle height: 725 mm",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "Measured from the bottom bracket",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "Seat angle",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "73.5°",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "Saddle",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "saddle",
+   "text": "260 × 143 mm",
+   "ratio": 14.21,
+   "need": 4.5,
+   "size": 15,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "finish",
+   "text": "Seven frame sizes, 44 to 61",
+   "ratio": 14.21,
+   "need": 3,
+   "size": 43.2,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "finish",
+   "text": "This one is the 56. We fit you t",
+   "ratio": 5.65,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "close",
+   "text": "Fittings and orders by message",
+   "ratio": 12.65,
+   "need": 3,
+   "size": 56,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "close",
+   "text": "Send your height and inseam on T",
+   "ratio": 5.03,
+   "need": 4.5,
+   "size": 17,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "close",
+   "text": "Email the workshop",
+   "ratio": 12.65,
+   "need": 4.5,
+   "size": 16,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "close",
+   "text": "© 2026 Varsen. A concept brand, ",
+   "ratio": 5.03,
+   "need": 4.5,
+   "size": 14,
+   "pass": true
+  },
+  {
+   "run": "chrome-1440x900",
+   "where": "close",
+   "text": "Frame geometry from the publishe",
+   "ratio": 5.03,
+   "need": 4.5,
+   "size": 14,
+   "pass": true
+  }
+ ]
+}

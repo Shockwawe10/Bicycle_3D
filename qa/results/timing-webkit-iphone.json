@@ -1,0 +1,142 @@
+[
+ {
+  "part": "frame",
+  "spec": [
+   0.06,
+   0.19
+  ],
+  "tolerance": 0.013,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.062,
+  "startErr": 0.002,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.1857,
+  "endErr": 0.0043
+ },
+ {
+  "part": "fork",
+  "spec": [
+   0.19,
+   0.31
+  ],
+  "tolerance": 0.012,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.1902,
+  "startErr": 0.0002,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.3061,
+  "endErr": 0.0039
+ },
+ {
+  "part": "wheelF",
+  "spec": [
+   0.31,
+   0.42
+  ],
+  "tolerance": 0.011,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.3101,
+  "startErr": 0.0001,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.4165,
+  "endErr": 0.0035
+ },
+ {
+  "part": "wheelR",
+  "spec": [
+   0.35,
+   0.46
+  ],
+  "tolerance": 0.011,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.3502,
+  "startErr": 0.0002,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.4566,
+  "endErr": 0.0034
+ },
+ {
+  "part": "drivetrain",
+  "spec": [
+   0.46,
+   0.6
+  ],
+  "tolerance": 0.014,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.4599,
+  "startErr": 0.0001,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.5955,
+  "endErr": 0.0045
+ },
+ {
+  "part": "handlebar",
+  "spec": [
+   0.6,
+   0.72
+  ],
+  "tolerance": 0.012,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.6002,
+  "startErr": 0.0002,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.7158,
+  "endErr": 0.0042
+ },
+ {
+  "part": "saddle",
+  "spec": [
+   0.72,
+   0.84
+  ],
+  "tolerance": 0.012,
+  "startBracket": [
+   true,
+   true
+  ],
+  "start": 0.7198,
+  "startErr": 0.0002,
+  "endBracket": [
+   true,
+   true
+  ],
+  "end": 0.8358,
+  "endErr": 0.0042
+ }
+]

@@ -1,0 +1,12 @@
+{
+ "before": {
+  "geometries": 82,
+  "textures": 3,
+  "calls": 83
+ },
+ "after": {
+  "geometries": 0,
+  "textures": 1,
+  "contextLost": true
+ }
+}

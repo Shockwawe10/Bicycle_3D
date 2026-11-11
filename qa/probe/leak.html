@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><canvas id="c" width="64" height="64"></canvas>
+<script type="importmap">{ "imports": { "three": "../../vendor/three@0.185.1/three.module.min.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from '../../vendor/three@0.185.1/RoomEnvironment.js';
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c') }), out = {};
+const n = k => out[k] = r.info.memory.textures;
+const pm = new THREE.PMREMGenerator(r), room = new RoomEnvironment(), cam = new THREE.PerspectiveCamera();
+if (location.search.includes('warm')) {
+  pm._setSize(128); const rt = pm._allocateTargets(); n('afterAllocate');
+  r.setRenderTarget(rt); n('afterBind'); await r.compileAsync(room, cam); r.setRenderTarget(null); rt.dispose(); n('afterWarmDispose');
+}
+const env = pm.fromScene(room, 0.04, 0.1, 100, { size: 128 }); n('afterFromScene');
+pm.dispose(); n('afterPmDispose'); env.dispose(); n('afterEnvDispose'); room.dispose();
+window.OUT = out;
+</script>

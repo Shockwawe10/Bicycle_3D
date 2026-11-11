@@ -1,0 +1,97 @@
+[
+ {
+  "p": 0,
+  "W": 1440,
+  "H": 900,
+  "svh": 900,
+  "bike": {
+   "x0": 111.95656983002527,
+   "y0": 171.92967536953864,
+   "x1": 845.772177011395,
+   "y1": 759.529646856667
+  },
+  "clipped": false,
+  "textOverlaps": [],
+  "bikeOverText": [],
+  "textOut": [],
+  "hScroll": false,
+  "stageTop": 0,
+  "texts": 5
+ },
+ {
+  "p": 0.25,
+  "W": 1440,
+  "H": 900,
+  "svh": 900,
+  "bike": {
+   "x0": 146.82406334354377,
+   "y0": 280.175250855642,
+   "x1": 848.9442829949548,
+   "y1": 821.1480350295799
+  },
+  "clipped": false,
+  "textOverlaps": [],
+  "bikeOverText": [],
+  "textOut": [],
+  "hScroll": false,
+  "stageTop": 0,
+  "texts": 9
+ },
+ {
+  "p": 0.5,
+  "W": 1440,
+  "H": 900,
+  "svh": 900,
+  "bike": {
+   "x0": 108.56672816253104,
+   "y0": 253.66084798049707,
+   "x1": 869.3897135711192,
+   "y1": 657.6750689952337
+  },
+  "clipped": false,
+  "textOverlaps": [],
+  "bikeOverText": [],
+  "textOut": [],
+  "hScroll": false,
+  "stageTop": 0,
+  "texts": 9
+ },
+ {
+  "p": 0.75,
+  "W": 1440,
+  "H": 900,
+  "svh": 900,
+  "bike": {
+   "x0": 100.63720179126535,
+   "y0": 208.97285291349266,
+   "x1": 883.3640739437385,
+   "y1": 785.8355872523302
+  },
+  "clipped": false,
+  "textOverlaps": [],
+  "bikeOverText": [],
+  "textOut": [],
+  "hScroll": false,
+  "stageTop": 0,
+  "texts": 9
+ },
+ {
+  "p": 1,
+  "W": 1440,
+  "H": 900,
+  "svh": 900,
+  "bike": {
+   "x0": 92.14345436291838,
+   "y0": 218.35985617677298,
+   "x1": 886.5600000000001,
+   "y1": 722.6470851852974
+  },
+  "clipped": false,
+  "textOverlaps": [],
+  "bikeOverText": [],
+  "textOut": [],
+  "hScroll": false,
+  "stageTop": 0,
+  "texts": 4
+ }
+]

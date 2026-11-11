@@ -1,0 +1,100 @@
+[
+ {
+  "part": "frame",
+  "spec": [
+   0.06,
+   0.19
+  ],
+  "measured": [
+   0.06,
+   0.188
+  ],
+  "tolerance": 0.013,
+  "errStart": 0,
+  "errEnd": 0.002
+ },
+ {
+  "part": "fork",
+  "spec": [
+   0.19,
+   0.31
+  ],
+  "measured": [
+   0.188,
+   0.308
+  ],
+  "tolerance": 0.012,
+  "errStart": 0.002,
+  "errEnd": 0.002
+ },
+ {
+  "part": "wheelF",
+  "spec": [
+   0.31,
+   0.42
+  ],
+  "measured": [
+   0.308,
+   0.42
+  ],
+  "tolerance": 0.011,
+  "errStart": 0.002,
+  "errEnd": 0
+ },
+ {
+  "part": "wheelR",
+  "spec": [
+   0.35,
+   0.46
+  ],
+  "measured": [
+   0.348,
+   0.46
+  ],
+  "tolerance": 0.011,
+  "errStart": 0.002,
+  "errEnd": 0
+ },
+ {
+  "part": "drivetrain",
+  "spec": [
+   0.46,
+   0.6
+  ],
+  "measured": [
+   0.46,
+   0.596
+  ],
+  "tolerance": 0.014,
+  "errStart": 0,
+  "errEnd": 0.004
+ },
+ {
+  "part": "handlebar",
+  "spec": [
+   0.6,
+   0.72
+  ],
+  "measured": [
+   0.6,
+   0.716
+  ],
+  "tolerance": 0.012,
+  "errStart": 0,
+  "errEnd": 0.004
+ },
+ {
+  "part": "saddle",
+  "spec": [
+   0.72,
+   0.84
+  ],
+  "measured": [
+   0.72,
+   0.836
+  ],
+  "tolerance": 0.012,
+  "errStart": 0,
+  "errEnd": 0.004
+ }
+]

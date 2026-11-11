@@ -90,6 +90,10 @@ a { color: inherit; }
 .specs dt, .specs dd { margin: 0; padding: 7px 0; border-top: 1px solid var(--rule); }
 .specs dd { text-align: right; font-variant-numeric: tabular-nums; }
 .specs > :nth-child(n+5) { display: none; }                         /* phones: two rows */
+@media (max-aspect-ratio: 4/5) and (min-width: 600px) {          /* portrait tablets: phone sizes read small at 820 px */
+  .beat h1 { font-size: 52px; max-width: 14em; } .beat h2 { font-size: 38px; } .beat p { font-size: 18px; } .step { font-size: 15px; }
+  .beat .btn { width: auto; } .specs { font-size: 16px; max-width: 34em; }
+}
 @media (max-aspect-ratio: 4/5) and (max-height: 700px) {
   .beat h1 { font-size: 30px; } .beat h2 { font-size: 26px; } .specs { display: none; }
 }
@@ -311,7 +315,9 @@ function makeMaterials() {
     rubber: new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.92, metalness: 0 }),
     tape: new THREE.MeshStandardMaterial({ color: 0x1d1e20, roughness: 0.78, metalness: 0 }),
   };
-  const FADE = new Map(Object.values(M).map(m => { const c = m.clone(); c.transparent = true; return [m, c]; }));
+  // Fade twins use alpha hashing (a stochastic dissolve in the opaque pass), not blending: blended low-opacity
+  // geometry rendered with 1-level run-to-run differences on GPU (qa/probe/gl-determinism.mjs); hashing is per-pixel deterministic.
+  const FADE = new Map(Object.values(M).map(m => { const c = m.clone(); c.alphaHash = true; c.transparent = false; return [m, c]; }));
   return { M, FADE };
 }
 
@@ -541,7 +547,8 @@ function posterSVG(J) {
 /* =====================================================================================
    5. APP: renderer, layout, damped scroll, render-on-demand, quality, lifecycle.
    ===================================================================================== */
-const stage = document.getElementById('stage'), story = stage.parentElement, canvas = document.getElementById('gl');
+const stage = document.getElementById('stage'), story = stage.parentElement;
+let canvas = document.getElementById('gl');
 const beatsEl = document.getElementById('beats'), poster = document.getElementById('poster');
 const beatEls = [...beatsEl.querySelectorAll('.beat')], layerEls = Object.fromEntries([...stage.querySelectorAll('[data-layer]')].map(e => [e.dataset.layer, e]));
 const probe = Object.assign(document.createElement('div'), { style: 'position:fixed;left:0;top:0;width:1px;height:100vh;height:100svh;visibility:hidden;pointer-events:none' });
@@ -724,12 +731,20 @@ async function initGL() {
   for (const g of Object.values(bike.parts)) g.traverse(o => { if (o.isMesh) o.material = o.userData.base; });
   for (const f of Object.values(faders)) f(null);  // forget cached alpha so the next apply sets materials
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; html.classList.remove('gl-ready'); }, false);
-  canvas.addEventListener('webglcontextrestored', async () => { await buildEnvironment(); lost = false; dirty = true; html.classList.add('gl-ready'); kick(); }, false);
+  canvas.addEventListener('webglcontextrestored', () => rebuildAfterRestore(), false);
   pApplied = NaN; dirty = true; gl.ready = true;    // only now may frame() touch the scene (init yields above)
   t1 = performance.now(); frame(performance.now());   // first frame now, then reveal
   window.__bike.steps.firstFrame = Math.round(performance.now() - t1); mark('first-frame');
   html.classList.add('gl-ready');
   window.__bike.initMs = Math.round(performance.now() - t0);
+}
+
+async function rebuildAfterRestore() {             // a restored context gets a fresh canvas and a fresh scene:
+  // the lost context's GPU objects died with it, so drop the references and never dispose them (three's stale
+  // per-object dispose listeners would delete foreign objects; WebKit logs each as INVALID_OPERATION).
+  const fresh = canvas.cloneNode(false); canvas.replaceWith(fresh); canvas = fresh;
+  gl = null; lost = false;
+  await initGL(); dirty = true; kick();
 }
 
 /* ---------- loop: one damped p, render only while it moves ---------- */
@@ -761,6 +776,7 @@ function dispose() {                               // free every GPU resource (c
   gl.scene.traverse(o => { if (o.geometry) geos.add(o.geometry); if (o.isInstancedMesh) o.dispose(); });
   for (const g of geos) g.dispose(); for (const m of mats) { if (m.map) m.map.dispose(); m.dispose(); }
   gl.envRT?.dispose(); gl.renderer.dispose();
+  gl.renderer.forceContextLoss();                  // three r185 PMREM keeps one internal texture after dispose (qa/probe/leak.html); losing the context frees it
 }
 
 /* ---------- boot ---------- */
