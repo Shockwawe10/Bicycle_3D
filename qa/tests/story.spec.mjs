@@ -216,3 +216,18 @@ test('context loss shows the poster, restore brings the 3D back; dispose frees G
   expect(after.contextLost).toBe(true);            // ...which the forced context loss frees with everything else
   expect(errors.filter(e => !/CONTEXT_LOST|context lost/i.test(e))).toEqual([]);
 });
+
+test('a quality change at rest redraws the bike (resizing the canvas clears it)', async ({ page }) => {
+  // Regression: the live site was blank at p = 1 in WebKit after adaptive quality stepped down on the last frame of
+  // a scroll: setSize() cleared the canvas, and nothing scheduled another frame.
+  const errors = await open(page);
+  await scrollToP(page, 1);
+  const r = await page.evaluate(async () => {
+    const B = window.__bike, before = B.renderer.info.render.frame;
+    B.setQuality(1);                                                      // what sampleFrame() does on a slow device
+    for (let k = 0; k < 4; k++) await new Promise(res => requestAnimationFrame(res));
+    return { before, after: B.renderer.info.render.frame, dpr: B.renderer.getPixelRatio() };
+  });
+  expect(r.after, `no frame drawn after the quality change (dpr ${r.dpr})`).toBeGreaterThan(r.before);
+  expect(errors).toEqual([]);
+});

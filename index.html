@@ -597,7 +597,7 @@ function sampleFrame(dtMs, now) {                  // adaptive pixel ratio from 
 }
 function setQuality(i, now = performance.now()) {
   quality.i = i; quality.slow = quality.fast = 0; quality.ema = 16.7; quality.changedAt = now;
-  if (gl) { gl.renderer.setPixelRatio(QUALITY[i]); gl.renderer.setSize(L.W, L.H, false); dirty = true; }
+  if (gl) { gl.renderer.setPixelRatio(QUALITY[i]); gl.renderer.setSize(L.W, L.H, false); dirty = true; kick(); }   // setSize clears the canvas: always schedule the redraw
 }
 async function buildEnvironment(warm = true) {    // RoomEnvironment -> PMREM, without blocking the main thread on shader compiles
   if (gl.envRT) gl.envRT.dispose();
@@ -780,7 +780,7 @@ function dispose() {                               // free every GPU resource (c
 }
 
 /* ---------- boot ---------- */
-window.__bike = { ready: false, STORY, state, reducedP, validateGeometry, CHART, deriveJoints, quality, QUALITY,
+window.__bike = { ready: false, STORY, state, reducedP, validateGeometry, CHART, deriveJoints, quality, QUALITY, setQuality,
   get p() { return { target: pTarget, shown: pShown } }, get layout() { return L; }, get gl() { return gl; }, dispose, THREE,
   get scene() { return gl?.scene; }, get renderer() { return gl?.renderer; }, get camera() { return gl?.camera; },
   settled: () => new Promise(res => { readScroll(); kick(); let n = 0; const chk = () => (++n > 2 && !raf && pShown === (RM.matches ? reducedP(pTarget) : pTarget) ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }) };

@@ -35,6 +35,8 @@ are in `qa/results/`; how to re-run them is in section 4.
 | CSP | Strict, hash-based (`default-src 'none'`). The QA server sends nginx.conf's policy; no violations from the page. |
 | Copy (design skill's copy-lint) | 0 FAIL, 0 WARN (1 INFO: one number-pair heading, within budget) |
 | Lighthouse Accessibility and Best Practices | 100 / 100 (all 3 runs) |
+| Adaptive-quality step at rest | The canvas is redrawn after the resize (regression test, WebKit and Chrome); bike visible after a forced step in Chrome (`live-check.mjs`) |
+| Live site (GitHub Pages) | `qa/live-check.mjs`: HTTP 200, geometry OK, bike visible at p = 0, 0.5 and 1, no errors |
 
 ## 2. Fix log: what the loop found and changed
 
@@ -48,6 +50,7 @@ are in `qa/results/`; how to re-run them is in section 4.
 | Dispose test | 1 texture left after dispose | three r185 PMREM keeps an internal texture (`qa/probe/leak.html`) | `forceContextLoss()` after `renderer.dispose()` |
 | iPad screenshots | Phone type sizes read small at 820 px | Missing portrait-tablet step | 52/38/18 px type for portrait screens ≥ 600 px wide |
 | QA server | Page blocked after edits | The server cached a stale CSP | CSP re-read per request; `qa/csp.mjs --check` |
+| Live check on GitHub Pages | Bike blank at p = 1 in WebKit | (1) After an adaptive-quality step, `setSize()` cleared the canvas and no frame was scheduled. (2) Playwright's Windows WebKit cannot present a resized WebGL canvas at all: reproduced with raw WebGL, no three.js (`qa/probe/resize.html`); Chromium presents it. | `setQuality()` now schedules the redraw (regression test). The live check counts bike pixels, so a blank canvas fails. WebKit live checks lock quality; Chrome runs unlocked with a forced step. |
 
 ## 3. Notes on method (read before trusting a number)
 
@@ -62,6 +65,7 @@ are in `qa/results/`; how to re-run them is in section 4.
 5. **Lighthouse and transfer** were measured against `qa/serve.mjs`, which reproduces nginx.conf
    (gzip level 6, cache headers, CSP), on 127.0.0.1. There is no deployed server or CDN.
 6. **Frame timing** runs on a desktop GPU. CPU throttling slows the main thread, not the GPU.
+7. **WebKit on Windows is not iOS Safari.** It cannot show a WebGL canvas after its drawing buffer is resized. So WebKit tests lock adaptive quality (`?qa=1`), and resize behaviour is verified in Chrome. iOS Safari is a different port that handles canvas resizes, but this is unverified without a device.
 
 ## 4. How to re-run
 
