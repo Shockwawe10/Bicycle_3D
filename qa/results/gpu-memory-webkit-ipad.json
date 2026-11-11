@@ -1,8 +1,8 @@
 {
  "before": {
-  "geometries": 82,
-  "textures": 3,
-  "calls": 83
+  "geometries": 111,
+  "textures": 7,
+  "calls": 119
  },
  "after": {
   "geometries": 0,

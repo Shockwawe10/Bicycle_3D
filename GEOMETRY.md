@@ -109,3 +109,19 @@ poster. A test feeds it a broken chart (head angle 80°) and expects that reject
 
 Chainring pitch radius: r = 12.7 / (2·sin(π/N)). That gives 105.17 mm for 52T, 72.86 mm for 36T and
 30.54 mm for the 15T cog.
+
+## 5. Part shapes (detail level)
+
+Every part is still built in code from the joints above. The joints, wheel and drivetrain
+numbers are unchanged, and only the shapes got richer (`index.html` section 4):
+
+| Part | Shape |
+|---|---|
+| Frame tubes | Profile sweeps between joints: superellipse sections, tapered along each tube. Down tube 49→62 mm deep, widening into the BB; head tube 54→62 mm, tapered; flattened top tube; truncated seat tube; dropped seat stays meeting the seat tube 30 mm below its top; boxier drive-side chainstay. Ellipsoid lugs blend the junctions. VARSEN wordmark on both sides of the down tube. |
+| Fork | Aero blades swept along a slightly forward-bowed path (38→21 mm deep), a blended crown, moulded dropouts, flat-mount caliper |
+| Wheels | Torus tyre (26-622) with a bump-mapped file tread; deep rim lathed from a hooked profile with rim decals; lathed hub with flanges; 24 **bladed** spokes and 24 nipples per wheel (instanced); valve; slotted rotor (30 slots) on a six-arm carrier; thru-axle with lever |
+| Drivetrain | Forged-look crank arms (bevelled hull outline); four-arm spider with bolts; 52/36 rings; 12 cogs on a carrier; chain of alternating outer and inner plates plus rollers on every 12.7 mm pin (instanced); rear derailleur hanger, knuckle, link, cage plates and toothed pulleys; front derailleur cage following the 52T ring |
+| Cockpit | One-piece bar and stem: aero-flat tops blending into a round, tape-wrapped (bump-mapped) drop; hoods seated on the forward bend; levers following the drop; headset spacers and top cap |
+| Saddle | Lofted padded shell over a carbon base, swept along a slightly curved axis (143 mm tail, 34 mm nose); curved steel rails; aero seatpost; two-bolt clamp |
+
+Budget at p = 1: **148k triangles, 119 draw calls** (iPhone target ≤ 250k).

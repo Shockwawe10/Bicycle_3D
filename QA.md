@@ -13,12 +13,12 @@ are in `qa/results/`; how to re-run them is in section 4.
 | 3b | … no overlapping text | No two visible text boxes intersect, and no text intersects the bike's box | **Pass**, 15 of 15 | same |
 | 3c | … no horizontal scroll | `scrollWidth ≤ innerWidth` | **Pass**, 15 of 15 | same |
 | 3d | Stage timing | Within 10% of each stage's length | **Pass.** Worst error 0.0043 p (handlebar end), 0.36 of the tolerance. p is measured from the DOM scroll position. | `timing-*.json` |
-| 4a | Lighthouse mobile Performance | ≥ 90 | **98 / 99 / 99** (3 runs) | `lighthouse-mobile-{1,2,3}.json` |
+| 4a | Lighthouse mobile Performance | ≥ 90 | **98 / 97 / 99** (3 runs; TBT 141 / 186 / 109 ms) | `lighthouse-mobile-{1,2,3}.json`, `lighthouse-summary.json` |
 | 4b | CLS | < 0.1 | **0** | same |
-| 4c | LCP | < 2.5 s | **1.46 s** (the hero h1) | same |
-| 4d | Total transfer, gzip | ≤ 600 KB | **238 KB**: index.html 49.7 KB, three r185 189 KB | same (total-byte-weight) |
+| 4c | LCP | < 2.5 s | **1.45 s** (the hero h1) | same |
+| 4d | Total transfer, gzip | ≤ 600 KB | **245 KB**: index.html 57 KB (fonts inline; the detailed builders add 8 KB), three r185 189 KB | same (total-byte-weight) |
 | 4e | WCAG 2.2 AA text contrast | 4.5:1 (3:1 for large text) | **Pass.** Lighthouse color-contrast passes, and on all 8 beats plus header, close and footer, 108 elements, the lowest is **5.03:1** | `contrast.json` |
-| 5 | 10 s scripted scroll, frames < 20 ms | ≥ 95% | **100%** (600 / 600). p95 17.1 ms, max 17.4 ms; adaptive quality stayed at level 0. **Proxy:** Chrome headless on the desktop GPU with 4× CPU throttle, iPhone emulation 390×844 at DPR 3, renderer at the 1.5 cap. Desktop 1440×900: also 100%, p95 17.0 ms. | `frames-mobile.json`, `frames-desktop.json` |
+| 5 | 10 s scripted scroll, frames < 20 ms | ≥ 95% | **100%** (600 / 600). p95 16.8 ms, max 17.3 ms; adaptive quality stayed at level 0. **Proxy:** Chrome headless on the desktop GPU with 4× CPU throttle, iPhone emulation 390×844 at DPR 3, renderer at the 1.5 cap. Desktop 1440×900: also 100%, p95 16.9 ms. | `frames-mobile.json`, `frames-desktop.json` |
 
 ### Supporting checks
 
@@ -35,6 +35,7 @@ are in `qa/results/`; how to re-run them is in section 4.
 | CSP | Strict, hash-based (`default-src 'none'`). The QA server sends nginx.conf's policy; no violations from the page. |
 | Copy (design skill's copy-lint) | 0 FAIL, 0 WARN (1 INFO: one number-pair heading, within budget) |
 | Lighthouse Accessibility and Best Practices | 100 / 100 (all 3 runs) |
+| Model detail budget | 148k triangles, 119 draw calls, 7 textures at p = 1 (was 30.7k / 83). Before/after close-ups: `closeups-before-detail.png`, `closeups-detailed.png` |
 | Adaptive-quality step at rest | The canvas is redrawn after the resize (regression test, WebKit and Chrome); bike visible after a forced step in Chrome (`live-check.mjs`) |
 | Live site (GitHub Pages) | `qa/live-check.mjs`: HTTP 200, geometry OK, bike visible at p = 0, 0.5 and 1, no errors |
 
@@ -50,6 +51,10 @@ are in `qa/results/`; how to re-run them is in section 4.
 | Dispose test | 1 texture left after dispose | three r185 PMREM keeps an internal texture (`qa/probe/leak.html`) | `forceContextLoss()` after `renderer.dispose()` |
 | iPad screenshots | Phone type sizes read small at 820 px | Missing portrait-tablet step | 52/38/18 px type for portrait screens ≥ 600 px wide |
 | QA server | Page blocked after edits | The server cached a stale CSP | CSP re-read per request; `qa/csp.mjs --check` |
+| Detail upgrade: init profile | TBT rose from ~130 ms to ~240 ms (4× CPU) | Many more geometry steps per part | Time-slicing: `slice()` yields whenever 8 ms have passed, between every sweep, extrusion and cog |
+| Detail upgrade: Lighthouse | Performance 90–93, TBT 312–419 ms | Lighthouse's own trace showed one 85 ms observed task (×4 simulated): canvas-text textures drawn in one go, and binding a dummy PMREM render target (35 ms framebuffer allocation and check) during the shader warm-up | Textures drawn one per slice; the warm-up compiles the same variant with a temporary linear output colour space, binding no target. Result 97–99. |
+| Detail upgrade: WebKit context test | 5 × "object does not belong to this context" | One shared lug geometry was a module constant and survived the rebuild after a context restore | Created per build: GPU resources are never shared across renderers |
+| Detail upgrade: software GL | — | CPU rasterisers (SwiftShader, llvmpipe) spend ~800 ms on one 4×-MSAA frame of the detailed bike | The renderer's name is read once; on a software rasteriser the page rebuilds the renderer without MSAA at 1×. GPU devices are unaffected. |
 | Live check on GitHub Pages | Bike blank at p = 1 in WebKit | (1) After an adaptive-quality step, `setSize()` cleared the canvas and no frame was scheduled. (2) Playwright's Windows WebKit cannot present a resized WebGL canvas at all: reproduced with raw WebGL, no three.js (`qa/probe/resize.html`); Chromium presents it. | `setQuality()` now schedules the redraw (regression test). The live check counts bike pixels, so a blank canvas fails. WebKit live checks lock quality; Chrome runs unlocked with a forced step. |
 
 ## 3. Notes on method (read before trusting a number)
