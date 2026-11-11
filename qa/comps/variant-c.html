@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comp C: Drawing sheet, putty and teal, Zilla Slab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500&family=Rethink+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#dedad3; --surface:#d3cec6; --ink:#0a0a0a; --muted:#4a4740; --accent:#256f82; --on-accent:#fff; --grid:rgba(10,10,10,.045); --grid2:rgba(10,10,10,.08); }
+* { box-sizing: border-box; } html, body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.5 'Rethink Sans', system-ui, sans-serif; }
+h1, h2, .brand { font-family: 'Zilla Slab', serif; font-weight: 400; letter-spacing: -0.024em; margin: 0; }
+.screen { position: relative; height: 100vh; overflow: hidden; }
+.far { position: absolute; inset: 0; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px), linear-gradient(var(--grid2) 1px, transparent 1px), linear-gradient(90deg, var(--grid2) 1px, transparent 1px); background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px; }
+.mid, .fg { position: absolute; inset: 0; pointer-events: none; } .mid svg, .fg svg { position: absolute; width: 100%; height: 100%; }
+.nav { position: absolute; z-index: 5; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 20px 64px; }
+.brand { font-size: 26px; font-weight: 500; }
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 2px; background: var(--accent); color: var(--on-accent); font-weight: 500; text-decoration: none; }
+.stagewrap { position: absolute; z-index: 2; left: 64px; width: 58vw; top: 50%; transform: translateY(-48%); }
+.bike { width: 100%; display: block; }
+.dim { display: flex; align-items: center; gap: 10px; margin: 6px 7% 0 7%; font-size: 14px; color: var(--muted); }
+.dim::before, .dim::after { content: ''; flex: 1; height: 1px; background: var(--muted); }
+.copy { position: absolute; z-index: 3; right: 64px; top: 50%; transform: translateY(-50%); width: 30vw; max-width: 440px; }
+h1 { font-size: clamp(40px, 4vw, 64px); line-height: 1.04; }
+.sub { color: var(--muted); margin: 18px 0 22px; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; } td { padding: 9px 0; border-top: 1px solid rgba(10,10,10,.18); } td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.stage { font-size: 14px; color: var(--accent); font-weight: 500; margin-bottom: 10px; }
+h2 { font-size: clamp(32px, 3.2vw, 50px); line-height: 1.05; }
+@media (max-aspect-ratio: 4/5) {
+  .nav { padding: 14px 16px; } .nav .btn { display: none; }
+  .stagewrap { left: 0; width: 100vw; top: 27%; } .dim { margin: 0 14% 0 14%; font-size: 13px; }
+  .copy { left: 16px; right: 16px; width: auto; top: auto; bottom: 24px; transform: none; }
+  h1 { font-size: 36px; } h2 { font-size: 30px; } .sub { margin: 12px 0 14px; font-size: 16px; } table { margin-bottom: 16px; font-size: 14px; } td { padding: 7px 0; }
+  .btn { width: 100%; justify-content: center; }
+}
+</style></head><body>
+<!-- far: drafting grid; mid: compass construction arcs; fg: ruler ticks -->
+<section class="screen">
+  <div class="far"></div>
+  <div class="mid"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#256f82" stroke-opacity=".16" stroke-width="1.2"><circle cx="420" cy="560" r="330"/><circle cx="1010" cy="560" r="330"/><path d="M120 560 H1330" stroke-dasharray="6 8"/></svg></div>
+  <header class="nav"><span class="brand">Varsen</span><a class="btn" href="#">Book a fitting</a></header>
+  <div class="stagewrap"><img class="bike" src="bike-c.png" alt=""><div class="dim">991 mm wheelbase</div></div>
+  <div class="copy">
+    <h1>Carbon road bike for racing and fast group rides</h1>
+    <p class="sub">Scroll and the bike builds itself from its size-56 geometry chart, part by part, each tube placed to the millimetre.</p>
+    <table><tr><td>Head angle</td><td>73.5°</td></tr><tr><td>Stack / reach</td><td>555 / 398 mm</td></tr><tr><td>Tyres</td><td>26-622</td></tr></table>
+    <a class="btn" href="#">Book a fitting</a>
+  </div>
+  <div class="fg"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M0 884 H1440" stroke="#0a0a0a" stroke-opacity=".25" stroke-width="16" stroke-dasharray="1 11"/></svg></div>
+</section>
+<section class="screen">
+  <div class="far" style="background-position: 0 -36px"></div>
+  <div class="mid"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#256f82" stroke-opacity=".16" stroke-width="1.2" transform="translate(-60 -20)"><circle cx="420" cy="560" r="330"/><circle cx="1010" cy="560" r="330"/><path d="M120 560 H1330" stroke-dasharray="6 8"/></svg></div>
+  <header class="nav"><span class="brand">Varsen</span><a class="btn" href="#">Book a fitting</a></header>
+  <div class="stagewrap"><img class="bike" src="bike-c.png" alt=""><div class="dim">674 mm tyre diameter</div></div>
+  <div class="copy">
+    <div class="stage">Stage 3 of 6</div>
+    <h2>Wheels: 45 mm rims, 26 mm tyres</h2>
+    <p class="sub">700c rims on a 622 mm bead seat, 24 spokes each: radial at the front, two-cross at the rear, where the pedalling torque goes.</p>
+    <table><tr><td>Bead seat</td><td>622 mm</td></tr><tr><td>Spokes</td><td>24 front, 24 rear</td></tr><tr><td>Rotors</td><td>160 / 140 mm</td></tr></table>
+  </div>
+  <div class="fg"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M0 884 H1440" stroke="#0a0a0a" stroke-opacity=".25" stroke-width="16" stroke-dasharray="1 11" stroke-dashoffset="-60"/></svg></div>
+</section>
+</body></html>

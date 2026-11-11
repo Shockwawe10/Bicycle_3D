@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parallax backdrop prototype (variant C)</title>
+<style>
+/* Prototype of the three backdrop layers for variant C, driven by one progress value p.
+   far = drafting grid (slowest), mid = construction geometry (middle), fg = ruler ticks in front of the bike (fastest). */
+:root { --bg:#dedad3; --ink:#0a0a0a; --accent:#256f82; --grid:rgba(10,10,10,.045); --grid2:rgba(10,10,10,.075); }
+html, body { margin: 0; background: var(--bg); }
+.story { height: 700lvh; position: relative; }
+.stage { position: sticky; top: 0; height: 100lvh; overflow: hidden; }
+.layer { position: absolute; inset: -12% -10%; pointer-events: none; will-change: transform; }
+.far { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px), linear-gradient(var(--grid2) 1px, transparent 1px), linear-gradient(90deg, var(--grid2) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px; }
+.mid svg, .fg svg { position: absolute; width: 100%; height: 100%; }
+.bike { position: absolute; left: 4vw; width: 62vw; top: 50%; transform: translateY(-50%); }
+.fg { inset: auto -10% 0 -10%; height: 56px; }
+@media (max-aspect-ratio: 4/5) { .bike { left: -2vw; width: 104vw; top: 30%; } }
+</style></head><body>
+<section class="story">
+  <div class="stage">
+    <div class="layer far" data-rate-y="-0.06"></div>
+    <div class="layer mid" data-rate-y="-0.18" data-rate-x="-0.05"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#256f82" stroke-opacity=".18" stroke-width="1.2">
+      <circle cx="430" cy="520" r="300"/><circle cx="1010" cy="520" r="300"/><path d="M60 520 H1380" stroke-dasharray="6 8"/>
+      <path d="M1010 520 L1105 200" stroke-dasharray="2 6"/><path d="M430 520 L560 80" stroke-dasharray="2 6" stroke-opacity=".12"/></svg></div>
+    <img class="bike" src="bike-c.png" alt="">
+    <div class="layer fg" data-rate-x="-0.5"><svg viewBox="0 0 2000 56" preserveAspectRatio="none"><path d="M0 56 V0" /><g stroke="#0a0a0a" stroke-opacity=".28">
+      <path d="M0 50 H2000" stroke-width="1"/><path d="M0 50 H2000" stroke-width="14" stroke-dasharray="1 9" transform="translate(0 -7)"/><path d="M0 50 H2000" stroke-width="26" stroke-dasharray="1.4 48.6" transform="translate(0 -13)"/></g></svg></div>
+  </div>
+</section>
+<script>
+// p from the story's scroll position; layers move at their own rates (fractions of the viewport per unit p)
+const story = document.querySelector('.story'), layers = [...document.querySelectorAll('[data-rate-y],[data-rate-x]')];
+function frame() {
+  const span = story.offsetHeight - innerHeight, p = Math.min(1, Math.max(0, (scrollY - story.offsetTop) / span));
+  for (const l of layers) l.style.transform = `translate3d(${(+l.dataset.rateX || 0) * p * innerWidth}px, ${(+l.dataset.rateY || 0) * p * innerHeight}px, 0)`;
+  document.documentElement.dataset.p = p.toFixed(3);
+}
+addEventListener('scroll', () => requestAnimationFrame(frame), { passive: true }); frame();
+</script>
+</body></html>

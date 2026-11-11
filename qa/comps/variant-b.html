@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comp B: Spec band, sand and moss, Archivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#ddd6c6; --surface:#d2cab8; --ink:#2a2a26; --muted:#55534b; --accent:#4f6238; --on-accent:#fff; --line:#c3bba8; }
+* { box-sizing: border-box; } html, body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.5 Archivo, system-ui, sans-serif; }
+h1, h2, .brand, .num { font-family: Archivo, sans-serif; font-stretch: 118%; font-weight: 400; letter-spacing: -0.035em; margin: 0; }
+.screen { position: relative; height: 100vh; overflow: hidden; }
+.far, .mid, .fg { position: absolute; inset: 0; pointer-events: none; } .far svg, .mid svg, .fg svg { position: absolute; width: 100%; height: 100%; }
+.nav { position: absolute; z-index: 5; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 22px 64px; }
+.brand { font-size: 22px; font-weight: 500; letter-spacing: 0.01em; }
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 6px; background: var(--accent); color: var(--on-accent); font-weight: 500; text-decoration: none; }
+.head { position: absolute; z-index: 3; left: 64px; right: 64px; top: 96px; }
+h1 { font-size: clamp(44px, 5.4vw, 86px); line-height: 0.98; max-width: 13em; }
+.sub { color: var(--muted); max-width: 34em; margin: 18px 0 0; }
+.bike { position: absolute; z-index: 2; width: 54vw; left: 50%; bottom: 120px; transform: translateX(-50%); }
+.specs { position: absolute; z-index: 3; left: 64px; right: 64px; bottom: 28px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); }
+.specs div { padding: 12px 0 0; } .num { font-size: 28px; display: block; } .specs span { color: var(--muted); font-size: 14px; }
+.stage { font-size: 15px; color: var(--muted); margin-bottom: 10px; }
+h2 { font-size: clamp(36px, 4.2vw, 64px); line-height: 1; }
+@media (max-aspect-ratio: 4/5) {
+  .nav { padding: 14px 16px; } .nav .btn { min-height: 40px; padding: 0 14px; font-size: 15px; }
+  .head { left: 16px; right: 16px; top: 72px; } h1 { font-size: 34px; } .sub { font-size: 16px; margin-top: 12px; }
+  .bike { width: 108vw; bottom: 170px; }
+  .specs { left: 16px; right: 16px; grid-template-columns: 1fr 1fr; row-gap: 10px; bottom: 20px; } .num { font-size: 22px; }
+  h2 { font-size: 32px; }
+}
+</style></head><body>
+<!-- far: contour lines; mid: road elevation profile; fg: hairline ground ticks -->
+<section class="screen">
+  <div class="far"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#cfc7b4" stroke-width="1.5">
+    <path d="M-50 300 C 200 220 420 380 700 290 S 1200 200 1500 320"/><path d="M-50 360 C 200 280 420 440 700 350 S 1200 260 1500 380"/><path d="M-50 420 C 200 340 420 500 700 410 S 1200 320 1500 440"/><path d="M-50 480 C 200 400 420 560 700 470 S 1200 380 1500 500"/></svg></div>
+  <div class="mid"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" fill="none"><path d="M0 700 L180 690 L320 640 L460 655 L620 590 L760 610 L900 560 L1080 600 L1240 575 L1440 610" stroke="var(--line)" stroke-width="3"/></svg></div>
+  <header class="nav"><span class="brand">VARSEN</span><a class="btn" href="#">Book a fitting</a></header>
+  <div class="head"><h1>Carbon road bike for racing and fast group rides</h1>
+    <p class="sub">Scroll and the bike builds itself from its size-56 geometry chart, part by part, each tube placed to the millimetre.</p></div>
+  <img class="bike" src="bike-b.png" alt="">
+  <div class="specs"><div><b class="num">991 mm</b><span>wheelbase</span></div><div><b class="num">73.5°</b><span>head angle</span></div><div><b class="num">53.5 mm</b><span>trail</span></div><div><b class="num">26 mm</b><span>tyres</span></div></div>
+  <div class="fg"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M0 820 H1440" stroke="#2a2a26" stroke-opacity=".08" stroke-width="40" stroke-dasharray="2 22"/></svg></div>
+</section>
+<section class="screen">
+  <div class="far"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#cfc7b4" stroke-width="1.5" transform="translate(0 -40)">
+    <path d="M-50 300 C 200 220 420 380 700 290 S 1200 200 1500 320"/><path d="M-50 360 C 200 280 420 440 700 350 S 1200 260 1500 380"/><path d="M-50 420 C 200 340 420 500 700 410 S 1200 320 1500 440"/><path d="M-50 480 C 200 400 420 560 700 470 S 1200 380 1500 500"/></svg></div>
+  <div class="mid"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" fill="none"><path d="M0 700 L180 690 L320 640 L460 655 L620 590 L760 610 L900 560 L1080 600 L1240 575 L1440 610" stroke="var(--line)" stroke-width="3" transform="translate(-200 10)"/></svg></div>
+  <header class="nav"><span class="brand">VARSEN</span><a class="btn" href="#">Book a fitting</a></header>
+  <div class="head"><div class="stage">03 of 06</div><h2>Wheels: 45 mm rims, 26 mm tyres</h2>
+    <p class="sub">700c rims on a 622 mm bead seat, 24 spokes each: radial at the front, two-cross at the rear, where the pedalling torque goes.</p></div>
+  <img class="bike" src="bike-b.png" alt="">
+  <div class="specs"><div><b class="num">622 mm</b><span>bead seat</span></div><div><b class="num">674 mm</b><span>tyre diameter</span></div><div><b class="num">24</b><span>spokes a wheel</span></div><div><b class="num">160 / 140</b><span>rotors, mm</span></div></div>
+  <div class="fg"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M0 820 H1440" stroke="#2a2a26" stroke-opacity=".08" stroke-width="40" stroke-dasharray="2 22" stroke-dashoffset="-160"/></svg></div>
+</section>
+</body></html>

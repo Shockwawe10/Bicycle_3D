@@ -1,6 +1,5 @@
 node_modules/
-.taste-skill/chrome*/
-.taste-skill/*.log
+.taste-skill/
 qa/tmp/
 # third-party skills installed earlier (not ours to version); our own skills in .claude/skills are tracked
 .claude/skills/design-taste-frontend/

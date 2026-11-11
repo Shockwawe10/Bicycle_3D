@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comp A: Split, sky and sand, Bricolage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=Figtree:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#cbe4f2; --surface:#bcdcee; --ink:#0a0a0a; --muted:#33414c; --accent:#b0298f; --on-accent:#fff; --hill:#b2d3e6; --hill2:#a5c9de; }
+* { box-sizing: border-box; } html, body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.5 Figtree, system-ui, sans-serif; }
+h1, h2, .brand { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 400; letter-spacing: -0.04em; margin: 0; }
+.screen { position: relative; height: 100vh; overflow: hidden; }
+.far, .mid, .fg { position: absolute; inset: 0; pointer-events: none; }
+.far svg, .mid svg, .fg svg { position: absolute; width: 100%; height: 100%; }
+.nav { position: absolute; z-index: 5; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 20px 72px; }
+.brand { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 500; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.bike { position: absolute; z-index: 2; width: 60vw; right: 4vw; top: 50%; transform: translateY(-46%); }
+.copy { position: absolute; z-index: 3; left: 72px; top: 50%; transform: translateY(-50%); width: 34vw; max-width: 520px; }
+h1 { font-size: clamp(40px, 4.6vw, 72px); line-height: 1.02; }
+.sub { color: var(--muted); margin: 20px 0 24px; max-width: 30em; }
+.facts { display: flex; gap: 28px; margin: 0 0 28px; padding: 0; list-style: none; }
+.facts b { display: block; font: 400 30px/1 'Bricolage Grotesque'; letter-spacing: -0.03em; } .facts span { color: var(--muted); font-size: 14px; }
+.stage { font-size: 14px; color: var(--muted); display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.rail { display: flex; gap: 4px; } .rail i { width: 22px; height: 3px; background: #9fbfd2; border-radius: 2px; } .rail i.on { background: var(--accent); }
+h2 { font-size: clamp(30px, 3.2vw, 48px); line-height: 1.05; }
+@media (max-aspect-ratio: 4/5) {
+  .nav { padding: 14px 16px; } .nav .btn { display: none; }
+  .bike { width: 112vw; right: -6vw; top: 30%; transform: translateY(-50%); }
+  .copy { left: 16px; right: 16px; width: auto; top: auto; bottom: 28px; transform: none; }
+  h1 { font-size: 38px; } .sub { margin: 12px 0 16px; font-size: 16px; } .facts { gap: 18px; margin-bottom: 18px; } .facts b { font-size: 24px; }
+  h2 { font-size: 30px; } .btn { width: 100%; justify-content: center; }
+}
+</style></head><body>
+<!-- far: soft sun and horizon; mid: rolling hills; fg: road edge (each layer would move at its own rate with p) -->
+<section class="screen">
+  <div class="far"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><circle cx="1050" cy="330" r="290" fill="#d9ecf7"/></svg></div>
+  <div class="mid"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M0 640 C 240 560 420 600 640 580 S 1080 520 1440 590 L1440 900 L0 900Z" fill="var(--hill)"/><path d="M0 720 C 300 660 520 700 820 680 S 1220 650 1440 690 L1440 900 L0 900Z" fill="var(--hill2)"/></svg></div>
+  <header class="nav"><span class="brand">Varsen</span><a class="btn" href="#">Book a fitting</a></header>
+  <img class="bike" src="bike-a.png" alt="">
+  <div class="copy">
+    <h1>Carbon road bike for racing and fast group rides</h1>
+    <p class="sub">Scroll and the bike builds itself from its size-56 geometry chart, part by part, each tube placed to the millimetre.</p>
+    <ul class="facts"><li><b>991 mm</b><span>wheelbase</span></li><li><b>73.5°</b><span>head angle</span></li><li><b>26 mm</b><span>tyres</span></li></ul>
+    <a class="btn" href="#">Book a fitting</a>
+  </div>
+  <div class="fg"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M-20 868 L1460 846" stroke="#0a0a0a" stroke-opacity=".12" stroke-width="2" stroke-dasharray="46 30"/></svg></div>
+</section>
+<section class="screen">
+  <div class="far"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><circle cx="990" cy="300" r="290" fill="#d9ecf7"/></svg></div>
+  <div class="mid"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M0 610 C 240 530 420 570 640 550 S 1080 490 1440 560 L1440 900 L0 900Z" fill="var(--hill)" transform="translate(-90 0)"/><path d="M0 720 C 300 660 520 700 820 680 S 1220 650 1440 690 L1440 900 L0 900Z" fill="var(--hill2)" transform="translate(-160 0)"/></svg></div>
+  <header class="nav"><span class="brand">Varsen</span><a class="btn" href="#">Book a fitting</a></header>
+  <img class="bike" src="bike-a.png" alt="">
+  <div class="copy">
+    <div class="stage"><span>03 / 06</span><span class="rail"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div>
+    <h2>Wheels: 45 mm rims, 26 mm tyres</h2>
+    <p class="sub">700c rims on a 622 mm bead seat, 24 spokes each: radial at the front, two-cross at the rear, where the pedalling torque goes.</p>
+  </div>
+  <div class="fg"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice"><path d="M-20 868 L1460 846" stroke="#0a0a0a" stroke-opacity=".12" stroke-width="2" stroke-dasharray="46 30" stroke-dashoffset="-220"/></svg></div>
+</section>
+</body></html>

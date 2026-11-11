@@ -1,0 +1,9 @@
+{
+  "chosen": "Varsen",
+  "trade": "premium road bikes (fictional concept brand for a portfolio piece)",
+  "searches": [
+    { "query": "\"Varsen\" bikes OR bicycles OR cycles", "date": "2026-11-11", "result": "no bike, bicycle or cycle business named Varsen in the results (nearest: Van Rysel, a different name)" },
+    { "query": "\"Telvar\" bikes OR bicycles OR cycles", "date": "2026-11-11", "result": "no match; not chosen (reads like a pharma name)" },
+    { "query": "\"Ardane\" bikes OR bicycles OR cycles", "date": "2026-11-11", "result": "no match; nearest 'Manufacture Ardennaise' (1920s French maker); not chosen to avoid the echo" }
+  ]
+}
