@@ -21,3 +21,9 @@ description: Adapt three.js render cost to the device by stepping the pixel rati
   - share materials, with one shared transparent twin set when fades never overlap;
   - PMREM at 128 on touch, 256 on desktop.
 - **Report** level and dpr on a debug object (`window.__bike.quality`), so tests can read what ran.
+- **Every runtime `renderer.setSize()` or `setPixelRatio()` must schedule a redraw.** `setSize` clears the
+  canvas, so a quality step on the last frame of a scroll otherwise leaves it blank until the next
+  scroll. That shipped once on the live site.
+- **If QA locks quality (`?qa`), keep one unlocked run that asserts on pixels:** dark pixels in the
+  subject's layout rect > 500 at p = 0, 0.5 and 1, plus one forced quality step at rest. A check that
+  asserts page state alone passes on a blank canvas.
