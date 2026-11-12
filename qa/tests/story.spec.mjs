@@ -56,10 +56,10 @@ test('p = 0 and p = 1 match the storyboard spec transforms (1e-3)', async ({ pag
     const got = await pose(page); report[p] = got;
     for (const s of S) {
       const g = got.parts[s.part];
-      const wantPos = p === 0 ? home(s.part).map((x, i) => x + s.off[i]) : home(s.part);
-      close(g.pos, wantPos, 1e-3, `${s.part}.pos@${p}`);
-      sameQuat(g.q, p === 0 ? qAxisAngle(s.axis, s.deg) : [0, 0, 0, 1], 1e-3, `${s.part}.rot@${p}`);
-      const wantOpacity = p === 0 ? s.o0 : 1;
+      // STORYBOARD 2a: p = 0 is the hero, the finished bike (every part at home, opaque); p = 1 is the finished bike too
+      close(g.pos, home(s.part), 1e-3, `${s.part}.pos@${p}`);
+      sameQuat(g.q, [0, 0, 0, 1], 1e-3, `${s.part}.rot@${p}`);
+      const wantOpacity = 1;
       expect(g.visible, `${s.part}.visible@${p}`).toBe(wantOpacity > 0);
       if (wantOpacity === 1) expect(g.solid, `${s.part}.solid@${p}`).toBe(true);
     }
@@ -69,7 +69,7 @@ test('p = 0 and p = 1 match the storyboard spec transforms (1e-3)', async ({ pag
     close(got.dir, camDir(key[1], key[2]), 1e-3, `camera dir@${p}`);
     const visibleBeats = got.beats.filter(([, o]) => o > 0.001).map(([id]) => id);
     expect(visibleBeats).toEqual([p === 0 ? Bt[0].id : Bt[Bt.length - 1].id]);
-    expect(Math.abs(got.shadow - (p === 0 ? 0 : 0.8))).toBeLessThanOrEqual(1e-3);
+    expect(Math.abs(got.shadow - 0.8)).toBeLessThanOrEqual(1e-3);
   }
   record(`spec-transforms-${test.info().project.name}`, report);
   expect(errors).toEqual([]);
@@ -229,5 +229,30 @@ test('a quality change at rest redraws the bike (resizing the canvas clears it)'
     return { before, after: B.renderer.info.render.frame, dpr: B.renderer.getPixelRatio() };
   });
   expect(r.after, `no frame drawn after the quality change (dpr ${r.dpr})`).toBeGreaterThan(r.before);
+  expect(errors).toEqual([]);
+});
+
+test('hero: dragging turns the bike on its own axis, and the story returns it to the spec', async ({ page }) => {
+  // STORYBOARD 2b. Mouse-driven pointer events (the same handlers serve touch; vertical swipes stay native scroll).
+  const errors = await open(page);
+  const yaw = () => page.evaluate(() => window.__bike.gl.spinner.rotation.y);
+  expect(Math.abs(await yaw())).toBeLessThan(1e-9);                         // ?qa: no entrance swing
+  const r = await page.evaluate(() => window.__bike.rectAt(0)), cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.id, [cx, cy])).toBe('gl');
+  await page.mouse.move(cx, cy); await page.mouse.down();
+  for (let k = 1; k <= 10; k++) await page.mouse.move(cx + k * 12, cy);
+  await page.mouse.up();
+  await page.waitForFunction(() => window.__bike.spin.vel === 0 && !window.__bike.spin.drag, null, { timeout: 15_000 });
+  const turned = await yaw();
+  expect(Math.abs(turned), 'a 120 px drag turns the bike').toBeGreaterThan(0.3);
+  const pivot = await page.evaluate(() => {                                // own axis: the wheelbase centre stays on the spin axis
+    const B = window.__bike, T = B.THREE, f = B.parts.wheelF.getWorldPosition(new T.Vector3()), b = B.parts.wheelR.getWorldPosition(new T.Vector3());
+    return [(f.x + b.x) / 2, (f.z + b.z) / 2];
+  });
+  expect(Math.hypot(...pivot), 'wheelbase centre on the axis').toBeLessThan(1e-3);
+  await scrollToP(page, 0.12);
+  expect(Math.abs(await yaw()), 'applied yaw is 0 once the story starts').toBeLessThan(1e-9);
+  await scrollToP(page, 0);
+  expect(Math.abs((await yaw()) - turned), 'the visitor angle comes back in the hero').toBeLessThan(1e-6);
   expect(errors).toEqual([]);
 });

@@ -24,14 +24,14 @@ for (const p of [0, 0.5, 1]) {
   await page.evaluate(async p => { const L = window.__bike.layout; scrollTo(0, Math.round(L.storyTop + p * L.span)); await window.__bike.settled(); }, p);
   await page.waitForTimeout(300);
   const f = `qa/results/live-${engine}-p${p * 100}.png`;
-  const rect = await page.evaluate(() => window.__bike.layout.rect);
+  const rect = await page.evaluate(() => window.__bike.rectAt(window.__bike.state(window.__bike.p.shown).layoutMix));   // hero rect at p = 0, story rect later
   await page.screenshot({ path: f });
   const dark = Number(execFileSync('py', ['-3.11', '-c', `from PIL import Image\nim=Image.open(r'${f}').convert('L');k=im.size[0]/390\nbox=tuple(int(v*k) for v in (${rect.x},${rect.y},${rect.x + rect.w},${rect.y + rect.h}))\nprint(sum(1 for v in im.crop(box).tobytes() if v<70))`]).toString());
   visible[p] = { darkPixels: dark, quality: await page.evaluate(() => window.__bike.quality.i) };
 }
 if (engine === 'chrome') {                           // force one adaptive step at rest: the canvas is resized and must be redrawn
   await page.evaluate(async () => { window.__bike.setQuality(1); for (let k = 0; k < 4; k++) await new Promise(r => requestAnimationFrame(r)); });
-  const f = 'qa/results/live-chrome-after-quality-step.png', rect = await page.evaluate(() => window.__bike.layout.rect);
+  const f = 'qa/results/live-chrome-after-quality-step.png', rect = await page.evaluate(() => window.__bike.rectAt(window.__bike.state(window.__bike.p.shown).layoutMix));
   await page.screenshot({ path: f });
   visible.afterQualityStep = { darkPixels: Number(execFileSync('py', ['-3.11', '-c', `from PIL import Image
 im=Image.open(r'${f}').convert('L');k=im.size[0]/390

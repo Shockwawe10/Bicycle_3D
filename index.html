@@ -55,7 +55,7 @@ a { color: inherit; }
 @media (min-aspect-ratio: 4/5) { .top .btn { display: inline-flex; } }
 
 /* story: native scroll, sticky stage (STORYBOARD.md section 1) */
-.story { position: relative; height: 1100vh; height: 1100lvh; }
+.story { position: relative; height: 1200vh; height: 1200lvh; }
 .stage { position: sticky; top: 0; height: 100vh; height: 100lvh; overflow: hidden; }
 .layer { position: absolute; pointer-events: none; will-change: transform; }
 .far { inset: -24px -24px calc(-6lvh - 24px) -24px; z-index: 0;
@@ -75,7 +75,7 @@ a { color: inherit; }
     repeating-linear-gradient(90deg, var(--tick) 0 1.5px, transparent 1.5px 50px) bottom / 100% 16px no-repeat; }
 
 /* beats: one cell, cross-faded; portrait = bottom panel, landscape = right column (DESIGN.md section 4) */
-.beats { position: absolute; z-index: 5; display: grid; left: var(--gutter); right: var(--gutter);
+.beats { position: absolute; z-index: 5; display: grid; left: var(--gutter); right: var(--gutter); pointer-events: none;
   bottom: calc(var(--toolbar) + var(--ruler) + 12px + env(safe-area-inset-bottom)); }
 .beat { grid-area: 1 / 1; align-self: end; opacity: 0; pointer-events: none; }
 .beat.on { pointer-events: auto; }
@@ -112,6 +112,21 @@ a { color: inherit; }
 }
 @keyframes enter { from { opacity: 0; transform: translateY(10px); } }
 
+/* hero: the bike centred, the big title beneath it (DESIGN.md section 9) */
+.hero-copy { position: absolute; z-index: 5; left: var(--gutter); right: var(--gutter); display: grid; justify-items: center; text-align: center; pointer-events: none;
+  bottom: calc(var(--toolbar) + var(--ruler) + 12px + env(safe-area-inset-bottom)); }
+.hero-copy .beat h1 { font-size: clamp(32px, 9.4vw, 44px); line-height: 1.04; max-width: 15em; margin-inline: auto; }
+.hero-copy .beat p { margin-inline: auto; }
+@media (max-aspect-ratio: 4/5) and (min-width: 600px) { .hero-copy .beat h1 { font-size: 60px; } }
+@media (max-aspect-ratio: 4/5) and (max-height: 700px) { .hero-copy .beat h1 { font-size: 30px; } }
+@media (min-aspect-ratio: 4/5) {
+  .hero-copy { bottom: calc(var(--ruler) + 30px); }
+  .hero-copy .beat h1 { font-size: clamp(46px, 5vw, 84px); line-height: 1; max-width: 16em; }
+  .hero-copy .beat p { max-width: 44em; }
+}
+.can-spin #gl { cursor: grab; }
+.spinning #gl { cursor: grabbing; }
+
 /* close and footer */
 .close { position: relative; z-index: 1; background: var(--surface); min-height: 70svh; display: grid; align-content: center; padding: 72px var(--gutter); }
 .close h2 { font-size: clamp(32px, 4.4vw, 56px); line-height: 1.04; max-width: 14em; }
@@ -138,12 +153,14 @@ footer p + p { margin-top: 6px; }
       <div class="poster" id="poster" aria-hidden="true"></div>
       <canvas id="gl" aria-hidden="true"></canvas>
       <div class="layer fg" data-layer="fg" aria-hidden="true"></div>
-      <div class="beats" id="beats">
+      <div class="hero-copy" id="heroCopy">
         <article class="beat on" data-beat="hero">
           <h1>Carbon road bike for racing and fast group rides</h1>
-          <p>Scroll to build it, part by part, from the size-56 geometry chart: a 991 mm wheelbase, a 73.5° head angle and 26 mm tyres.</p>
+          <p>Drag or swipe to turn it. Scroll and it comes apart, then builds back up from the size-56 geometry chart: a 991 mm wheelbase, a 73.5° head angle and 26 mm tyres.</p>
           <a class="btn" href="https://t.me/varsen_fitting" target="_blank" rel="noopener" data-contact="telegram">Book a fitting</a>
         </article>
+      </div>
+      <div class="beats" id="beats">
         <article class="beat" data-beat="frame">
           <p class="step">Stage 1 of 6</p>
           <h2>Frame: 555 mm stack, 398 mm reach</h2>
@@ -259,45 +276,59 @@ function validateGeometry(m, c = CHART, R = CHART_RANGE) {
    2. STORY: STORYBOARD.md as data, and state(p) as a pure function of it.
    ===================================================================================== */
 const STORY = {
-  span: 10, tau: 0.17, fov: 24, fade: 0.02,
+  span: 11, tau: 0.17, fov: 24, fade: 0.02,
+  // hero: assembled bike, drag-to-spin on its own vertical axis; apart: parts move out and dissolve, leaving the frame;
+  // spinOff: the user's spin eases back to 0 over this p window, so the story below always matches the spec
+  hero: { end: 0.06, apart: [0.06, 0.12], spinOff: [0.04, 0.10], spinTurnPerWidth: 1, inertia: 0.45 },
   parts: [
-    { id: 'frame', a: 0.06, b: 0.19, off: [0, 0.06, 0], axis: [0, 1, 0], deg: -32, o0: 1, ease: 'inOutCubic' },
-    { id: 'fork', a: 0.19, b: 0.31, off: [-0.0852, 0.2876, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
-    { id: 'wheelF', a: 0.31, b: 0.42, off: [0, 0, 0.32], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', spin: 450 },
-    { id: 'wheelR', a: 0.35, b: 0.46, off: [0, 0, 0.32], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', spin: 450 },
-    { id: 'drivetrain', a: 0.46, b: 0.60, off: [0, 0, 0.26], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', crank: -360 },
-    { id: 'handlebar', a: 0.60, b: 0.72, off: [-0.0625, 0.2109, 0], axis: [-0.28402, 0.95882, 0], deg: 70, o0: 0, ease: 'outCubic' },
-    { id: 'saddle', a: 0.72, b: 0.84, off: [-0.0682, 0.2301, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
+    { id: 'frame', a: 0.14, b: 0.24, off: [0, 0.06, 0], axis: [0, 1, 0], deg: -32, o0: 1, ease: 'inOutCubic' },
+    { id: 'fork', a: 0.24, b: 0.35, off: [-0.0852, 0.2876, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
+    { id: 'wheelF', a: 0.35, b: 0.45, off: [0, 0, 0.32], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', spin: 450 },
+    { id: 'wheelR', a: 0.39, b: 0.49, off: [0, 0, 0.32], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', spin: 450 },
+    { id: 'drivetrain', a: 0.49, b: 0.62, off: [0, 0, 0.26], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', crank: -360 },
+    { id: 'handlebar', a: 0.62, b: 0.73, off: [-0.0625, 0.2109, 0], axis: [-0.28402, 0.95882, 0], deg: 70, o0: 0, ease: 'outCubic' },
+    { id: 'saddle', a: 0.73, b: 0.84, off: [-0.0682, 0.2301, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
   ],
-  camera: [[0, 34, 14], [0.06, 34, 14], [0.19, 18, 10], [0.31, 26, 16], [0.46, 10, 6], [0.60, -22, 10], [0.72, 20, 17], [0.84, 8, 11], [0.92, 16, 9], [1, 16, 9]],
-  beats: [['hero', 0, 0.06], ['frame', 0.06, 0.19], ['fork', 0.19, 0.31], ['wheels', 0.31, 0.46], ['drivetrain', 0.46, 0.60], ['handlebar', 0.60, 0.72], ['saddle', 0.72, 0.84], ['finish', 0.84, 1]],
+  camera: [[0, 20, 5], [0.06, 20, 5], [0.12, 34, 14], [0.14, 34, 14], [0.24, 18, 10], [0.35, 26, 16], [0.49, 10, 6], [0.62, -22, 10], [0.73, 20, 17], [0.84, 8, 11], [0.92, 16, 9], [1, 16, 9]],
+  beats: [['hero', 0, 0.06], ['frame', 0.12, 0.24], ['fork', 0.24, 0.35], ['wheels', 0.35, 0.49], ['drivetrain', 0.49, 0.62], ['handlebar', 0.62, 0.73], ['saddle', 0.73, 0.84], ['finish', 0.84, 1]],
   backdrop: { far: [0, -0.06], mid: [-0.05, -0.18], fg: [-0.5, 0] },
-  reduced: [[0, 0], [0.24, 0.31], [0.40, 0.46], [0.66, 0.72], [0.88, 1]],
-  framing: [[0, ['frame'], 0], [0.19, ['fork'], 0.018], [0.31, ['wheelF'], 0.0165], [0.35, ['wheelR'], 0.0165], [0.46, ['drivetrain'], 0.021], [0.60, ['handlebar'], 0.018], [0.72, ['saddle'], 0.018], [0.84, null, 0.08]],
+  reduced: [[0, 0], [0.20, 0.35], [0.44, 0.49], [0.68, 0.73], [0.88, 1]],
+  framing: [[0, 'spin', 0], [0.06, 'apart', 0.03], [0.12, ['frame'], 0.02], [0.24, ['fork'], 0.0165], [0.35, ['wheelF'], 0.015], [0.39, ['wheelR'], 0.015], [0.49, ['drivetrain'], 0.0195], [0.62, ['handlebar'], 0.0165], [0.73, ['saddle'], 0.0165], [0.84, null, 0.08]],
 };
 const clamp01 = x => (x < 0 ? 0 : x > 1 ? 1 : x);
-const EASE = { outCubic: t => 1 - (1 - t) ** 3, inOutCubic: t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2), inOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2 };
+const EASE = { inCubic: t => t * t * t, outCubic: t => 1 - (1 - t) ** 3, inOutCubic: t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2), inOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2 };
 const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
-/** Everything the page shows at progress p. Pure: same p, same result. */
+/** One part at progress p. k: 0 = at home, 1 = at its start pose. Hero: assembled; apart: home -> start; then its stage. */
+function partPose(s, p) {
+  const [a0, a1] = STORY.hero.apart;
+  if (p <= a0) return { t: 1, e: 1, k: 0, opacity: 1 };
+  if (p < a1) { const u = (p - a0) / (a1 - a0), k = EASE.inCubic(u); return { t: 1, e: 1 - k, k, opacity: s.o0 === 1 ? 1 : 1 - smooth(0, 0.6, u) }; }
+  const t = clamp01((p - s.a) / (s.b - s.a)), e = EASE[s.ease](t);
+  return { t, e, k: 1 - e, opacity: s.o0 === 1 ? 1 : smooth(0, 0.3, t) };
+}
+/** Everything the page shows at progress p. Pure: same p, same result. (The user's drag yaw is applied on top, scaled by spinWeight.) */
 function state(p) {
   p = clamp01(p);
   const parts = {};
   for (const s of STORY.parts) {
-    const t = clamp01((p - s.a) / (s.b - s.a)), e = EASE[s.ease](t);
-    parts[s.id] = { t, e, opacity: s.o0 === 1 ? 1 : smooth(0, 0.3, t), spin: s.spin ? rad(s.spin) * (1 - e) : 0, crank: s.crank ? rad(s.crank) * (1 - e) : 0 };
+    const ps = partPose(s, p);
+    parts[s.id] = { ...ps, spin: s.spin ? rad(s.spin) * ps.k : 0, crank: s.crank ? rad(s.crank) * ps.k : 0 };
   }
   const C = STORY.camera; let i = 0;
   while (i < C.length - 2 && p > C[i + 1][0]) i++;
   const [p0, az0, el0] = C[i], [p1, az1, el1] = C[i + 1], u = EASE.inOutSine(clamp01((p - p0) / (p1 - p0)));
   const last = STORY.beats.length - 1, f = STORY.fade;
   const beats = STORY.beats.map(([id, a, b], k) => ({ id, o: (k === 0 ? 1 : clamp01((p - a) / f)) * (k === last ? 1 : clamp01((b - p) / f)) }));
-  return { p, parts, camera: { az: az0 + (az1 - az0) * u, el: el0 + (el1 - el0) * u }, beats, shadow: 0.8 * (parts.wheelF.e + parts.wheelR.e) / 2 };
+  const wheels = [parts.wheelF, parts.wheelR], shadow = 0.8 * wheels.reduce((acc, w) => acc + (1 - w.k) * w.opacity, 0) / 2;
+  return { p, parts, camera: { az: az0 + (az1 - az0) * u, el: el0 + (el1 - el0) * u }, beats, shadow,
+    spinWeight: 1 - smooth(STORY.hero.spinOff[0], STORY.hero.spinOff[1], p), layoutMix: smooth(STORY.hero.apart[0], STORY.hero.apart[1], p) };
 }
 /** Reduced motion: the highest of the five states whose threshold the scroll has passed. */
 const reducedP = pt => STORY.reduced.reduce((acc, [th, shown]) => (pt >= th - 1e-9 ? shown : acc), 0);
 (function assertStory() {                          // one shared fade-material set is only valid if no two fades overlap
   const fades = STORY.parts.filter(s => s.o0 === 0).map(s => [s.a, s.a + 0.3 * (s.b - s.a)]).sort((x, y) => x[0] - y[0]);
+  if (fades[0][0] < STORY.hero.apart[1]) throw new Error('STORY: an assembly fade overlaps the take-apart');   // apart fades every part together (one opacity)
   for (let k = 1; k < fades.length; k++) if (fades[k][0] < fades[k - 1][1]) throw new Error('STORY: fade windows overlap');
 })();
 
@@ -480,9 +511,12 @@ async function buildFrame(J, M) {                 // origin = BB
   const P = k => V(...J[k]), along = (k, mm) => V(J[k][0] + G0.d[0] * mm, J[k][1] + G0.d[1] * mm);
   const dtA = P('DTH'), dtB = P('BB'), dtDir = new THREE.Vector3().subVectors(dtA, dtB);
   // aero main triangle: tapered head tube, deep down tube that widens into the BB, truncated seat tube, flattened top tube
-  g.add(profTube(along('HTB', 12), along('HTT', -9), t => [lerp(0.031, 0.027, t) - 0.0025 * Math.sin(Math.PI * t), lerp(0.0255, 0.0215, t)], M.paint, 'headTube', { n: 2.3, segs: 12, radial: 28 }),
-    profTube(P('STT').lerp(P('BB'), 0.04), P('HTT').lerp(P('HTB'), 0.12), t => [lerp(0.0145, 0.0165, t), lerp(0.0165, 0.0155, t)], M.paint, 'topTube', { n: 2.6 }),
-    profTube(dtA, dtB, t => [lerp(0.0245, 0.031, t), lerp(0.0195, 0.03, sm(t))], M.paint, 'downTube', { n: 2.8, segs: 14, radial: 28 }),
+  g.add(profTube(along('HTB', 12), along('HTT', -9), t => [lerp(0.031, 0.027, t) - 0.0025 * Math.sin(Math.PI * t), lerp(0.0255, 0.0215, t)], M.paint, 'headTube', { n: 2.3, segs: 12, radial: 28 }));
+  await slice();
+  g.add(profTube(P('STT').lerp(P('BB'), 0.04), P('HTT').lerp(P('HTB'), 0.12), t => [lerp(0.0145, 0.0165, t), lerp(0.0165, 0.0155, t)], M.paint, 'topTube', { n: 2.6 }),
+    profTube(dtA, dtB, t => [lerp(0.0245, 0.031, t), lerp(0.0195, 0.03, sm(t))], M.paint, 'downTube', { n: 2.8, segs: 14, radial: 28 }));
+  await slice();
+  g.add(
     profTube(P('BB'), P('STT'), t => [lerp(0.0215, 0.0175, t), lerp(0.024, 0.0145, sm(t))], M.paint, 'seatTube', { n: 2.5, segs: 12 }));
   await slice();
   // smooth junctions: blended lugs at the BB, head tube and seat cluster
@@ -573,10 +607,12 @@ async function buildWheel(rear, M, shared) {      // origin = axle; wheel plane 
   for (const im of [spokes, nipples]) { im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.computeBoundingBox(); spin.add(im); }
   await slice();
   // disc rotor: slotted braking band + six-arm carrier (non-drive side)
-  const rotorR = (rear ? 70 : 80) * MM, rz = rear ? -0.055 : -0.042, band = new THREE.Shape();
-  band.absarc(0, 0, rotorR, 0, TAU, false);
-  const inner = new THREE.Path(); inner.absarc(0, 0, rotorR - 0.016, 0, TAU, true); band.holes.push(inner);
-  for (let k = 0; k < 30; k++) { const a = k / 30 * TAU, rr = rotorR - (k % 2 ? 0.0055 : 0.0105), h = new THREE.Path(); h.absarc(rr * Math.cos(a), rr * Math.sin(a), 0.0019, 0, TAU, true); band.holes.push(h); }
+  // polygons, not arcs: 30 slots at 40 curve segments each cost 54-72 ms of triangulation at 4x CPU per wheel
+  const rotorR = (rear ? 70 : 80) * MM, rz = rear ? -0.055 : -0.042;
+  const ring = (cx, cy, r, n, ccw) => Array.from({ length: n }, (_, i) => { const a = (ccw ? 1 : -1) * i / n * TAU; return new THREE.Vector2(cx + r * Math.cos(a), cy + r * Math.sin(a)); });
+  const band = new THREE.Shape(ring(0, 0, rotorR, 72, true));
+  band.holes.push(new THREE.Path(ring(0, 0, rotorR - 0.016, 72, false)));
+  for (let k = 0; k < 30; k++) { const a = k / 30 * TAU, rr = rotorR - (k % 2 ? 0.0055 : 0.0105); band.holes.push(new THREE.Path(ring(rr * Math.cos(a), rr * Math.sin(a), 0.0019, 10, false))); }
   await slice();
   const rotor = mesh(extrude(band, 0.0018, 0, 40), M.steel, 'rotor'); rotor.position.z = rz; spin.add(rotor);
   await slice();
@@ -771,8 +807,8 @@ function posterSVG(J) {
    ===================================================================================== */
 const stage = document.getElementById('stage'), story = stage.parentElement;
 let canvas = document.getElementById('gl');
-const beatsEl = document.getElementById('beats'), poster = document.getElementById('poster');
-const beatEls = [...beatsEl.querySelectorAll('.beat')], layerEls = Object.fromEntries([...stage.querySelectorAll('[data-layer]')].map(e => [e.dataset.layer, e]));
+const beatsEl = document.getElementById('beats'), heroCopy = document.getElementById('heroCopy'), poster = document.getElementById('poster');
+const beatEls = [...stage.querySelectorAll('.beat')], layerEls = Object.fromEntries([...stage.querySelectorAll('[data-layer]')].map(e => [e.dataset.layer, e]));
 const probe = Object.assign(document.createElement('div'), { style: 'position:fixed;left:0;top:0;width:1px;height:100vh;height:100svh;visibility:hidden;pointer-events:none' });
 document.body.append(probe);
 const yieldToMain = () => new Promise(r => (globalThis.scheduler?.yield ? scheduler.yield().then(r) : setTimeout(r, 0)));
@@ -789,8 +825,10 @@ function layout() {                                // the bike rect comes from w
   const rect = portrait
     ? { x: gut, y: header + 4, w: W - 2 * gut, h: Math.max(80, b.top - s.top - 14 - header - 4) }
     : { x: Math.max(gut, W * 0.03), y: header, w: Math.max(200, b.left - s.left - 32 - Math.max(gut, W * 0.03)), h: Math.max(160, svh * 0.94 - header) };
-  for (const [k, v] of [['--rx', rect.x], ['--ry', rect.y], ['--rw', rect.w], ['--rh', rect.h]]) poster.style.setProperty(k, v + 'px');   // on the poster only: inherited vars on the stage would re-lay out every beat
-  return { W, H, svh, portrait, rect, storyTop: story.offsetTop, span: story.offsetHeight - H };
+  const hc = heroCopy.getBoundingClientRect();     // hero: the bike centred above the big title
+  const heroRect = { x: gut, y: header + 4, w: W - 2 * gut, h: Math.max(80, hc.top - s.top - 16 - header - 4) };
+  for (const [k, v] of [['--rx', heroRect.x], ['--ry', heroRect.y], ['--rw', heroRect.w], ['--rh', heroRect.h]]) poster.style.setProperty(k, v + 'px');   // on the poster only: inherited vars on the stage would re-lay out every beat
+  return { W, H, svh, portrait, rect, heroRect, storyTop: story.offsetTop, span: story.offsetHeight - H };
 }
 const readScroll = () => { pTarget = L ? clamp01((scrollY - L.storyTop) / L.span) : 0; };
 
@@ -800,6 +838,7 @@ function applyDOM(st) {                            // beats and backdrop: transf
     el.style.opacity = o.toFixed(4); el.classList.toggle('on', on);
     for (const a of el.querySelectorAll('a')) a.tabIndex = on ? 0 : -1;
   });
+  stage.classList.toggle('can-spin', st.p < STORY.hero.end);
   const still = RM.matches;
   for (const [k, [rx, ry]] of Object.entries(STORY.backdrop)) {
     const el = layerEls[k]; if (!el) continue;
@@ -857,13 +896,14 @@ function applyScene(st, aim = true) {
   const { parts, faders, spins, crank } = gl;
   for (const s of STORY.parts) {
     const g = parts[s.id], ps = st.parts[s.id];
-    g.position.copy(g.userData.home).addScaledVector(s.offV, 1 - ps.e);
-    g.quaternion.slerpQuaternions(s.q0, IDQ, ps.e);
+    g.position.copy(g.userData.home).addScaledVector(s.offV, ps.k);
+    g.quaternion.slerpQuaternions(IDQ, s.q0, ps.k);
     faders[s.id](ps.opacity);
     if (spins[s.id]) spins[s.id].rotation.z = ps.spin;
   }
   crank.rotation.z = st.parts.drivetrain.crank;
   gl.shadow.material.opacity = st.shadow;
+  gl.spinner.rotation.y = spin.yaw * st.spinWeight;     // drag-to-spin: about the bike's own vertical axis (wheelbase centre)
   if (aim) aimCamera(st);
 }
 function makeFader(g, FADE) {                      // shared fade twins: valid because fade windows never overlap (assertStory)
@@ -891,7 +931,16 @@ async function framingVolumes() {                       // STORYBOARD.md 3a: cum
   const assembled = Object.values(home).reduce((b, h) => b.union(h), new THREE.Box3());
   return STORY.framing.map(([a, add, dur], k, all) => {
     const next = k + 1 < all.length ? all[k + 1][0] : 1, box = new THREE.Box3();
-    if (!add) box.copy(assembled);
+    if (add === 'spin') {                             // yaw-invariant: a box that holds the bike at every angle about the vertical axis
+      const c = [0, 1, 2, 3, 4, 5, 6, 7].map(i => new THREE.Vector3(i & 1 ? assembled.max.x : assembled.min.x, 0, i & 4 ? assembled.max.z : assembled.min.z));
+      const r = Math.max(...c.map(v => Math.hypot(v.x, v.z)));
+      box.set(new THREE.Vector3(-r, assembled.min.y, -r), new THREE.Vector3(r, assembled.max.y, r));
+      // fit a ring, not the box: a 24-gon around the axis at the bike's bottom and top is as safe at every angle, and
+      // its silhouette is the turning diameter instead of the box diagonal (the hero bike ~25% larger at 3/4 view)
+      const ring = []; for (let i = 0; i < 24; i++) { const a = i / 24 * TAU; for (const y of [assembled.min.y, assembled.max.y]) ring.push(new THREE.Vector3(r * Math.cos(a), y, r * Math.sin(a))); }
+      return { a, dur, box, corners: ring, target: new THREE.Vector3(0, (assembled.min.y + assembled.max.y) / 2, 0) };
+    } else if (add === 'apart') for (const id of Object.keys(gl.parts)) box.union(travel[id]);
+    else if (!add) box.copy(assembled);
     else for (const s of STORY.parts) {                // moving in this window: travel box; landed before it: home box; not started: nothing
       if (s.b <= a) box.union(home[s.id]); else if (s.a < next) box.union(travel[s.id]);
     }
@@ -901,8 +950,9 @@ async function framingVolumes() {                       // STORYBOARD.md 3a: cum
 }
 const _w = new THREE.Vector3(), _r = new THREE.Vector3(), _u = new THREE.Vector3(), _v = new THREE.Vector3();
 const _t = new THREE.Vector3();
-function fitDistance(vol) {                        // smallest distance that puts all 8 corners inside the layout rect
-  const tanV = Math.tan(rad(STORY.fov / 2)), tanH = tanV * (L.W / L.H), sx = L.rect.w / L.W * 0.94, sy = L.rect.h / L.H * 0.94;
+const rectAt = mix => { const a = L.heroRect, b = L.rect; return { x: lerp(a.x, b.x, mix), y: lerp(a.y, b.y, mix), w: lerp(a.w, b.w, mix), h: lerp(a.h, b.h, mix) }; };
+function fitDistance(vol, rect) {                  // smallest distance that puts all 8 corners inside the layout rect
+  const tanV = Math.tan(rad(STORY.fov / 2)), tanH = tanV * (L.W / L.H), sx = rect.w / L.W * 0.94, sy = rect.h / L.H * 0.94;
   let d = 0;
   for (const c of vol.corners) { _v.subVectors(c, vol.target); const z = _v.dot(_w); d = Math.max(d, z + Math.abs(_v.dot(_r)) / (sx * tanH), z + Math.abs(_v.dot(_u)) / (sy * tanV)); }
   return d;
@@ -913,10 +963,11 @@ function aimCamera(st) {                           // fit the current framing vo
   _r.crossVectors(UP, _w).normalize(); _u.crossVectors(_w, _r);
   let k = 0; while (k < frames.length - 1 && st.p >= frames[k + 1].a) k++;
   const cur = frames[k], prev = frames[Math.max(0, k - 1)], blend = k === 0 || cur.dur === 0 ? 1 : smooth(cur.a, cur.a + cur.dur, st.p);
-  const d0 = fitDistance(prev), d1 = fitDistance(cur), d = d0 + (d1 - d0) * blend, target = _t.lerpVectors(prev.target, cur.target, blend);
+  const rect = rectAt(st.layoutMix);               // centred hero rect -> story rect while the bike comes apart
+  const d0 = fitDistance(prev, rect), d1 = fitDistance(cur, rect), d = d0 + (d1 - d0) * blend, target = _t.lerpVectors(prev.target, cur.target, blend);
   camera.position.copy(target).addScaledVector(_w, d); camera.up.copy(UP); camera.lookAt(target);
   camera.near = Math.max(0.02, d - 3); camera.far = d + 3;
-  camera.setViewOffset(L.W, L.H, L.W / 2 - (L.rect.x + L.rect.w / 2), L.H / 2 - (L.rect.y + L.rect.h / 2), L.W, L.H);
+  camera.setViewOffset(L.W, L.H, L.W / 2 - (rect.x + rect.w / 2), L.H / 2 - (rect.y + rect.h / 2), L.W, L.H);
   camera.updateProjectionMatrix();
   gl.view = { az: azDeg, el: elDeg, distance: d, volume: k, blend };
 }
@@ -946,14 +997,14 @@ async function initGL() {
   const measures = measureBuilt(bike), violations = validateGeometry(measures);
   Object.assign(window.__bike, { joints: bike.J, measures, violations, geometryOK: violations.length === 0, parts: bike.parts });
   if (violations.length) { console.error('Geometry assertion failed:', violations); renderer.dispose(); html.classList.add('geometry-failed'); return; }
-  scene.add(bike.root);
+  const spinner = new THREE.Group(); spinner.name = 'spinner'; spinner.add(bike.root); scene.add(spinner);
   const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-1.5, 3, 2.5); scene.add(key);
   const shadow = shadowBlob(); scene.add(shadow);
   const camera = new THREE.PerspectiveCamera(STORY.fov, L.W / L.H, 0.05, 20);
   for (const s of STORY.parts) { s.offV = new THREE.Vector3(...s.off); s.q0 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...s.axis).normalize(), rad(s.deg)); }
   const faders = Object.fromEntries(Object.entries(bike.parts).map(([k, g]) => [k, makeFader(g, FADE)]));
   const spins = { wheelF: bike.parts.wheelF.getObjectByName('spin'), wheelR: bike.parts.wheelR.getObjectByName('spin') };
-  gl = { renderer, scene, camera, bike, parts: bike.parts, faders, spins, crank: bike.parts.drivetrain.getObjectByName('crankset'), shadow, M, FADE, envRT: null };
+  gl = { renderer, scene, camera, bike, parts: bike.parts, faders, spins, crank: bike.parts.drivetrain.getObjectByName('crankset'), shadow, M, FADE, envRT: null, spinner };
   await yieldToMain(); let t1 = performance.now();
   await buildEnvironment(); (window.__bike.steps ||= {}).environment = Math.round(performance.now() - t1); mark('environment');
   await yieldToMain(); t1 = performance.now();
@@ -969,13 +1020,23 @@ async function initGL() {
   window.__bike.steps.compileTotal = Math.round(performance.now() - t1);
   mark('compiled');
   for (const g of Object.values(bike.parts)) g.traverse(o => { if (o.isMesh) o.material = o.userData.base; });
-  for (const f of Object.values(faders)) f(null);  // forget cached alpha so the next apply sets materials
+  // upload geometry and textures one part per slice: the hero shows the whole bike, and uploading 148k triangles in the
+  // first frame was one 44 ms task (LoAF). The canvas is still invisible (opacity 0 until gl-ready), so these draws never show.
+  window.__bike.steps.upload = {};
+  for (const [id, g] of Object.entries(bike.parts)) {
+    for (const h of Object.values(bike.parts)) h.visible = h === g;
+    const u0 = performance.now(); renderer.render(scene, camera); window.__bike.steps.upload[id] = +(performance.now() - u0).toFixed(1);
+    await slice();
+  }
+  window.__bike.steps.uploaded = Math.round(performance.now() - t1);
+  for (const f of Object.values(faders)) f(null);  // forget cached alpha so the next apply sets materials (and visibility)
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; html.classList.remove('gl-ready'); }, false);
   canvas.addEventListener('webglcontextrestored', () => rebuildAfterRestore(), false);
   pApplied = NaN; dirty = true; gl.ready = true;    // only now may frame() touch the scene (init yields above)
   t1 = performance.now(); frame(performance.now());   // first frame now, then reveal
   window.__bike.steps.firstFrame = Math.round(performance.now() - t1); mark('first-frame');
   html.classList.add('gl-ready');
+  if (!QA && !RM.matches && pShown < STORY.hero.end && spin.yaw === 0) { spin.yaw = -0.45; spin.vel = 0.45 / STORY.hero.inertia; kick(); }
   window.__bike.initMs = Math.round(performance.now() - t0);
 }
 
@@ -987,6 +1048,29 @@ async function rebuildAfterRestore() {             // a restored context gets a 
   await initGL(); dirty = true; kick();
 }
 
+/* ---------- drag-to-spin: the hero bike turns on its own vertical axis (camera still) ---------- */
+const spin = { yaw: 0, vel: 0, drag: null };
+const spinActive = () => gl?.ready && pShown < STORY.hero.end;
+const wrapYaw = () => { spin.yaw = Math.atan2(Math.sin(spin.yaw), Math.cos(spin.yaw)); };   // same orientation, smallest angle
+stage.addEventListener('pointerdown', e => {
+  if (e.target !== canvas || !spinActive() || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  spin.drag = { id: e.pointerId, x: e.clientX, t: e.timeStamp }; spin.vel = 0;
+  canvas.setPointerCapture?.(e.pointerId); stage.classList.add('spinning');
+});
+stage.addEventListener('pointermove', e => {
+  const d = spin.drag; if (!d || e.pointerId !== d.id) return;
+  const dx = e.clientX - d.x, dtm = Math.max(1, e.timeStamp - d.t), k = TAU * STORY.hero.spinTurnPerWidth / L.W;   // one screen width = one turn
+  spin.yaw += dx * k; wrapYaw(); spin.vel = 0.7 * spin.vel + 0.3 * (dx * k / dtm * 1000);
+  d.x = e.clientX; d.t = e.timeStamp; dirty = true; kick();
+});
+const endDrag = e => {
+  if (!spin.drag || e.pointerId !== spin.drag.id) return;
+  spin.drag = null; stage.classList.remove('spinning');
+  if (RM.matches) spin.vel = 0;                      // reduced motion: the bike stops where the finger stops
+  dirty = true; kick();
+};
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) stage.addEventListener(ev, endDrag);
+
 /* ---------- loop: one damped p, render only while it moves ---------- */
 function kick() { if (!raf && !disposed) raf = requestAnimationFrame(frame); }
 function frame(now) {
@@ -995,13 +1079,18 @@ function frame(now) {
   const goal = RM.matches ? reducedP(pTarget) : pTarget;
   if (Number.isNaN(pShown) || RM.matches) pShown = goal;
   else { pShown += (goal - pShown) * (1 - Math.exp(-dt / STORY.tau)); if (Math.abs(goal - pShown) < 1e-4) pShown = goal; }
+  if (!spin.drag && spin.vel !== 0) {               // momentum after a released drag (user-started motion only)
+    spin.yaw += spin.vel * dt; wrapYaw(); spin.vel *= Math.exp(-dt / STORY.hero.inertia);
+    if (Math.abs(spin.vel) < 0.02) spin.vel = 0;
+    dirty = true;
+  }
   if (pShown !== pApplied || dirty) {
     const st = state(pShown);
     applyDOM(st);
     if (gl?.ready && inView && !lost) { applyScene(st); render(); if (consecutive) sampleFrame(dt * 1000, now); }
     pApplied = pShown; dirty = false;
   }
-  if (pShown !== goal) { last = now; kick(); } else last = 0;
+  if (pShown !== goal || spin.vel !== 0) { last = now; kick(); } else last = 0;
 }
 function onScroll() { readScroll(); kick(); }
 function relayout() {
@@ -1022,7 +1111,7 @@ function dispose() {                               // free every GPU resource (c
 /* ---------- boot ---------- */
 window.__bike = { ready: false, STORY, state, reducedP, validateGeometry, CHART, deriveJoints, quality, get QUALITY() { return QUALITY; }, setQuality, softwareGL: SOFTWARE_GL,
   get p() { return { target: pTarget, shown: pShown } }, get layout() { return L; }, get gl() { return gl; }, dispose, THREE,
-  get scene() { return gl?.scene; }, get renderer() { return gl?.renderer; }, get camera() { return gl?.camera; },
+  get scene() { return gl?.scene; }, get renderer() { return gl?.renderer; }, get camera() { return gl?.camera; }, get spin() { return spin; }, rectAt: mix => rectAt(mix),
   settled: () => new Promise(res => { readScroll(); kick(); let n = 0; const chk = () => (++n > 2 && !raf && pShown === (RM.matches ? reducedP(pTarget) : pTarget) ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }) };
 poster.innerHTML = posterSVG(deriveJoints().j);
 L = layout(); readScroll();
