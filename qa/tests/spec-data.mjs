@@ -9,3 +9,5 @@ export const stages = () => md('STORYBOARD.md').map(l => l.match(/^\| (S\d+[ab]?
 export const cameraKeys = () => md('STORYBOARD.md').map(l => l.match(/^\| ([01]\.\d\d) \| (-?\d+(?:\.\d+)?) \| (-?\d+(?:\.\d+)?) \|/)).filter(Boolean).map(m => [+m[1], +m[2], +m[3]]);
 export const beats = () => md('STORYBOARD.md').map(l => l.match(/^\| (hero|frame|fork|wheels|drivetrain|handlebar|saddle|finish) \| ([\d.]+) \| ([\d.]+) \|/)).filter(Boolean).map(m => ({ id: m[1], a: +m[2], b: +m[3] }));
 export const reduced = () => md('STORYBOARD.md').map(l => l.match(/^\| R\d \| ([\d.]+) \| ([\d.]+) \|/)).filter(Boolean).map(m => [+m[1], +m[2]]);
+// GEOMETRY.md section 6: the only places two parts may share space (a shaft running in its bore)
+export const fits = () => md('GEOMETRY.md').map(l => l.match(/^\| `([\w/]+:\w+)` \| `([\w/]+)` \|/)).filter(Boolean).map(m => ({ shaft: m[1], host: m[2] }));

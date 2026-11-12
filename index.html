@@ -241,6 +241,10 @@ const BUILD = {
   rimDepth: 45, rimFlange: 6, crank: 170, stemLength: 100, stemAngle: -6, stackAboveHT: 35, saddleHeight: 725,
   cassette: [11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 30], chainCog: 4, pitch: 12.7, frontOLD: 100, rearOLD: 142, crankDeg: -35,
 };
+// 12-speed chain and sprocket teeth (m): a 3.8 mm roller rests in a 4.0 mm seat; 1.6 mm teeth run between inner plates 2.2 mm apart
+const CHAIN = { roller: 0.0038, seat: 0.004, tip: 0.003, tipW: 0.0016, teeth: 0.0016, inner: 0.0015, outer: 0.0023, plate: 0.0008, rollerLen: 0.0022 };
+// dropout plates (m): inner face 0.2 mm outside the hub's end face, 7 mm thick, a 6.3 mm half-width slot for the 6 mm axle
+const DROPOUT = { gap: 0.0002, thick: 0.007, bevel: 0.001, slot: 0.0063 };
 const rad = d => d * Math.PI / 180, TAU = Math.PI * 2, MM = 0.001;
 
 function deriveJoints(c = CHART, b = BUILD) {
@@ -253,7 +257,7 @@ function deriveJoints(c = CHART, b = BUILD) {
   const j = {
     BB: [0, 0], RA: [-Math.sqrt(c.chainstay ** 2 - c.bbDrop ** 2), c.bbDrop],
     FA: add(add(HTT, d, c.headTube + c.axleToCrown), n, c.forkOffset),
-    HTT, HTB, STT, DTH: add(HTB, d, -25), SSJ: add(STT, s, -30), CROWN: HTB,
+    HTT, HTB, STT, DTH: add(HTB, d, -50), SSJ: add(STT, s, -30), CROWN: HTB,
     STEM, BAR: add(STEM, [Math.cos(a), Math.sin(a)], b.stemLength),
     SADDLE: add([0, 0], s, b.saddleHeight), POST_TOP: add([0, 0], s, b.saddleHeight - 40),
   };
@@ -278,15 +282,18 @@ function validateGeometry(m, c = CHART, R = CHART_RANGE) {
    ===================================================================================== */
 const STORY = {
   span: 11, tau: 0.17, fov: 24, fade: 0.02,
-  // hero: assembled bike, drag-to-spin on its own vertical axis; apart: parts move out and dissolve, leaving the frame;
+  // hero: assembled bike, drag-to-spin on its own vertical axis; apart: every part stays mounted on the frame while it
+  // dissolves (gone: fraction of the take-apart when it is invisible), and the frame turns to its start pose;
   // spinOff: the user's spin eases back to 0 over this p window, so the story below always matches the spec
-  hero: { end: 0.06, apart: [0.06, 0.12], spinOff: [0.04, 0.10], spinTurnPerWidth: 1, inertia: 0.45 },
+  hero: { end: 0.06, apart: [0.06, 0.12], gone: 0.6, spinOff: [0.04, 0.10], spinTurnPerWidth: 1, inertia: 0.45 },
   parts: [
     { id: 'frame', a: 0.14, b: 0.24, off: [0, 0.06, 0], axis: [0, 1, 0], deg: -32, o0: 1, ease: 'inOutCubic' },
-    { id: 'fork', a: 0.24, b: 0.35, off: [-0.0852, 0.2876, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
-    { id: 'wheelF', a: 0.35, b: 0.45, off: [0, 0, 0.32], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', spin: 450 },
-    { id: 'wheelR', a: 0.39, b: 0.49, off: [0, 0, 0.32], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', spin: 450 },
-    { id: 'drivetrain', a: 0.49, b: 0.62, off: [0, 0, 0.26], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', crank: -360 },
+    { id: 'fork', a: 0.24, b: 0.35, off: [0.0852, -0.2876, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
+    { id: 'wheelF', a: 0.35, b: 0.45, off: [0.30, 0, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', roll: true },
+    { id: 'wheelR', a: 0.39, b: 0.49, off: [-0.30, 0, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', roll: true },
+    // cranks turn forward (+360 -> 0, clockwise seen from the drive side) and stop at crankEnd of the stage; the non-drive
+    // arm comes in from the non-drive side (nds: its own start offset); the chain fades in on the sprockets over chain[]
+    { id: 'drivetrain', a: 0.49, b: 0.62, off: [0, 0, 0.26], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic', crank: 360, crankEnd: 0.8, nds: [0, 0, -0.26], chain: [0.9, 1] },
     { id: 'handlebar', a: 0.62, b: 0.73, off: [-0.0625, 0.2109, 0], axis: [-0.28402, 0.95882, 0], deg: 70, o0: 0, ease: 'outCubic' },
     { id: 'saddle', a: 0.73, b: 0.84, off: [-0.0682, 0.2301, 0], axis: [0, 1, 0], deg: 0, o0: 0, ease: 'outCubic' },
   ],
@@ -294,27 +301,40 @@ const STORY = {
   beats: [['hero', 0, 0.06], ['frame', 0.12, 0.24], ['fork', 0.24, 0.35], ['wheels', 0.35, 0.49], ['drivetrain', 0.49, 0.62], ['handlebar', 0.62, 0.73], ['saddle', 0.73, 0.84], ['finish', 0.84, 1]],
   backdrop: { far: [0, -0.06], mid: [-0.05, -0.18], fg: [-0.5, 0] },
   reduced: [[0, 0], [0.20, 0.35], [0.44, 0.49], [0.68, 0.73], [0.88, 1]],
-  framing: [[0, 'spin', 0], [0.06, 'apart', 0.03], [0.12, ['frame'], 0.02], [0.24, ['fork'], 0.0165], [0.35, ['wheelF'], 0.015], [0.39, ['wheelR'], 0.015], [0.49, ['drivetrain'], 0.0195], [0.62, ['handlebar'], 0.0165], [0.73, ['saddle'], 0.0165], [0.84, null, 0.08]],
+  framing: [[0, 'spin', 0], [0.06, 'apart', 0.03], [0.12, ['frame'], 0.02], [0.24, ['fork'], 0.0165], [0.35, ['wheelF'], 0.015], [0.39, ['wheelR'], 0.015], [0.45, ['wheelF lands'], 0.015], [0.49, ['drivetrain'], 0.0195], [0.62, ['handlebar'], 0.0165], [0.73, ['saddle'], 0.0165], [0.84, null, 0.08]],
 };
 const clamp01 = x => (x < 0 ? 0 : x > 1 ? 1 : x);
 const EASE = { inCubic: t => t * t * t, outCubic: t => 1 - (1 - t) ** 3, inOutCubic: t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2), inOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2 };
 const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
-/** One part at progress p. k: 0 = at home, 1 = at its start pose. Hero: assembled; apart: home -> start; then its stage. */
+/** One part at progress p. k: 0 = at home, 1 = at its start pose; mount: 1 = carried by the frame (take-apart).
+    Hero: assembled. Apart: the frame turns home -> start; every other part rides on it while it dissolves, then waits,
+    invisible, at its start pose. Then each part's own stage. */
 function partPose(s, p) {
   const [a0, a1] = STORY.hero.apart;
-  if (p <= a0) return { t: 1, e: 1, k: 0, opacity: 1 };
-  if (p < a1) { const u = (p - a0) / (a1 - a0), k = EASE.inCubic(u); return { t: 1, e: 1 - k, k, opacity: s.o0 === 1 ? 1 : 1 - smooth(0, 0.6, u) }; }
+  if (p <= a0) return { t: 1, e: 1, k: 0, opacity: 1, mount: 0 };
+  if (p < a1) {
+    const u = (p - a0) / (a1 - a0);
+    if (s.o0 === 1) { const k = EASE.inCubic(u); return { t: 1, e: 1 - k, k, opacity: 1, mount: 0 }; }
+    return u < STORY.hero.gone ? { t: 1, e: 1, k: 0, opacity: 1 - smooth(0, STORY.hero.gone, u), mount: 1 } : { t: 0, e: 0, k: 1, opacity: 0, mount: 0 };
+  }
   const t = clamp01((p - s.a) / (s.b - s.a)), e = EASE[s.ease](t);
-  return { t, e, k: 1 - e, opacity: s.o0 === 1 ? 1 : smooth(0, 0.3, t) };
+  return { t, e, k: 1 - e, opacity: s.o0 === 1 ? 1 : smooth(0, 0.3, t), mount: 0 };
 }
+const TYRE_R = CHART.tyreOD / 2 * MM;
 /** Everything the page shows at progress p. Pure: same p, same result. (The user's drag yaw is applied on top, scaled by spinWeight.) */
 function state(p) {
   p = clamp01(p);
-  const parts = {};
+  const parts = {}, inStory = p >= STORY.hero.apart[1];
   for (const s of STORY.parts) {
-    const ps = partPose(s, p);
-    parts[s.id] = { ...ps, spin: s.spin ? rad(s.spin) * ps.k : 0, crank: s.crank ? rad(s.crank) * ps.k : 0 };
+    const ps = partPose(s, p), x = { ...ps, spin: 0, crank: 0, nds: 0, chain: ps.opacity };
+    if (s.roll) x.spin = -s.off[0] / TYRE_R * ps.k;                                   // rolls on the ground: turns by -dx / R, no slip
+    if (s.crank) {
+      x.crank = rad(s.crank) * (inStory ? 1 - EASE.outCubic(clamp01(ps.t / s.crankEnd)) : ps.k);   // forward pedalling while it comes in
+      x.nds = ps.k;                                                                   // non-drive arm: from its own side
+      if (inStory) x.chain = smooth(s.chain[0], s.chain[1], ps.t);                    // the chain appears once everything has landed
+    }
+    parts[s.id] = x;
   }
   const C = STORY.camera; let i = 0;
   while (i < C.length - 2 && p > C[i + 1][0]) i++;
@@ -328,7 +348,7 @@ function state(p) {
 /** Reduced motion: the highest of the five states whose threshold the scroll has passed. */
 const reducedP = pt => STORY.reduced.reduce((acc, [th, shown]) => (pt >= th - 1e-9 ? shown : acc), 0);
 (function assertStory() {                          // one shared fade-material set is only valid if no two fades overlap
-  const fades = STORY.parts.filter(s => s.o0 === 0).map(s => [s.a, s.a + 0.3 * (s.b - s.a)]).sort((x, y) => x[0] - y[0]);
+  const fades = STORY.parts.filter(s => s.o0 === 0).flatMap(s => [[s.a, s.a + 0.3 * (s.b - s.a)], ...(s.chain ? [s.chain.map(f => s.a + f * (s.b - s.a))] : [])]).sort((x, y) => x[0] - y[0]);
   if (fades[0][0] < STORY.hero.apart[1]) throw new Error('STORY: an assembly fade overlaps the take-apart');   // apart fades every part together (one opacity)
   for (let k = 1; k < fades.length; k++) if (fades[k][0] < fades[k - 1][1]) throw new Error('STORY: fade windows overlap');
 })();
@@ -483,17 +503,57 @@ const extrude = (shapes, depth, bevel = 0, curveSegments = 12) => {
   const g = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments });
   g.translate(0, 0, -depth / 2); return g;
 };
-function gearGeometry(teeth, pitchR, thick, holeR) {
-  const s = new THREE.Shape(), tip = pitchR + 0.0032, root = pitchR - 0.0036, step = TAU / teeth;
+/** Sprocket outline: a seating arc (radius CHAIN.seat) centred on every pitch point, so a roller (radius CHAIN.roller)
+    resting there touches nothing, and straight flanks up to a flat tip. Gaps at phase + i * 2pi / teeth. */
+function gearShape(teeth, pitchR, holeR, phase = 0) {
+  const s = new THREE.Shape(), step = TAU / teeth, rs = CHAIN.seat, tipR = pitchR + CHAIN.tip, half = CHAIN.tipW / 2 / tipR;
   for (let i = 0; i < teeth; i++) {
-    const a = i * step;
-    [[root, a], [tip, a + step * 0.34], [tip, a + step * 0.56], [root, a + step * 0.9]]
-      .forEach(([r, t], k) => (i === 0 && k === 0 ? s.moveTo : s.lineTo).call(s, r * Math.cos(t), r * Math.sin(t)));
+    const a = phase + i * step, px = pitchR * Math.cos(a), py = pitchR * Math.sin(a);
+    for (let k = 0; k <= 6; k++) {                   // seat: from the -tangent side, through the inward point, to the +tangent side
+      const b = a - Math.PI / 2 - k * Math.PI / 6;
+      (i === 0 && k === 0 ? s.moveTo : s.lineTo).call(s, px + rs * Math.cos(b), py + rs * Math.sin(b));
+    }
+    const c = a + step / 2;
+    s.lineTo(tipR * Math.cos(c - half), tipR * Math.sin(c - half)); s.lineTo(tipR * Math.cos(c + half), tipR * Math.sin(c + half));
   }
   const hole = new THREE.Path(); hole.absarc(0, 0, holeR, 0, TAU, true); s.holes.push(hole);
-  return extrude(s, thick, 0, 24);
+  return s;
 }
+const gearGeometry = (teeth, pitchR, thick, holeR, phase = 0) => extrude(gearShape(teeth, pitchR, holeR, phase), thick, 0, 24);
 const pitchRadius = (teeth, pitch = BUILD.pitch) => pitch / (2 * Math.sin(Math.PI / teeth)) * MM;
+const annulus = (r0, r1, thick) => { const s = new THREE.Shape(); s.absarc(0, 0, r1, 0, TAU, false); const h = new THREE.Path(); h.absarc(0, 0, r0, 0, TAU, true); s.holes.push(h); return extrude(s, thick, 0, 48); };
+/** Dropout plate with a slot for the axle: the hull of a circle at the axle (r1) and one at c2 (r2), with a slot of half
+    width `slot` cut from the axle centre out through the edge along +x (mirror: along -x), the way the wheel comes in.
+    `bevel` is the extrusion bevel, which grows the walls into the slot, so the cut is that much wider. */
+function slottedPlate(c2, r1, r2, slot, mirror, bevel) {
+  const h = slot + bevel, m = mirror ? -1 : 1;
+  const pts = hullShape(new THREE.Vector2(0, 0), r1, new THREE.Vector2(c2.x * m, c2.y), r2).getPoints(24);
+  if (pts[0].distanceTo(pts[pts.length - 1]) < 1e-9) pts.pop();
+  const n = pts.length, cross = y => {                // edge (k, k+1) that crosses y going up on the +x side
+    for (let k = 0; k < n; k++) { const a = pts[k], b = pts[(k + 1) % n]; if (a.y < y && b.y >= y && a.x + b.x > 0) return k; }
+    throw new Error('slottedPlate: the slot misses the outline');
+  };
+  const at = (k, y) => { const a = pts[k], b = pts[(k + 1) % n], t = (y - a.y) / (b.y - a.y); return new THREE.Vector2(a.x + (b.x - a.x) * t, y); };
+  const lo = cross(-h), hi = cross(h), out = [];
+  for (let k = (hi + 1) % n; ; k = (k + 1) % n) { out.push(pts[k]); if (k === lo) break; }
+  out.push(at(lo, -h), new THREE.Vector2(0, -h));
+  for (let k = 1; k < 12; k++) { const b = -Math.PI / 2 - k * Math.PI / 12; out.push(new THREE.Vector2(h * Math.cos(b), h * Math.sin(b))); }
+  out.push(new THREE.Vector2(0, h), at(hi, h));
+  return new THREE.Shape(out.map(p => new THREE.Vector2(p.x * m, p.y)));
+}
+/** Polygon with every corner rounded to radius r (crown side profile). */
+function roundedShape(poly, r) {
+  const s = new THREE.Shape(), n = poly.length;
+  poly.forEach((p, i) => {
+    const a = poly[(i + n - 1) % n], b = poly[(i + 1) % n], u = a.clone().sub(p).normalize(), v = b.clone().sub(p).normalize();
+    const half = Math.acos(Math.max(-1, Math.min(1, u.dot(v)))) / 2, d = r / Math.tan(half), p0 = p.clone().addScaledVector(u, d), p1 = p.clone().addScaledVector(v, d);
+    const c = p.clone().addScaledVector(u.clone().add(v).normalize(), r / Math.sin(half));
+    const a0 = Math.atan2(p0.y - c.y, p0.x - c.x), a1 = Math.atan2(p1.y - c.y, p1.x - c.x), cw = u.x * v.y - u.y * v.x > 0;
+    i === 0 ? s.moveTo(p0.x, p0.y) : s.lineTo(p0.x, p0.y);
+    s.absarc(c.x, c.y, r, a0, a1, cw);
+  });
+  return s;
+}
 /** Flat arc strip (rim decals): u runs along the arc, v from inner to outer radius. */
 function arcStripGeometry(r0, r1, a0, a1, segs, z, mirror) {
   const pos = [], uv = [], nor = [], idx = [];
@@ -512,7 +572,8 @@ async function buildFrame(J, M) {                 // origin = BB
   const P = k => V(...J[k]), along = (k, mm) => V(J[k][0] + G0.d[0] * mm, J[k][1] + G0.d[1] * mm);
   const dtA = P('DTH'), dtB = P('BB'), dtDir = new THREE.Vector3().subVectors(dtA, dtB);
   // aero main triangle: tapered head tube, deep down tube that widens into the BB, truncated seat tube, flattened top tube
-  g.add(profTube(along('HTB', 12), along('HTT', -9), t => [lerp(0.031, 0.027, t) - 0.0025 * Math.sin(Math.PI * t), lerp(0.0255, 0.0215, t)], M.paint, 'headTube', { n: 2.3, segs: 12, radial: 28 }));
+  // head tube: from its bottom face at HTB (the fork crown docks under it) to the headset cover 9 mm above HTT
+  g.add(profTube(along('HTB', 0), along('HTT', -9), t => [lerp(0.031, 0.027, t) - 0.0025 * Math.sin(Math.PI * t), lerp(0.0255, 0.0215, t)], M.paint, 'headTube', { n: 2.3, segs: 12, radial: 28 }));
   await slice();
   g.add(profTube(P('STT').lerp(P('BB'), 0.04), P('HTT').lerp(P('HTB'), 0.12), t => [lerp(0.0145, 0.0165, t), lerp(0.0165, 0.0155, t)], M.paint, 'topTube', { n: 2.6 }),
     profTube(dtA, dtB, t => [lerp(0.0245, 0.031, t), lerp(0.0195, 0.03, sm(t))], M.paint, 'downTube', { n: 2.8, segs: 14, radial: 28 }));
@@ -521,22 +582,28 @@ async function buildFrame(J, M) {                 // origin = BB
     profTube(P('BB'), P('STT'), t => [lerp(0.0215, 0.0175, t), lerp(0.024, 0.0145, sm(t))], M.paint, 'seatTube', { n: 2.5, segs: 12 }));
   await slice();
   // smooth junctions: blended lugs at the BB, head tube and seat cluster
-  g.add(blob(P('BB').add(new THREE.Vector3(0.004, 0.006, 0)), [0.044, 0.04, 0.045], M.paint),
-    blob(dtA.clone().addScaledVector(dtDir.clone().normalize(), -0.012), [0.033, 0.03, 0.026], M.paint, Math.atan2(dtDir.y, dtDir.x)),
-    blob(P('HTT').lerp(P('HTB'), 0.1), [0.025, 0.022, 0.021], M.paint),
-    blob(P('STT').lerp(P('BB'), 0.03), [0.02, 0.028, 0.0175], M.paint, rad(16)),
-    blob(P('SSJ'), [0.017, 0.02, 0.0175], M.paint));
-  const bb = axleCyl(0.0215, 0.092, M.dark, 'bbShell'); g.add(bb);
+  g.add(blob(P('BB').add(new THREE.Vector3(0.004, 0.006, 0)), [0.044, 0.04, 0.036], M.paint, 0, 'lugBB'),
+    blob(dtA.clone().addScaledVector(dtDir.clone().normalize(), -0.012), [0.033, 0.03, 0.026], M.paint, Math.atan2(dtDir.y, dtDir.x), 'lugDownTube'),
+    blob(P('HTT').lerp(P('HTB'), 0.1), [0.025, 0.022, 0.021], M.paint, 0, 'lugTopTube'),
+    blob(P('STT').lerp(P('BB'), 0.03), [0.02, 0.028, 0.0175], M.paint, rad(16), 'lugSeat'),
+    blob(P('SSJ'), [0.017, 0.02, 0.0175], M.paint, 0, 'lugSeatStay'));
+  const bb = axleCyl(0.0215, 0.074, M.dark, 'bbShell'); g.add(bb);   // ends 1 mm inside the spider and the 36T ring
+  // rear dropouts: plates whose inner faces sit 0.2 mm outside the hub's end faces (142 mm), with a slot open to the rear,
+  // since the wheel rolls in from behind; both stays end on the plates, outside the hub, the cassette and the rotor
+  const zDrop = DROPOUT.gap + BUILD.rearOLD / 2 * MM + DROPOUT.thick / 2;
   for (const side of [1, -1]) {
-    const cs = side > 0 ? 1.08 : 1;            // drive-side chainstay is the stiffer one
-    g.add(profTube(V(0, 0, 36 * side), V(J.RA[0] + 8, J.RA[1] - 2, 66 * side), t => [lerp(0.0165, 0.0095, t) * cs, lerp(0.012, 0.0068, t) * cs], M.paint, 'chainstay', { n: 3 }),
-      profTube(V(J.SSJ[0], J.SSJ[1], 11 * side), V(J.RA[0] + 6, J.RA[1] + 6, 66 * side), t => [lerp(0.0085, 0.0074, t), lerp(0.0066, 0.0056, t)], M.paint, 'seatstay', { n: 2.6 }));
-    const drop = mesh(extrude(hullShape(new THREE.Vector2(0, 0), 0.013, new THREE.Vector2(0.024, 0.012), 0.009), 0.007, 0.0012), M.dark, 'dropout');
-    drop.position.copy(V(J.RA[0], J.RA[1], 68 * side)); g.add(drop);
+    const cs = side > 0 ? 1.08 : 1;            // drive-side chainstay is the stiffer one (deeper, not wider)
+    // chainstay: where it passes the rim (14.2 mm each side) it is also inside the chainrings (36T inner face at 39.8 mm),
+    // so it runs between them, slim sideways, then flares out to the dropout
+    const csPath = curvePts([V(0, 0, 22 * side), V(-60, 11, 24.5 * side), V(-105, 19, 26.5 * side), V(-255, 46, 52 * side), V(J.RA[0] + 28, J.RA[1] - 3, zDrop * 1000 * side)], 32);
+    g.add(sweep(csPath, t => [lerp(0.0165, 0.0095, t) * cs, lerp(0.0105, 0.0068, t)], M.paint, 'chainstay', { up: Z, n: 3 }),
+      profTube(V(J.SSJ[0], J.SSJ[1], 11 * side), V(J.RA[0] + 16, J.RA[1] + 16, zDrop * 1000 * side), t => [lerp(0.0085, 0.0074, t), lerp(0.0066, 0.0056, t)], M.paint, 'seatstay', { n: 2.6 }));
+    const drop = mesh(extrude(slottedPlate(new THREE.Vector2(0.022, 0.008), 0.014, 0.012, DROPOUT.slot, true, DROPOUT.bevel), DROPOUT.thick - 2 * DROPOUT.bevel, DROPOUT.bevel), M.dark, 'dropout');
+    drop.position.copy(V(J.RA[0], J.RA[1])).setZ(zDrop * side); g.add(drop);
     await slice();
   }
-  // rear flat-mount caliper on the non-drive chainstay
-  const cal = rbox(0.056, 0.024, 0.022, 0.008, M.dark, 'rearCaliper'); cal.position.copy(V(J.RA[0] + 52, J.RA[1] + 26, -58)); cal.rotation.z = rad(-12); g.add(cal);
+  // rear flat-mount caliper on the non-drive chainstay, outboard of the rotor
+  const cal = rbox(0.056, 0.024, 0.022, 0.008, M.dark, 'rearCaliper'); cal.position.copy(V(J.RA[0] + 52, J.RA[1] + 26, -67.5)); cal.rotation.z = rad(-12); g.add(cal);
   // wordmark on both sides of the down tube, where its section is flattest
   const tMid = 0.42, hMid = lerp(0.0195, 0.03, sm(tMid)) + 0.0007, mid = dtA.clone().lerp(dtB, tMid), ang = Math.atan2(dtB.y - dtA.y, dtB.x - dtA.x) + Math.PI;
   for (const side of [1, -1]) {
@@ -552,13 +619,20 @@ async function buildFork(J, M) {                  // origin = CROWN
   const c = J.CROWN, dV = new THREE.Vector3(G0.d[0], G0.d[1], 0), nV = new THREE.Vector3(G0.n[0], G0.n[1], 0), L = (x, y, z = 0) => V(x - c[0], y - c[1], z);
   g.add(mesh(new THREE.CylinderGeometry(0.0143, 0.019, (CHART.headTube + BUILD.stackAboveHT + 18) * MM, 20), M.carbon, 'steerer'));
   g.children[0].position.copy(dV.clone().multiplyScalar(-(CHART.headTube + BUILD.stackAboveHT + 18) * MM / 2)); g.children[0].quaternion.setFromUnitVectors(UP, dV.clone().negate());
-  g.add(blob(nV.clone().multiplyScalar(0.006).add(new THREE.Vector3(0, -0.006, 0)), [0.034, 0.024, 0.058], M.paint, Math.atan2(G0.d[0], -G0.d[1]), 'crown'));
+  // crown: a side profile (along the steering normal and up the axis) extruded across the fork with rounded edges. Its top
+  // sits 0.6 mm under the head tube's bottom face, so the fork docks without entering the frame; its underside clears the tyre.
+  const cb = 0.004, crown = mesh(extrude(roundedShape([[-14, -18], [21, -18], [25, -4.6], [-25, -4.6]].map(([x, y]) => new THREE.Vector2(x * MM, y * MM)), 0.003), 0.12 - 2 * cb, cb, 6), M.paint, 'crown');
+  crown.rotation.z = Math.atan2(nV.y, nV.x); g.add(crown);
+  const FAl = L(J.FA[0], J.FA[1]), zPlate = DROPOUT.gap + BUILD.frontOLD / 2 * MM + DROPOUT.thick / 2;
   for (const side of [1, -1]) {
-    const top = nV.clone().multiplyScalar(0.01).add(new THREE.Vector3(0, -0.014, 0.043 * side)), bot = L(J.FA[0], J.FA[1], 50 * side);
+    // blade: from inside the crown down to 22 mm above the axle, where the slotted dropout plate takes over (slot open to the
+    // front: the wheel rolls in from ahead). The blade ends outboard of the hub's end face.
+    const top = nV.clone().multiplyScalar(0.01).add(new THREE.Vector3(0, -0.014, 0.048 * side));
+    const up2 = new THREE.Vector3(top.x - FAl.x, top.y - FAl.y, 0).normalize(), bot = FAl.clone().addScaledVector(up2, 0.022).setZ(0.0585 * side);
     const mid = top.clone().lerp(bot, 0.55).addScaledVector(nV, 0.006);          // slight forward bow, as moulded blades have
     g.add(sweep(curvePts([top, mid, bot], 16), t => [lerp(0.019, 0.0105, t), lerp(0.0125, 0.008, t)], M.paint, 'forkLeg', { up: Z, n: 2.4, radial: 22 }));
-    const tip = mesh(extrude(hullShape(new THREE.Vector2(0, 0), 0.011, new THREE.Vector2(-0.006, 0.02), 0.008), 0.007, 0.001), M.dark, 'forkDropout');
-    tip.position.copy(L(J.FA[0], J.FA[1], 51 * side)); g.add(tip);
+    const tip = mesh(extrude(slottedPlate(new THREE.Vector2(bot.x - FAl.x, bot.y - FAl.y), 0.013, 0.009, DROPOUT.slot, false, DROPOUT.bevel), DROPOUT.thick - 2 * DROPOUT.bevel, DROPOUT.bevel), M.dark, 'forkDropout');
+    tip.position.copy(FAl).setZ(zPlate * side); g.add(tip);
     await slice();
   }
   const cal = rbox(0.056, 0.024, 0.022, 0.008, M.dark, 'frontCaliper'); cal.position.copy(L(J.FA[0] - 22, J.FA[1] + 48, -58)); cal.rotation.z = rad(74); g.add(cal);
@@ -567,9 +641,9 @@ async function buildFork(J, M) {                  // origin = CROWN
 function sharedWheelGeometry() {                  // one blade and one nipple geometry for all four instanced meshes
   return { blade: new THREE.BoxGeometry(0.0022, 1, 0.0009), nipple: new THREE.CylinderGeometry(0.0016, 0.0016, 1, 8) };
 }
-async function buildWheel(rear, M, shared) {      // origin = axle; wheel plane XY, axle z (yields between sub-assemblies)
+async function buildWheel(rear, M, shared, CH) {  // origin = axle; wheel plane XY, axle z (yields between sub-assemblies)
   const g = new THREE.Group(); g.name = rear ? 'wheelR' : 'wheelF';
-  const spin = new THREE.Group(); spin.name = 'spin'; g.add(spin);
+  const spin = new THREE.Group(); spin.name = 'spin'; spin.userData.body = true; g.add(spin);   // body: moves inside its part (QA overlap scan)
   const R = CHART.bsd / 2 * MM;
   spin.add(mesh(new THREE.TorusGeometry((CHART.bsd / 2 + CHART.tyreWidth / 2) * MM, CHART.tyreWidth / 2 * MM, 20, 160), M.rubber, rear ? 'tyreR' : 'tyreF'));
   // deep aero rim: hooked bead seat, U-shaped body, rounded spoke bed
@@ -584,8 +658,8 @@ async function buildWheel(rear, M, shared) {      // origin = axle; wheel plane 
   const valve = axleCyl(0.003, 0.034, M.steel, 'valve'); valve.rotation.set(0, 0, 0); valve.geometry.rotateX(-Math.PI / 2); valve.position.set(0, -(bed - 0.012), 0); spin.add(valve);
   // hub: shell with flanges (lathe), end caps
   const old = (rear ? BUILD.rearOLD : BUILD.frontOLD) * MM, fl = rear ? [[0.020, 0.024], [-0.030, 0.024]] : [[0.032, 0.022], [-0.032, 0.022]];
-  const hubProf = [[0.006, -old / 2 + 0.006], [0.0125, -old / 2 + 0.006], [0.0125, fl[1][0] - 0.004], [fl[1][1], fl[1][0] - 0.002], [fl[1][1], fl[1][0] + 0.002], [0.0155, fl[1][0] + 0.006],
-    [0.0175, 0], [0.0155, fl[0][0] - 0.006], [fl[0][1], fl[0][0] - 0.002], [fl[0][1], fl[0][0] + 0.002], [0.0125, fl[0][0] + 0.004], [0.0125, old / 2 - 0.006], [0.006, old / 2 - 0.006]].map(([r, z]) => new THREE.Vector2(r, z));
+  const hubProf = [[0.006, -old / 2], [0.0125, -old / 2], [0.0125, fl[1][0] - 0.004], [fl[1][1], fl[1][0] - 0.002], [fl[1][1], fl[1][0] + 0.002], [0.0155, fl[1][0] + 0.006],   // end faces at the OLD
+    [0.0175, 0], [0.0155, fl[0][0] - 0.006], [fl[0][1], fl[0][0] - 0.002], [fl[0][1], fl[0][0] + 0.002], [0.0125, fl[0][0] + 0.004], [0.0125, old / 2], [0.006, old / 2]].map(([r, z]) => new THREE.Vector2(r, z));
   const hub = new THREE.LatheGeometry(hubProf, 40); hub.rotateX(Math.PI / 2); spin.add(mesh(hub, M.alloy, 'hub'));
   await slice();
   // bladed spokes (one InstancedMesh, 24) and their nipples (another, 24)
@@ -620,37 +694,104 @@ async function buildWheel(rear, M, shared) {      // origin = axle; wheel plane 
   const arms = [], ringS = new THREE.Shape(); ringS.absarc(0, 0, 0.024, 0, TAU, false); const ringH = new THREE.Path(); ringH.absarc(0, 0, 0.0125, 0, TAU, true); ringS.holes.push(ringH); arms.push(ringS);
   for (let k = 0; k < 6; k++) { const a = k / 6 * TAU + 0.2, r1 = rotorR - 0.0135; arms.push(hullShape(new THREE.Vector2(0.021 * Math.cos(a), 0.021 * Math.sin(a)), 0.006, new THREE.Vector2(r1 * Math.cos(a + 0.18), r1 * Math.sin(a + 0.18)), 0.0045)); }
   const carrier = mesh(extrude(arms, 0.0022, 0, 16), M.dark, 'rotorCarrier'); carrier.position.z = rz - 0.0004; spin.add(carrier);
-  // thru-axle with its lever on the non-drive side
-  const axle = axleCyl(0.006, old + 0.02, M.dark, 'thruAxle'); g.add(axle);
-  const lever = rbox(0.05, 0.009, 0.006, 0.003, M.dark, 'axleLever'); lever.position.set(0.02, 0, -old / 2 - 0.012); lever.rotation.z = rad(-20); g.add(lever);
+  // thru-axle, flush with both dropout plates' outer faces, and its lever just outside the non-drive plate
+  const plateOut = old / 2 + DROPOUT.gap + DROPOUT.thick;
+  const axle = axleCyl(0.006, 2 * plateOut, M.dark, 'thruAxle'); g.add(axle);
+  const lever = rbox(0.05, 0.009, 0.006, 0.003, M.dark, 'axleLever'); lever.position.set(rear ? -0.02 : 0.02, 0, -plateOut - 0.0035); lever.rotation.z = rad(rear ? 20 : -20); g.add(lever);   // rear: points back, clear of the stays
+  if (rear) {                                      // the cassette sits on the freehub: it arrives with the wheel and turns with it
+    const cas = new THREE.Group(); cas.name = 'cassette'; spin.add(cas);
+    for (const [i, t] of BUILD.cassette.entries()) {   // the chain's cog has its gaps where the chain's rollers land (solveChain)
+      const cog = mesh(gearGeometry(t, pitchRadius(t), CHAIN.teeth, 0.011, i === BUILD.chainCog ? CH.phase.cog : 0), M.steel, 'cog');
+      cog.position.z = 0.060 - i * 0.0036; cas.add(cog); await slice();
+    }
+    const freehub = mesh(annulus(0.0061, 0.0125, 0.044), M.dark, 'cassetteCarrier'); freehub.position.z = 0.04; cas.add(freehub);   // bored for the axle
+  }
   return g;
 }
-function chainPath(circles, step = 0.0015) {      // circles in travel order; signed radius: + counter-clockwise, - clockwise (drive-side view)
-  const tang = (A, B) => {
-    const D = new THREE.Vector2().subVectors(B.c, A.c), L = D.length(), beta = Math.asin((A.r - B.r) / L);
-    const u = D.clone().normalize().rotateAround(new THREE.Vector2(), beta), n = new THREE.Vector2(u.y, -u.x);
-    return [A.c.clone().addScaledVector(n, A.r), B.c.clone().addScaledVector(n, B.r)];
+/** The chain on 52 x 15, link by link (drive-side plane, metres, BB origin). Every pin sits on a sprocket's pitch point or
+    on a straight run, exactly one pitch from the next, and the loop closes on a whole, even number of links: the lower
+    pulley swings about the upper one (the cage angle) until it does, as a real derailleur cage takes up the slack.
+    Returns the pins in loop order and each sprocket's tooth phase (the angle of one gap), so every roller lands in a seat. */
+function solveChain(J) {
+  const P = BUILD.pitch * MM, V2 = (x, y) => new THREE.Vector2(x, y), ring0 = 0;
+  const RA = V2(J.RA[0] * MM, J.RA[1] * MM), U = RA.clone().add(V2(0.012, -0.066)), cage = 0.071, psi0 = rad(-101);
+  const layout = psi => [[V2(0, 0), 52, 1], [RA, BUILD.cassette[BUILD.chainCog], 1], [U, 11, -1], [U.clone().add(V2(Math.cos(psi), Math.sin(psi)).multiplyScalar(cage)), 11, 1]]
+    .map(([c, N, dir]) => ({ c, N, dir, r: pitchRadius(N), step: TAU / N }));   // travel order; dir: +1 wrapped counter-clockwise (drive-side view)
+  const tang = (A, B) => {                          // the straight run from A to B: its end points on the two pitch circles
+    const D = B.c.clone().sub(A.c), L = D.length(), beta = Math.asin((A.r * A.dir - B.r * B.dir) / L);
+    const u = D.normalize().rotateAround(V2(0, 0), beta), n = V2(u.y, -u.x);
+    return [A.c.clone().addScaledVector(n, A.r * A.dir), B.c.clone().addScaledVector(n, B.r * B.dir)];
   };
-  const runs = circles.map((A, i) => tang(A, circles[(i + 1) % circles.length])), pts = [];
-  circles.forEach((C, i) => {
-    const pin = runs[(i - 1 + circles.length) % circles.length][1], pout = runs[i][0];
-    const a0 = Math.atan2(pin.y - C.c.y, pin.x - C.c.x), a1 = Math.atan2(pout.y - C.c.y, pout.x - C.c.x), ccw = C.r > 0;
-    let sweepA = ccw ? a1 - a0 : a0 - a1; while (sweepA < 0) sweepA += TAU;
-    const r = Math.abs(C.r), n = Math.max(2, Math.ceil(sweepA * r / step));
-    for (let k = 0; k <= n; k++) { const a = a0 + (ccw ? 1 : -1) * sweepA * k / n; pts.push(new THREE.Vector2(C.c.x + r * Math.cos(a), C.c.y + r * Math.sin(a))); }
-    const q = runs[i][1], m = Math.ceil(pout.distanceTo(q) / step);
-    for (let k = 1; k < m; k++) pts.push(pout.clone().lerp(q, k / m));
-  });
-  return pts;
+  const ang = (s, p) => Math.atan2(p.y - s.c.y, p.x - s.c.x), wrap = (x, m) => ((x % m) + m) % m, signed = x => wrap(x + Math.PI, TAU) - Math.PI;
+  function walk(psi) {                              // pins from the ring's front, all the way round; err: where it lands back on the ring
+    const S = layout(psi), n = S.length;
+    S.forEach((s, i) => { const [a, b] = tang(s, S[(i + 1) % n]); s.out = a; S[(i + 1) % n].in = b; });
+    S.forEach(s => { s.aIn = ang(s, s.in); s.span = wrap(s.dir * (ang(s, s.out) - s.aIn), TAU); });
+    const along = (s, a) => wrap(s.dir * (a - s.aIn), TAU), phase = [ring0, 0, 0, 0];
+    let i = 0, onArc = true, p = V2(S[0].r * Math.cos(ring0), S[0].r * Math.sin(ring0));
+    const pins = [p];
+    for (let guard = 0; guard < 400; guard++) {
+      const s = S[i], t = S[(i + 1) % n], d = t.in.clone().sub(s.out), len = d.length(); d.normalize();
+      if (onArc) {
+        const a = ang(s, p) + s.dir * s.step;
+        if (along(s, a) <= s.span) { p = V2(s.c.x + s.r * Math.cos(a), s.c.y + s.r * Math.sin(a)); pins.push(p); continue; }
+        const w = s.out.clone().sub(p), b = w.dot(d), lam = -b + Math.sqrt(b * b - (w.lengthSq() - P * P));
+        if (lam > len) throw new Error('solveChain: a straight run shorter than a link');
+        p = s.out.clone().addScaledVector(d, lam); pins.push(p); onArc = false; continue;
+      }
+      const q = p.clone().addScaledVector(d, P);
+      if (q.clone().sub(s.out).dot(d) <= len) { p = q; pins.push(p); continue; }
+      // onto the next sprocket: the point of its pitch circle one pitch from p, just past where the run meets it
+      const D = t.c.clone().sub(p), L = D.length(), x = (L * L + P * P - t.r * t.r) / (2 * L), y = Math.sqrt(Math.max(0, P * P - x * x));
+      const m = p.clone().addScaledVector(D, x / L), perp = V2(-D.y / L, D.x / L);
+      const next = [m.clone().addScaledVector(perp, y), m.clone().addScaledVector(perp, -y)].map(c => [c, signed(t.dir * (ang(t, c) - t.aIn))])
+        .filter(([, a]) => a > -1e-9).sort((u, v) => u[1] - v[1])[0][0];
+      i = (i + 1) % n; onArc = true;
+      if (i === 0) return { err: signed((ang(t, next) - ring0) * t.N) / t.N, pins, back: next, S, phase };
+      p = next; pins.push(p); phase[i] = ang(t, p);
+    }
+    throw new Error('solveChain: the loop does not close');
+  }
+  // search outward from the nominal cage angle, both ways in 0.25 deg steps; refine each sign change of the closure error
+  // (Illinois regula falsi, ~10 walks) and keep the first one with an even number of links
+  const root = (a, fa, b, fb) => {
+    for (let k = 0; k < 60 && Math.abs(fb) > 1e-15 && Math.abs(b - a) > 1e-15; k++) {
+      const c = b - fb * (b - a) / (fb - fa), fc = walk(c).err;
+      if (fc * fb < 0) { a = b; fa = fb; } else fa /= 2;
+      b = c; fb = fc;
+    }
+    const r = walk(b), ringS = r.S[0], rest = Math.round(wrap(ring0 - ang(ringS, r.back), TAU) / ringS.step);
+    return { psi: b, r, rest, links: r.pins.length + rest };
+  };
+  const last = { 1: [psi0, walk(psi0).err], [-1]: null }; last[-1] = last[1];
+  let best = null;
+  for (let k = 1; k <= 80 && !best; k++) for (const side of [1, -1]) {
+    const psi = psi0 + side * rad(0.25 * k), err = walk(psi).err, [p0, e0] = last[side];
+    if (Math.sign(e0) !== Math.sign(err) && Math.abs(e0 - err) < Math.PI / 52) {     // a real crossing, not the error's wrap
+      const c = root(p0, e0, psi, err);
+      if (c.links % 2 === 0 && (!best || Math.abs(c.psi - psi0) < Math.abs(best.psi - psi0))) best = c;
+    }
+    last[side] = [psi, err];
+  }
+  if (!best) throw new Error('solveChain: no even closure');
+  const { r } = best, ringS = r.S[0], pins = [...r.pins];
+  for (let k = best.rest; k >= 1; k--) { const a = ring0 - k * ringS.step; pins.push(V2(ringS.r * Math.cos(a), ringS.r * Math.sin(a))); }
+  const gap = Math.max(...pins.map((p, k) => Math.abs(p.distanceTo(pins[(k + 1) % pins.length]) - P)));
+  if (gap > 1e-6) throw new Error(`solveChain: a link is off pitch by ${(gap * 1000).toFixed(4)} mm`);
+  return { pins, links: pins.length, U: r.S[2].c, Lw: r.S[3].c, phase: { ring: ring0, cog: r.phase[1], U: r.phase[2], Lw: r.phase[3] }, cage: best.psi };
 }
-async function buildDrivetrain(J, M) {            // origin = BB (yields between sub-assemblies)
+async function buildDrivetrain(J, M, CH) {        // origin = BB (yields between sub-assemblies); CH = solveChain(J)
   const g = new THREE.Group(); g.name = 'drivetrain';
-  const crank = new THREE.Group(); crank.name = 'crankset'; g.add(crank);
+  const crank = new THREE.Group(); crank.name = 'crankset'; crank.userData.body = true; g.add(crank);
+  const nds = new THREE.Group(); nds.name = 'crankNDS'; nds.userData.body = true; crank.add(nds);   // non-drive arm: fitted from its own side
   crank.add(axleCyl(0.0121, 0.15, M.alloy, 'spindle'));
-  const r52 = pitchRadius(52), r36 = pitchRadius(36);
-  const ring52 = mesh(gearGeometry(52, r52, 0.004, r52 - 0.017), M.dark, 'ring52'); ring52.position.z = 0.0455;
-  const ring36 = mesh(gearGeometry(36, r36, 0.004, r36 - 0.013), M.alloy, 'ring36'); ring36.position.z = 0.0405;
-  crank.add(ring52, ring36);
+  const r52 = pitchRadius(52), r36 = pitchRadius(36), zc = 0.060 - BUILD.chainCog * 0.0036;   // chainline: the 15T cog's plane
+  // rings: a thin toothed plate (the chain's inner plates run either side of it) on a thicker body, inside the chain's reach
+  for (const [nm, N, r, hole, z, mat, ph] of [['ring52', 52, r52, 0.017, zc, M.dark, CH.phase.ring], ['ring36', 36, r36, 0.013, zc - 0.005, M.alloy, 0]]) {
+    const teeth = mesh(gearGeometry(N, r, CHAIN.teeth, r - hole, ph), mat, nm); teeth.position.z = z;
+    const body = mesh(annulus(r - hole, r - 0.0065, 0.0032), mat, nm); body.position.z = z + 0.0008;
+    crank.add(teeth, body);
+  }
   await slice();
   const t0 = rad(BUILD.crankDeg), L = BUILD.crank * MM, spider = [];
   for (let k = 0; k < 4; k++) {                   // four-arm spider with bolt bosses
@@ -660,29 +801,23 @@ async function buildDrivetrain(J, M) {            // origin = BB (yields between
   const sp = mesh(extrude(spider, 0.006, 0.001), M.carbon, 'spider'); sp.position.z = 0.043; crank.add(sp);
   for (let k = 0; k < 4; k++) { const a = t0 + k * TAU / 4 + TAU / 8, bolt = axleCyl(0.004, 0.011, M.alloy, 'ringBolt', 12); bolt.position.set(Math.cos(a) * (r52 - 0.022), Math.sin(a) * (r52 - 0.022), 0.0435); crank.add(bolt); }
   for (const side of [1, -1]) {                   // forged-look arms: hull of the spindle eye and the pedal eye, bevelled
+    const host = side > 0 ? crank : nds;
     const t = t0 + (side > 0 ? 0 : Math.PI), arm = mesh(extrude(hullShape(new THREE.Vector2(0, 0), 0.0215, new THREE.Vector2(L, 0), 0.0115), 0.012, 0.0028), M.carbon, 'crankArm');
-    arm.position.z = 0.072 * side; arm.rotation.z = t; crank.add(arm);
+    arm.position.z = 0.072 * side; arm.rotation.z = t; host.add(arm);
     const pe = new THREE.Vector3(Math.cos(t) * L, Math.sin(t) * L, 0);
-    const spindle = axleCyl(0.0055, 0.06, M.steel, 'pedalSpindle', 12); spindle.position.copy(pe).setZ(0.1 * side); crank.add(spindle);
+    const spindle = axleCyl(0.0055, 0.06, M.steel, 'pedalSpindle', 12); spindle.position.copy(pe).setZ(0.1 * side); host.add(spindle);
     const body = mesh(extrude(hullShape(new THREE.Vector2(-0.03, 0), 0.02, new THREE.Vector2(0.034, 0), 0.026), 0.013, 0.002, 16), M.dark, 'pedal');
-    body.geometry.rotateX(Math.PI / 2); body.position.copy(pe).setZ(0.122 * side); crank.add(body);
+    body.geometry.rotateX(Math.PI / 2); body.position.copy(pe).setZ(0.122 * side); host.add(body);
   }
   await slice();
-  // cassette on the rear axle
-  const RA = V(...J.RA), cas = new THREE.Group(); cas.name = 'cassette'; cas.position.copy(RA); g.add(cas);
-  for (const [i, t] of BUILD.cassette.entries()) { const cog = mesh(gearGeometry(t, pitchRadius(t), 0.0018, 0.011), M.steel, 'cog'); cog.position.z = 0.060 - i * 0.0036; cas.add(cog); await slice(); }
-  const freehub = axleCyl(0.0125, 0.044, M.dark, 'cassetteCarrier'); freehub.position.z = 0.04; cas.add(freehub);
-  await slice();
-  // chain on 52 x 15: pins every 12.7 mm along the tangent-routed path; outer/inner plate pairs alternate; rollers on every pin
-  const zc = 0.060 - BUILD.chainCog * 0.0036, jr = pitchRadius(11);
-  const U = new THREE.Vector2(RA.x + 0.006, RA.y - 0.058), Lw = new THREE.Vector2(RA.x - 0.008, RA.y - 0.128);
-  const path = chainPath([{ c: new THREE.Vector2(0, 0), r: r52 }, { c: new THREE.Vector2(RA.x, RA.y), r: pitchRadius(BUILD.cassette[BUILD.chainCog]) }, { c: U, r: -jr }, { c: Lw, r: jr }]);
-  const pins = [path[0]], pitch = BUILD.pitch * MM; let acc = 0;
-  for (let i = 1; i < path.length; i++) { acc += path[i].distanceTo(path[i - 1]); if (acc >= pitch) { pins.push(path[i]); acc -= pitch; } }
-  const outerG = extrude(hullShape(new THREE.Vector2(-pitch / 2, 0), 0.0043, new THREE.Vector2(pitch / 2, 0), 0.0043), 0.0009, 0, 10);
-  const innerG = extrude(hullShape(new THREE.Vector2(-pitch / 2, 0), 0.0039, new THREE.Vector2(pitch / 2, 0), 0.0039), 0.0009, 0, 10);
-  const rollerG = new THREE.CylinderGeometry(0.0038, 0.0038, 0.0058, 10); rollerG.rotateX(Math.PI / 2);
-  const plates = [['chainOuter', outerG, M.steel, 0.0049, 0], ['chainInner', innerG, M.alloy, 0.0036, 1]];
+  // chain on 52 x 15 (solveChain): a roller in a seat of every sprocket it wraps; outer and inner plate pairs alternate.
+  // Its own group: it fades in last, once the cranks have stopped (STORYBOARD 2, S4).
+  const chain = new THREE.Group(); chain.name = 'chain'; chain.userData.body = true; g.add(chain);
+  const pins = CH.pins, pitch = BUILD.pitch * MM, RA = V(...J.RA), jr = pitchRadius(11);
+  const outerG = extrude(hullShape(new THREE.Vector2(-pitch / 2, 0), 0.0043, new THREE.Vector2(pitch / 2, 0), 0.0043), CHAIN.plate, 0, 10);
+  const innerG = extrude(hullShape(new THREE.Vector2(-pitch / 2, 0), 0.0039, new THREE.Vector2(pitch / 2, 0), 0.0039), CHAIN.plate, 0, 10);
+  const rollerG = new THREE.CylinderGeometry(CHAIN.roller, CHAIN.roller, CHAIN.rollerLen, 12); rollerG.rotateX(Math.PI / 2);
+  const plates = [['chainOuter', outerG, M.steel, CHAIN.outer, 0], ['chainInner', innerG, M.alloy, CHAIN.inner, 1]];
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
   for (const [name, geo, mat, off, parity] of plates) {
     const links = pins.map((p, i) => [p, pins[(i + 1) % pins.length], i]).filter(([, , i]) => i % 2 === parity);
@@ -691,24 +826,27 @@ async function buildDrivetrain(J, M) {            // origin = BB (yields between
       q.setFromAxisAngle(Z, Math.atan2(b.y - a.y, b.x - a.x));
       for (const s of [1, -1]) im.setMatrixAt(2 * k + (s > 0 ? 0 : 1), m4.compose(new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, zc + off * s), q, one));
     });
-    im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.computeBoundingBox(); g.add(im);
+    im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.computeBoundingBox(); chain.add(im);
   }
-  const rollers = new THREE.InstancedMesh(rollerG, M.dark, pins.length); rollers.name = 'chain';
+  const rollers = new THREE.InstancedMesh(rollerG, M.dark, pins.length); rollers.name = 'chainRoller';
   pins.forEach((p, i) => rollers.setMatrixAt(i, m4.compose(new THREE.Vector3(p.x, p.y, zc), q.identity(), one)));
-  rollers.instanceMatrix.needsUpdate = true; rollers.computeBoundingSphere(); rollers.computeBoundingBox(); g.add(rollers);
+  rollers.instanceMatrix.needsUpdate = true; rollers.computeBoundingSphere(); rollers.computeBoundingBox(); chain.add(rollers);
   await slice();
-  // rear derailleur: hanger, knuckle, parallelogram, cage plates, pulleys
-  for (const [c, nm] of [[U, 'pulleyU'], [Lw, 'pulleyL']]) {
-    const p = mesh(gearGeometry(11, jr, 0.004, 0.004), M.dark, nm); p.position.set(c.x, c.y, zc); g.add(p);
-    const bolt = axleCyl(0.0042, 0.02, M.alloy, 'pulleyBolt', 12); bolt.position.set(c.x, c.y, zc); g.add(bolt);
+  // rear derailleur: hanger, knuckle, parallelogram, cage plates, pulleys (positions from solveChain: the cage takes up the slack)
+  const U = CH.U, Lw = CH.Lw, rearOut = BUILD.rearOLD / 2 * MM + DROPOUT.gap + DROPOUT.thick;
+  for (const [c, nm, ph] of [[U, 'pulleyU', CH.phase.U], [Lw, 'pulleyL', CH.phase.Lw]]) {
+    const p = mesh(gearGeometry(11, jr, CHAIN.teeth, 0.004, ph), M.dark, nm); p.position.set(c.x, c.y, zc); g.add(p);
+    const hub = mesh(annulus(0.004, jr - 0.0065, 0.0036), M.dark, nm); hub.position.set(c.x, c.y, zc); g.add(hub);
+    const bolt = axleCyl(0.0042, 0.012, M.alloy, 'pulleyBolt', 12); bolt.position.set(c.x, c.y, zc); g.add(bolt);
   }
-  for (const side of [1, -1]) {
+  for (const side of [1, -1]) {                   // cage plates just outside the chain's outer plates
     const plate = mesh(extrude(hullShape(new THREE.Vector2(U.x, U.y), 0.0165, new THREE.Vector2(Lw.x, Lw.y), 0.019), 0.0016, 0.0004), side > 0 ? M.carbon : M.dark, 'cage');
-    plate.position.z = zc + 0.0068 * side; g.add(plate);
+    plate.position.z = zc + 0.0042 * side; g.add(plate);
   }
-  const hanger = mesh(extrude(hullShape(new THREE.Vector2(RA.x, RA.y), 0.012, new THREE.Vector2(RA.x + 0.004, RA.y - 0.034), 0.008), 0.005, 0.001), M.dark, 'hanger'); hanger.position.z = 0.073; g.add(hanger);
-  const knuckle = rbox(0.026, 0.034, 0.02, 0.008, M.dark, 'rdKnuckle'); knuckle.position.set(RA.x + 0.006, RA.y - 0.036, 0.074); knuckle.rotation.z = rad(18); g.add(knuckle);
-  const link = rbox(0.016, 0.048, 0.012, 0.005, M.carbon, 'rdLink'); link.position.set(RA.x + 0.014, RA.y - 0.052, 0.066); link.rotation.z = rad(-28); g.add(link);
+  // hanger on the outer face of the drive-side dropout plate; the knuckle hangs below the plate
+  const hanger = mesh(extrude(hullShape(new THREE.Vector2(RA.x, RA.y), 0.012, new THREE.Vector2(RA.x + 0.004, RA.y - 0.034), 0.008), 0.005, 0.001), M.dark, 'hanger'); hanger.position.z = rearOut + 0.0004 + 0.0035; g.add(hanger);
+  const knuckle = rbox(0.026, 0.034, 0.02, 0.008, M.dark, 'rdKnuckle'); knuckle.position.set(RA.x + 0.006, RA.y - 0.037, rearOut + 0.004); knuckle.rotation.z = rad(18); g.add(knuckle);
+  const link = rbox(0.016, 0.048, 0.012, 0.005, M.carbon, 'rdLink'); link.position.set(RA.x + 0.014, RA.y - 0.054, 0.068); link.rotation.z = rad(-28); g.add(link);
   const pivot = rbox(0.022, 0.022, 0.018, 0.007, M.dark, 'rdPivot'); pivot.position.set(U.x + 0.004, U.y + 0.006, zc + 0.012); g.add(pivot);
   // front derailleur: braze-on body and a curved outer cage following the 52T ring
   const arc = new THREE.Shape(), rOut = r52 + 0.016, rIn = r52 + 0.007, a0 = rad(95), a1 = rad(150);
@@ -723,8 +861,9 @@ async function buildHandlebar(J, M) {             // origin = STEM; one-piece ca
   g.add(sweep(curvePts([new THREE.Vector3(), Bl.clone().multiplyScalar(0.5).add(new THREE.Vector3(0, 0.002, 0)), Bl], 14), t => [lerp(0.021, 0.019, t), lerp(0.02, 0.0175, t)], M.carbon, 'stem', { up: UP, n: 3.2 }));
   g.add(sweep([up.clone().multiplyScalar(-0.022), up.clone().multiplyScalar(0.024)], () => [0.0215, 0.0215], M.carbon, 'stemClamp', { up: Z, n: 2.6 }),
     sweep([up.clone().multiplyScalar(0.024), up.clone().multiplyScalar(0.031)], t => [0.019 - 0.003 * t, 0.019 - 0.003 * t], M.dark, 'topCap', { up: Z, n: 2 }));
-  for (const [z0, z1, r] of [[-0.035, -0.03, 0.0225], [-0.03, -0.0225, 0.0205]]) g.add(sweep([up.clone().multiplyScalar(z0), up.clone().multiplyScalar(z1)], () => [r, r], M.dark, 'spacer', { up: Z, n: 2 }));
-  g.add(blob(Bl, [0.022, 0.0175, 0.04], M.carbon));
+  // spacer between the head tube's top cover (HTT + 9 mm = STEM - 26 mm) and the stem clamp, 0.2 mm clear of each
+  for (const [z0, z1, r] of [[-0.0258, -0.0222, 0.0212]]) g.add(sweep([up.clone().multiplyScalar(z0), up.clone().multiplyScalar(z1)], () => [r, r], M.dark, 'spacer', { up: Z, n: 2 }));
+  g.add(blob(Bl, [0.022, 0.0175, 0.04], M.carbon, 0, 'barClamp'));
   for (const side of [1, -1]) {
     const P3 = (x, y, z) => new THREE.Vector3(x, y, z * side).add(Bl);
     const path = curvePts([P3(0, 0, 0), P3(0, 0, 0.06), P3(0.002, 0, 0.13), P3(0.012, -0.001, 0.178), P3(0.042, -0.008, 0.203), P3(0.074, -0.03, 0.21), P3(0.082, -0.07, 0.21), P3(0.064, -0.108, 0.21), P3(0.022, -0.125, 0.21), P3(-0.042, -0.129, 0.21)], 90);
@@ -772,14 +911,15 @@ function shadowBlob() {                           // the one contact shadow: a s
 async function buildBike(M) {                     // one part per task, so no single build step blocks the main thread
   G0 = deriveJoints(); const J = G0.j; UNIT_SPHERE = new THREE.SphereGeometry(1, 24, 16);
   const root = new THREE.Group(); root.name = 'bike';
-  const spokeGeo = sharedWheelGeometry();
-  const builders = { frame: () => buildFrame(J, M), fork: () => buildFork(J, M), wheelF: () => buildWheel(false, M, spokeGeo), wheelR: () => buildWheel(true, M, spokeGeo), drivetrain: () => buildDrivetrain(J, M), handlebar: () => buildHandlebar(J, M), saddle: () => buildSaddle(J, M) };
+  const c0 = performance.now(), spokeGeo = sharedWheelGeometry(), CH = solveChain(J);   // the chain decides the cog's, the ring's and the pulleys' tooth phases
+  (window.__bike.steps ||= {}).chain = +(performance.now() - c0).toFixed(1); await slice();
+  const builders = { frame: () => buildFrame(J, M), fork: () => buildFork(J, M), wheelF: () => buildWheel(false, M, spokeGeo, CH), wheelR: () => buildWheel(true, M, spokeGeo, CH), drivetrain: () => buildDrivetrain(J, M, CH), handlebar: () => buildHandlebar(J, M), saddle: () => buildSaddle(J, M) };
   const parts = {};
   for (const [k, build] of Object.entries(builders)) { parts[k] = await build(); await slice(); }
   const mount = { frame: 'BB', fork: 'CROWN', wheelF: 'FA', wheelR: 'RA', drivetrain: 'BB', handlebar: 'STEM', saddle: 'STT' };
   for (const [k, part] of Object.entries(parts)) { part.userData.home = V(...J[mount[k]]); part.position.copy(part.userData.home); root.add(part); }
   root.position.set(-(J.FA[0] + J.RA[0]) / 2 * MM, (CHART.bsd / 2 + CHART.tyreWidth - CHART.bbDrop) * MM, 0);   // tyres on y = 0, centred on x = 0
-  return { root, parts, J };
+  return { root, parts, J, CH };
 }
 /** Measure the assembled scene (mm) for the startup assertion. */
 function measureBuilt({ root, parts }) {
@@ -894,21 +1034,26 @@ async function buildEnvironment(warm = true) {    // RoomEnvironment -> PMREM, w
 }
 const _q = new THREE.Quaternion(), IDQ = new THREE.Quaternion();
 function applyScene(st, aim = true) {
-  const { parts, faders, spins, crank } = gl;
+  const { parts, faders, spins, crank } = gl, F = parts.frame;   // the frame comes first in STORY.parts
   for (const s of STORY.parts) {
     const g = parts[s.id], ps = st.parts[s.id];
     g.position.copy(g.userData.home).addScaledVector(s.offV, ps.k);
     g.quaternion.slerpQuaternions(IDQ, s.q0, ps.k);
+    if (ps.mount) { g.position.sub(F.userData.home).applyQuaternion(F.quaternion).add(F.position); g.quaternion.premultiply(F.quaternion); }   // carried by the frame
     faders[s.id](ps.opacity);
     if (spins[s.id]) spins[s.id].rotation.z = ps.spin;
   }
-  crank.rotation.z = st.parts.drivetrain.crank;
+  const dt = st.parts.drivetrain;
+  crank.rotation.z = dt.crank;
+  gl.nds.position.copy(gl.ndsOff).multiplyScalar(dt.nds);   // along the crank axis, so the crank's turn leaves it on its side
+  gl.chainFader(dt.chain);
   gl.shadow.material.opacity = st.shadow;
   gl.spinner.rotation.y = spin.yaw * st.spinWeight;     // drag-to-spin: about the bike's own vertical axis (wheelbase centre)
   if (aim) aimCamera(st);
 }
-function makeFader(g, FADE) {                      // shared fade twins: valid because fade windows never overlap (assertStory)
-  const meshes = []; g.traverse(o => { if (o.isMesh) meshes.push(o); });
+function makeFader(g, FADE, skip = null) {         // shared fade twins: valid because fade windows never overlap (assertStory)
+  const meshes = [], walk = o => { if (o === skip) return; if (o.isMesh) meshes.push(o); o.children.forEach(walk); };   // skip: a group with its own fader
+  walk(g);
   for (const m of meshes) { m.userData.base = m.material; m.userData.fade = FADE.get(m.material); }
   let lastA = -1;
   return a => {
@@ -921,11 +1066,19 @@ function makeFader(g, FADE) {                      // shared fade twins: valid b
   };
 }
 async function framingVolumes() {                       // STORYBOARD.md 3a: cumulative travel volumes, then the assembled bike
-  const travel = Object.fromEntries(Object.keys(gl.parts).map(k => [k, new THREE.Box3()])), tmp = new THREE.Box3();
-  for (let k = 0; k <= 48; k++) {
-    applyScene(state(k / 48), false); gl.bike.root.updateMatrixWorld(true);
-    for (const [id, g] of Object.entries(gl.parts)) travel[id].union(tmp.setFromObject(g));
+  // every part's box at p every 1/96, plus every stage's and every framing row's ends, so each window's ends are exact
+  const ids = Object.keys(gl.parts), tmp = new THREE.Box3(), apart = new THREE.Box3(), boxes = [];
+  const ps = [...new Set([...Array.from({ length: 97 }, (_, k) => k / 96), ...STORY.parts.flatMap(s => [s.a, s.b]), ...STORY.framing.map(f => f[0])])].sort((x, y) => x - y);
+  for (const [k, p] of ps.entries()) {
+    applyScene(state(p), false); gl.bike.root.updateMatrixWorld(true);
+    boxes.push([p, Object.fromEntries(ids.map(id => [id, new THREE.Box3().setFromObject(gl.parts[id])]))]);
     if (k % 12 === 11) await yieldToMain();
+  }
+  const travel = (id, p0, p1) => boxes.reduce((b, [p, x]) => (p >= p0 - 1e-9 && p <= p1 + 1e-9 ? b.union(x[id]) : b), new THREE.Box3());   // its boxes over [p0, p1]
+  const [a0, a1] = STORY.hero.apart;
+  for (let k = 0; k <= 12; k++) {                         // take-apart: what is on screen (the parts dissolving on the turning frame)
+    applyScene(state(a0 + (a1 - a0) * k / 12), false); gl.bike.root.updateMatrixWorld(true);
+    for (const g of Object.values(gl.parts)) if (g.visible) apart.union(tmp.setFromObject(g));
   }
   applyScene(state(1), false); gl.bike.root.updateMatrixWorld(true);
   const home = Object.fromEntries(Object.entries(gl.parts).map(([id, g]) => [id, new THREE.Box3().setFromObject(g)]));
@@ -940,10 +1093,10 @@ async function framingVolumes() {                       // STORYBOARD.md 3a: cum
       // its silhouette is the turning diameter instead of the box diagonal (the hero bike ~25% larger at 3/4 view)
       const ring = []; for (let i = 0; i < 24; i++) { const a = i / 24 * TAU; for (const y of [assembled.min.y, assembled.max.y]) ring.push(new THREE.Vector3(r * Math.cos(a), y, r * Math.sin(a))); }
       return { a, dur, box, corners: ring, target: new THREE.Vector3(0, (assembled.min.y + assembled.max.y) / 2, 0) };
-    } else if (add === 'apart') for (const id of Object.keys(gl.parts)) box.union(travel[id]);
+    } else if (add === 'apart') box.copy(apart);
     else if (!add) box.copy(assembled);
-    else for (const s of STORY.parts) {                // moving in this window: travel box; landed before it: home box; not started: nothing
-      if (s.b <= a) box.union(home[s.id]); else if (s.a < next) box.union(travel[s.id]);
+    else for (const s of STORY.parts) {                // moving in this window: its travel within the window; landed before it: home box; not started: nothing
+      if (s.b <= a) box.union(home[s.id]); else if (s.a < next) box.union(travel(s.id, Math.max(a, s.a), Math.min(next, s.b)));
     }
     const corners = [0, 1, 2, 3, 4, 5, 6, 7].map(i => new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
     return { a, dur, box, corners, target: box.getCenter(new THREE.Vector3()) };
@@ -1003,9 +1156,11 @@ async function initGL() {
   const shadow = shadowBlob(); scene.add(shadow);
   const camera = new THREE.PerspectiveCamera(STORY.fov, L.W / L.H, 0.05, 20);
   for (const s of STORY.parts) { s.offV = new THREE.Vector3(...s.off); s.q0 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...s.axis).normalize(), rad(s.deg)); }
-  const faders = Object.fromEntries(Object.entries(bike.parts).map(([k, g]) => [k, makeFader(g, FADE)]));
+  const chain = bike.parts.drivetrain.getObjectByName('chain'), dts = STORY.parts.find(s => s.id === 'drivetrain');
+  const faders = Object.fromEntries(Object.entries(bike.parts).map(([k, g]) => [k, makeFader(g, FADE, k === 'drivetrain' ? chain : null)]));
   const spins = { wheelF: bike.parts.wheelF.getObjectByName('spin'), wheelR: bike.parts.wheelR.getObjectByName('spin') };
-  gl = { renderer, scene, camera, bike, parts: bike.parts, faders, spins, crank: bike.parts.drivetrain.getObjectByName('crankset'), shadow, M, FADE, envRT: null, spinner };
+  gl = { renderer, scene, camera, bike, parts: bike.parts, faders, spins, crank: bike.parts.drivetrain.getObjectByName('crankset'), shadow, M, FADE, envRT: null, spinner,
+    chain, chainFader: makeFader(chain, FADE), nds: bike.parts.drivetrain.getObjectByName('crankNDS'), ndsOff: new THREE.Vector3(...dts.nds).sub(dts.offV) };
   await yieldToMain(); let t1 = performance.now();
   await buildEnvironment(); (window.__bike.steps ||= {}).environment = Math.round(performance.now() - t1); mark('environment');
   await yieldToMain(); t1 = performance.now();
@@ -1015,6 +1170,7 @@ async function initGL() {
   t1 = performance.now();
   for (const variant of ['base', 'fade']) {        // compile opaque and fade variants off the main thread, one pass each
     for (const g of Object.values(bike.parts)) { g.visible = true; g.traverse(o => { if (o.isMesh) o.material = o.userData[variant]; }); }
+    chain.visible = true;
     try { await renderer.compileAsync(scene, camera); } catch { /* falls back to compiling on first render */ }
     await yieldToMain();
   }
@@ -1030,7 +1186,7 @@ async function initGL() {
     await slice();
   }
   window.__bike.steps.uploaded = Math.round(performance.now() - t1);
-  for (const f of Object.values(faders)) f(null);  // forget cached alpha so the next apply sets materials (and visibility)
+  for (const f of [...Object.values(faders), gl.chainFader]) f(null);  // forget cached alpha so the next apply sets materials (and visibility)
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; html.classList.remove('gl-ready'); html.classList.add('gl-lost'); }, false);
   canvas.addEventListener('webglcontextrestored', () => rebuildAfterRestore(), false);
   pApplied = NaN; dirty = true; gl.ready = true;    // only now may frame() touch the scene (init yields above)
@@ -1113,6 +1269,7 @@ function dispose() {                               // free every GPU resource (c
 window.__bike = { ready: false, STORY, state, reducedP, validateGeometry, CHART, deriveJoints, quality, get QUALITY() { return QUALITY; }, setQuality, softwareGL: SOFTWARE_GL,
   get p() { return { target: pTarget, shown: pShown } }, get layout() { return L; }, get gl() { return gl; }, dispose, THREE,
   get scene() { return gl?.scene; }, get renderer() { return gl?.renderer; }, get camera() { return gl?.camera; }, get spin() { return spin; }, rectAt: mix => rectAt(mix),
+  pose: p => { applyScene(state(p), false); gl.bike.root.updateMatrixWorld(true); dirty = true; },   // QA: the parts at p, no render; the next frame restores the scroll state
   settled: () => new Promise(res => { readScroll(); kick(); let n = 0; const chk = () => (++n > 2 && !raf && pShown === (RM.matches ? reducedP(pTarget) : pTarget) ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }) };
 poster.innerHTML = posterSVG(deriveJoints().j);
 L = layout(); readScroll();

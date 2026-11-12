@@ -1,0 +1,146 @@
+{
+ "ms": 8695,
+ "samples": 6528,
+ "pairTests": 74018,
+ "bodies": [
+  {
+   "name": "frame",
+   "triangles": 13664
+  },
+  {
+   "name": "fork",
+   "triangles": 5192
+  },
+  {
+   "name": "wheelF",
+   "triangles": 796
+  },
+  {
+   "name": "wheelF/spin",
+   "triangles": 17168
+  },
+  {
+   "name": "wheelR",
+   "triangles": 796
+  },
+  {
+   "name": "wheelR/spin",
+   "triangles": 28124
+  },
+  {
+   "name": "drivetrain",
+   "triangles": 8568
+  },
+  {
+   "name": "drivetrain/crankset",
+   "triangles": 9192
+  },
+  {
+   "name": "drivetrain/crankNDS",
+   "triangles": 1432
+  },
+  {
+   "name": "drivetrain/chain",
+   "triangles": 42112
+  },
+  {
+   "name": "handlebar",
+   "triangles": 12248
+  },
+  {
+   "name": "saddle",
+   "triangles": 7444
+  }
+ ],
+ "overlaps": [],
+ "fits": [
+  {
+   "shaft": "fork:steerer",
+   "host": "frame",
+   "ranges": [
+    [
+     0,
+     0.095
+    ],
+    [
+     0.25331,
+     1
+    ]
+   ],
+   "maxDeviationMm": 0.0059,
+   "pAtMax": 0.25331243896483724
+  },
+  {
+   "shaft": "fork:steerer",
+   "host": "handlebar",
+   "ranges": [
+    [
+     0,
+     0.095
+    ],
+    [
+     0.66603,
+     1
+    ]
+   ],
+   "maxDeviationMm": 0.0055,
+   "pAtMax": 0.6660311889648562
+  },
+  {
+   "shaft": "drivetrain/crankset:spindle",
+   "host": "frame",
+   "ranges": [
+    [
+     0,
+     0.095
+    ],
+    [
+     0.52194,
+     1
+    ]
+   ],
+   "maxDeviationMm": 0,
+   "pAtMax": 0.5442186889648588
+  },
+  {
+   "shaft": "drivetrain/crankset:spindle",
+   "host": "drivetrain/crankNDS",
+   "ranges": [
+    [
+     0,
+     0.095
+    ],
+    [
+     0.58416,
+     1
+    ]
+   ],
+   "maxDeviationMm": 0,
+   "pAtMax": 0.09449999999999993
+  },
+  {
+   "shaft": "saddle:seatpost",
+   "host": "frame",
+   "ranges": [
+    [
+     0,
+     0.095
+    ],
+    [
+     0.76641,
+     0.76641
+    ],
+    [
+     0.76691,
+     0.76741
+    ],
+    [
+     0.76791,
+     1
+    ]
+   ],
+   "maxDeviationMm": 0.0118,
+   "pAtMax": 0.7664061889648596
+  }
+ ]
+}

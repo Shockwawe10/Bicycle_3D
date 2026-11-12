@@ -31,14 +31,29 @@ that start at 0.
 | id | part | p start | p end | start offset (m) | start rotation axis | start angle (deg) | start opacity | easing | extra motion |
 |---|---|---|---|---|---|---|---|---|---|
 | S1 | frame | 0.14 | 0.24 | (0, 0.06, 0) | (0, 1, 0) | -32 | 1 | easeInOutCubic | none |
-| S2 | fork | 0.24 | 0.35 | (-0.0852, 0.2876, 0) | (0, 1, 0) | 0 | 0 | easeOutCubic | slides down the steering axis by 0.30 m |
-| S3a | wheelF | 0.35 | 0.45 | (0, 0, 0.32) | (0, 1, 0) | 0 | 0 | easeOutCubic | wheel spins 450° → 0° about its axle |
-| S3b | wheelR | 0.39 | 0.49 | (0, 0, 0.32) | (0, 1, 0) | 0 | 0 | easeOutCubic | wheel spins 450° → 0° about its axle |
-| S4 | drivetrain | 0.49 | 0.62 | (0, 0, 0.26) | (0, 1, 0) | 0 | 0 | easeOutCubic | cranks turn −360° → 0° |
+| S2 | fork | 0.24 | 0.35 | (0.0852, -0.2876, 0) | (0, 1, 0) | 0 | 0 | easeOutCubic | slides up the steering axis by 0.30 m: the steerer goes into the head tube from below, as on a real bike |
+| S3a | wheelF | 0.35 | 0.45 | (0.30, 0, 0) | (0, 1, 0) | 0 | 0 | easeOutCubic | rolls in on the ground from the front: turns −51.0° → 0° about its axle (−0.30 m / 0.337 m: no slip) |
+| S3b | wheelR | 0.39 | 0.49 | (-0.30, 0, 0) | (0, 1, 0) | 0 | 0 | easeOutCubic | rolls in on the ground from behind, the cassette on its hub: turns +51.0° → 0° |
+| S4 | drivetrain | 0.49 | 0.62 | (0, 0, 0.26) | (0, 1, 0) | 0 | 0 | easeOutCubic | the cranks turn forward, +360° → 0°, by 0.8 of the stage; the non-drive arm comes from its own side; the chain fades in over 0.9–1.0 |
 | S5 | handlebar | 0.62 | 0.73 | (-0.0625, 0.2109, 0) | (-0.28402, 0.95882, 0) | 70 | 0 | easeOutCubic | turns 70° about the steering axis while it drops 0.22 m |
 | S6 | saddle | 0.73 | 0.84 | (-0.0682, 0.2301, 0) | (0, 1, 0) | 0 | 0 | easeOutCubic | slides down the seat tube by 0.24 m |
 
 **Finish:** 0.84 < p ≤ 1. The bike is whole and the camera settles by 0.92.
+
+**Wheels roll.** Each wheel comes in along the bike's own line of travel, on the ground: the front one from ahead,
+backwards into the fork; the rear one from behind, forwards into the frame. Its turn is −offset / R (R = 337 mm, the
+tyre's radius), so the tyre does not slip. The axle slides into slotted dropouts (GEOMETRY.md section 2).
+
+**Drivetrain, in workshop order** (t is the stage's local progress):
+- The drive side (spindle, rings, spider, drive-side arm and pedal) and both derailleurs come from the drive side, the
+  start offset above. The non-drive arm and pedal come from the other side, start offset (0, 0, −0.26), and clamp onto
+  the spindle.
+- The cranks pedal **forward**: clockwise seen from the drive side, +360° → 0°, angle = 360° × (1 − easeOutCubic(t / 0.8)).
+  They stop at t = 0.8.
+- The **chain** appears last, in place: opacity = smoothstep(0.9, 1.0, t). By then the cranks are still and the drive
+  side is within 0.26 mm of home. A closed chain cannot be moved onto a cassette and a ring without passing through the
+  other cogs, so it is not moved.
+- The cassette is part of the rear wheel (S3b): a cassette cannot reach a hub through a dropout.
 
 **Contact-shadow blob:** opacity = 0.8 × the mean over both wheels of (1 − k) × opacity, where k is
 0 at home and 1 at the start pose. The full shadow shows under the hero bike, fades as the wheels
@@ -49,11 +64,23 @@ leave, and returns as they land.
 | window | p | what happens |
 |---|---|---|
 | Hero | 0.00 – 0.06 | **The finished bike**: every part at home, opacity 1. It is centred above the big title (DESIGN.md §9), and the camera is still at (20°, 5°). |
-| Take-apart | 0.06 – 0.12 | Every part moves from home to its start pose, k = easeInCubic(u) with u = (p − 0.06) / 0.06. Every part except the frame dissolves together: opacity = 1 − smoothstep(0, 0.6, u). The frame turns to its start pose. The layout rect blends from the hero rect to the story rect with smoothstep(0.06, 0.12, p). |
+| Take-apart | 0.06 – 0.12 | The frame turns to its start pose, k = easeInCubic(u) with u = (p − 0.06) / 0.06. Every other part **stays mounted on the frame**, moving with it, and dissolves: opacity = 1 − smoothstep(0, 0.6, u). From u = 0.6 it is invisible and waits at its start pose. The layout rect blends from the hero rect to the story rect with smoothstep(0.06, 0.12, p). |
 | Hold | 0.12 – 0.14 | The frame alone at its start pose. The frame beat fades in. |
 
-All parts dissolve together during the take-apart (one opacity), and no assembly fade starts
-before 0.12. So one shared set of fade materials stays valid; the page asserts this at startup.
+Why mounted: the chain links the cranks to the cassette and the wheels sit in the fork and frame, so no part can
+leave along its own path while the others are still there. Mounted, nothing moves against anything else, so nothing
+passes through anything while the bike comes apart (section 2c).
+
+All parts dissolve together during the take-apart (one opacity), no assembly fade starts before 0.12, and the chain's
+own fade (S4, 0.9–1.0 of the stage) overlaps no other fade. So one shared set of fade materials stays valid; the page
+asserts this at startup.
+
+## 2c. No part passes through another
+
+At every p, no two parts share space: separate parts touch and never interpenetrate. The only exceptions are a shaft
+in its bore (steerer, BB spindle, seatpost), and only while the shaft slides along or turns about its own axis
+(GEOMETRY.md section 6). The QA scans the whole range triangle against triangle and moves no part more than 1 mm
+between two samples (`qa/overlap.mjs`, `qa/tests/overlap.spec.mjs`).
 
 ## 2b. Drag-to-spin (hero only)
 
@@ -99,8 +126,9 @@ this one over its blend length: target and distance, with smoothstep.
 
 A volume covers the p window up to the next row. For each part, its contribution depends on its
 own stage:
-- **Travel box** (the union of its bounding boxes over every p in [0, 1], 48 samples) when its
-  stage overlaps the window;
+- **Travel box** when its stage overlaps the window: the union of its bounding boxes over the part of its stage that
+  lies in the window (sampled every 1/96 p, plus both ends). The path a part has already covered stops holding the
+  camera back: at 0.39 the front wheel is 78% home, so the window from 0.39 frames its last 65 mm, not 300;
 - **Home box** when its stage ended before the window;
 - **Nothing** when its stage has not started yet.
 
@@ -109,11 +137,12 @@ So landed parts stop holding the camera back, and the bike stays large between s
 | from p | volume | blend (p) |
 |---|---|---|
 | 0.00 | spin ring: the assembled bike's turning radius and height (section 2b) | 0 |
-| 0.06 | every part's travel box (take-apart) | 0.03 |
+| 0.06 | what is on screen in the take-apart: the parts dissolving on the turning frame (13 samples) | 0.03 |
 | 0.12 | frame | 0.02 |
 | 0.24 | frame (home) + fork | 0.0165 |
 | 0.35 | + front wheel | 0.015 |
 | 0.39 | + rear wheel | 0.015 |
+| 0.45 | the front wheel has landed: its home box | 0.015 |
 | 0.49 | + drivetrain | 0.0195 |
 | 0.62 | + handlebar | 0.0165 |
 | 0.73 | + saddle | 0.0165 |

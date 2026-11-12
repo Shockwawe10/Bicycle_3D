@@ -75,6 +75,39 @@ test('p = 0 and p = 1 match the storyboard spec transforms (1e-3)', async ({ pag
   expect(errors).toEqual([]);
 });
 
+test('wheels roll in along the line of travel without slipping; the cranks pedal forward', async ({ page }) => {
+  // User request 2026-11-12 (STORYBOARD 2): the front wheel comes from ahead and the rear from behind, each turning by
+  // -dx / R (no slip); the cranks turn clockwise seen from the drive side (+z), i.e. their angle about z only falls.
+  const errors = await open(page), S = stages();
+  const r = await page.evaluate(S => {
+    const B = window.__bike, at = (s, k) => s.a + (s.b - s.a) * k / 40, out = { R: B.CHART.tyreOD / 2000 };
+    for (const id of ['wheelF', 'wheelR']) {
+      const s = S.find(x => x.part === id), g = B.parts[id], spin = g.getObjectByName('spin');
+      out[id] = Array.from({ length: 41 }, (_, k) => { B.pose(at(s, k)); return [g.position.x, g.position.y, g.position.z, spin.rotation.z]; });
+      out[id + 'Home'] = B.joints[id === 'wheelF' ? 'FA' : 'RA'][0] / 1000;
+    }
+    const d = S.find(x => x.part === 'drivetrain');
+    out.crank = Array.from({ length: 41 }, (_, k) => { B.pose(at(d, k)); return B.gl.crank.rotation.z; });
+    B.pose(B.p.shown);
+    return out;
+  }, S);
+  for (const [id, dir] of [['wheelF', -1], ['wheelR', 1]]) {             // front: moves back (-x); rear: moves forward (+x)
+    const w = r[id];
+    expect(Math.sign(w[0][0] - r[id + 'Home']), `${id} starts ${dir < 0 ? 'ahead of' : 'behind'} its axle position`).toBe(-dir);
+    expect(Math.abs(w[40][0] - r[id + 'Home']), `${id} ends at home`).toBeLessThan(1e-9);
+    for (let k = 1; k <= 40; k++) {
+      const dx = w[k][0] - w[k - 1][0];
+      expect(dx * dir, `${id} keeps moving ${dir < 0 ? 'back' : 'forward'}`).toBeGreaterThanOrEqual(0);
+      expect(Math.abs(w[k][1] - w[0][1]) + Math.abs(w[k][2] - w[0][2]), `${id} stays on its line (y, z)`).toBeLessThan(1e-9);
+      expect(Math.abs((w[k][3] - w[k - 1][3]) + dx / r.R), `${id} rolls without slip at step ${k}`).toBeLessThan(1e-9);
+    }
+  }
+  expect(r.crank[0], 'cranks start a full turn back').toBeCloseTo(2 * Math.PI, 9);
+  expect(r.crank[40]).toBeCloseTo(0, 9);
+  for (let k = 1; k <= 40; k++) expect(r.crank[k] - r.crank[k - 1], `crank angle never rises (forward) at step ${k}`).toBeLessThanOrEqual(1e-12);
+  expect(errors).toEqual([]);
+});
+
 test('20 random scroll jumps give screenshots identical to sequential scrolling', async ({ page }) => {
   test.setTimeout(480_000);
   await open(page);
@@ -241,10 +274,14 @@ test('hero: dragging turns the bike on its own axis, and the story returns it to
   expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.id, [cx, cy])).toBe('gl');
   await page.mouse.move(cx, cy); await page.mouse.down();
   for (let k = 1; k <= 10; k++) await page.mouse.move(cx + k * 12, cy);
+  // Read the drag itself before release: one screen width is one turn. (After release, momentum from Playwright's
+  // back-to-back events can add several turns, and the stored yaw wraps to (-pi, pi], so the final angle is arbitrary.)
+  const dragged = await page.evaluate(() => ({ yaw: window.__bike.spin.yaw, want: 120 * 2 * Math.PI / window.__bike.layout.W }));
+  expect(Math.abs(dragged.yaw - dragged.want), `a 120 px drag turns the bike ${dragged.want.toFixed(3)} rad`).toBeLessThan(1e-6);
+  expect(Math.abs(dragged.yaw), 'a 120 px drag turns the bike').toBeGreaterThan(0.3);
   await page.mouse.up();
   await page.waitForFunction(() => window.__bike.spin.vel === 0 && !window.__bike.spin.drag, null, { timeout: 15_000 });
   const turned = await yaw();
-  expect(Math.abs(turned), 'a 120 px drag turns the bike').toBeGreaterThan(0.3);
   const pivot = await page.evaluate(() => {                                // own axis: the wheelbase centre stays on the spin axis
     const B = window.__bike, T = B.THREE, f = B.parts.wheelF.getWorldPosition(new T.Vector3()), b = B.parts.wheelR.getWorldPosition(new T.Vector3());
     return [(f.x + b.x) / 2, (f.z + b.z) / 2];

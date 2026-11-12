@@ -28,7 +28,7 @@ export function deriveJoints(c = CHART, b = BUILD) {
   const BAR = add(STEM, stemDir, b.stemLength);
   const j = {
     BB: [0, 0], RA, FA, HTT, HTB, STT,
-    DTH: add(HTB, d, -25),          // down tube meets head tube 25 mm above its bottom
+    DTH: add(HTB, d, -50),          // down tube meets head tube 50 mm above its bottom (its underside clears the fork crown)
     SSJ: add(STT, s, -30),          // seat stays meet seat tube 30 mm below its top
     CROWN: HTB,                     // fork crown at head-tube bottom (zero lower stack)
     STEM, BAR,
