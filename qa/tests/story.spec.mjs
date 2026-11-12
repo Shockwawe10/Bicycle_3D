@@ -256,3 +256,22 @@ test('hero: dragging turns the bike on its own axis, and the story returns it to
   expect(Math.abs((await yaw()) - turned), 'the visitor angle comes back in the hero').toBeLessThan(1e-6);
   expect(errors).toEqual([]);
 });
+
+test('the poster never shows while the 3D bike is loading (only as a real fallback)', async ({ page }) => {
+  // User report 2026-11-12: a large line drawing flashed before the 3D bike appeared.
+  await page.addInitScript(() => {
+    window.__posterSeen = 0;
+    const check = () => {
+      const el = document.getElementById('poster');
+      if (el && !window.__bike?.ready) {
+        const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+        if (cs.display !== 'none' && cs.visibility !== 'hidden' && +cs.opacity > 0 && r.width > 0 && r.height > 0 && el.querySelector('svg')) window.__posterSeen++;
+      }
+      if (!window.__bike?.ready) requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+  });
+  await page.goto('/index.html');
+  await page.waitForFunction(() => window.__bike?.ready === true, null, { timeout: 60_000 });
+  expect(await page.evaluate(() => window.__posterSeen), 'frames with the poster visible before the 3D was ready').toBe(0);
+});

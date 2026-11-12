@@ -146,7 +146,7 @@ Prototype: `qa/comps/parallax.html`. Captured at p = 0, 0.5 and 1 in
 - **Hover and press:** buttons darken on hover, press 1 px down, and the focus ring is a 2 px
   `--accent-ink` outline at 2 px offset.
 - **Reduced motion:** five discrete states with no tweening, and a static backdrop.
-- **No WebGL:** a static poster, an SVG drawing of the bike generated from the same joint table.
+- **No WebGL:** a static poster, an SVG drawing of the bike generated from the same joint table. It is a fallback only, never a loading state: while the 3D bike loads, the stage shows the backdrop and the title, and the bike fades in.
 
 ## 7. Fonts
 

@@ -66,9 +66,10 @@ a { color: inherit; }
 .mid svg { width: 100%; height: 100%; display: block; }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; opacity: 0; transition: opacity .5s; touch-action: pan-y; }
 .gl-ready #gl { opacity: 1; }
-.poster { position: absolute; z-index: 2; left: var(--rx, 16px); top: var(--ry, 64px); width: var(--rw, 90vw); height: var(--rh, 45svh); }
+.poster { display: none; position: absolute; z-index: 2; left: var(--rx, 16px); top: var(--ry, 64px); width: var(--rw, 90vw); height: var(--rh, 45svh); }
 .poster svg { width: 100%; height: 100%; display: block; }
-.gl-ready .poster { display: none; }
+.no-webgl .poster, .geometry-failed .poster, .gl-lost .poster { display: block; }
+.no-webgl .spin-hint, .geometry-failed .spin-hint { display: none; }                 /* no 3D bike to turn */   /* a fallback only: never a loading state */
 .fg { left: 0; bottom: var(--toolbar); height: var(--ruler); width: calc(150vw + 48px); z-index: 3;
   background: linear-gradient(var(--tick), var(--tick)) bottom / 100% 1px no-repeat,
     repeating-linear-gradient(90deg, var(--tick) 0 1px, transparent 1px 10px) bottom / 100% 8px no-repeat,
@@ -156,7 +157,7 @@ footer p + p { margin-top: 6px; }
       <div class="hero-copy" id="heroCopy">
         <article class="beat on" data-beat="hero">
           <h1>Carbon road bike for racing and fast group rides</h1>
-          <p>Drag or swipe to turn it. Scroll and it comes apart, then builds back up from the size-56 geometry chart: a 991 mm wheelbase, a 73.5° head angle and 26 mm tyres.</p>
+          <p><span class="spin-hint">Drag or swipe to turn it. </span>Scroll and it comes apart, then builds back up from the size-56 geometry chart: a 991 mm wheelbase, a 73.5° head angle and 26 mm tyres.</p>
           <a class="btn" href="https://t.me/varsen_fitting" target="_blank" rel="noopener" data-contact="telegram">Book a fitting</a>
         </article>
       </div>
@@ -795,10 +796,10 @@ function measureBuilt({ root, parts }) {
 function posterSVG(J) {
   const R = CHART.bsd / 2 + CHART.tyreWidth, y = v => -v, L = (a, b) => `<path d="M${J[a][0]} ${y(J[a][1])} L${J[b][0]} ${y(J[b][1])}"/>`;
   const x0 = J.RA[0] - R - 12, x1 = J.FA[0] + R + 12, y0 = y(J.SADDLE[1]) - 24, y1 = y(J.RA[1] - R) + 12;
-  return `<svg viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Side drawing of the bike" fill="none" stroke="#0a0a0a" stroke-linecap="round" stroke-width="9">`
-    + `<g stroke-width="22">${['FA', 'RA'].map(k => `<circle cx="${J[k][0]}" cy="${y(J[k][1])}" r="${R - 11}"/>`).join('')}</g>`
-    + `<g stroke="#1d5866" stroke-width="30">${L('HTT', 'HTB')}${L('STT', 'HTT')}${L('DTH', 'BB')}${L('BB', 'STT')}${L('BB', 'RA')}${L('SSJ', 'RA')}${L('CROWN', 'FA')}</g>`
-    + `${L('STEM', 'BAR')}${L('STT', 'POST_TOP')}<path d="M${J.SADDLE[0] - 130} ${y(J.SADDLE[1])} h260" stroke-width="22"/>`
+  return `<svg viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Side drawing of the bike" fill="none" stroke="#0a0a0a" stroke-linecap="round" stroke-width="6">`
+    + `<g stroke-width="10">${['FA', 'RA'].map(k => `<circle cx="${J[k][0]}" cy="${y(J[k][1])}" r="${R - 5}"/>`).join('')}</g>`
+    + `<g stroke="#1d5866" stroke-width="14">${L('HTT', 'HTB')}${L('STT', 'HTT')}${L('DTH', 'BB')}${L('BB', 'STT')}${L('BB', 'RA')}${L('SSJ', 'RA')}${L('CROWN', 'FA')}</g>`
+    + `${L('STEM', 'BAR')}${L('STT', 'POST_TOP')}<path d="M${J.SADDLE[0] - 130} ${y(J.SADDLE[1])} h260" stroke-width="10"/>`
     + `<circle cx="0" cy="0" r="105"/></svg>`;
 }
 
@@ -1030,12 +1031,12 @@ async function initGL() {
   }
   window.__bike.steps.uploaded = Math.round(performance.now() - t1);
   for (const f of Object.values(faders)) f(null);  // forget cached alpha so the next apply sets materials (and visibility)
-  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; html.classList.remove('gl-ready'); }, false);
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; html.classList.remove('gl-ready'); html.classList.add('gl-lost'); }, false);
   canvas.addEventListener('webglcontextrestored', () => rebuildAfterRestore(), false);
   pApplied = NaN; dirty = true; gl.ready = true;    // only now may frame() touch the scene (init yields above)
   t1 = performance.now(); frame(performance.now());   // first frame now, then reveal
   window.__bike.steps.firstFrame = Math.round(performance.now() - t1); mark('first-frame');
-  html.classList.add('gl-ready');
+  html.classList.add('gl-ready'); html.classList.remove('gl-lost');
   if (!QA && !RM.matches && pShown < STORY.hero.end && spin.yaw === 0) { spin.yaw = -0.45; spin.vel = 0.45 / STORY.hero.inertia; kick(); }
   window.__bike.initMs = Math.round(performance.now() - t0);
 }
