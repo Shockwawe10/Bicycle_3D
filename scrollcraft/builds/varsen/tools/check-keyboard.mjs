@@ -38,6 +38,19 @@ const yaw1 = await p.evaluate(() => window.__bike.spin.yaw);
 console.log(`plate focus hint: ${hint}; yaw ${yaw0.toFixed(3)} -> ${yaw1.toFixed(3)} rad after 3 x ArrowRight (expect ~${(3 * Math.PI / 12).toFixed(3)}), scrollY ${await p.evaluate(() => scrollY)}`);
 await p.screenshot({ path: 'qa/tmp/tab-plate.png' });
 
+// In detail from the keyboard: a point takes focus, Enter flies in and moves focus to the part, ArrowRight steps to the
+// next part, Escape flies back and returns focus to the point of the part last shown.
+await p.evaluate(() => document.getElementById('detail').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(500);
+const land = () => p.waitForFunction(() => !window.__bike.detail.flying, null, { timeout: 5000 });
+const where = () => p.evaluate(() => ({ cur: window.__bike.detail.cur, focus: document.activeElement?.id || document.activeElement?.className }));
+await p.locator('.spot[data-spot="1"]').focus();
+const ring = await p.evaluate(() => getComputedStyle(document.querySelector('.spot[data-spot="1"] .spot__dot')).outlineStyle);
+await p.keyboard.press('Enter'); await land(); const a1 = await where();
+await p.keyboard.press('ArrowRight'); await land(); const a2 = await where();
+await p.keyboard.press('Escape'); await land(); await p.waitForTimeout(100); const a3 = await where();
+console.log(`in detail: point ring ${ring}; Enter -> ${JSON.stringify(a1)}; ArrowRight -> ${JSON.stringify(a2)}; Escape -> ${JSON.stringify(a3)}`);
+await p.screenshot({ path: 'qa/tmp/tab-detail.png' });
+
 // The chooser from the keyboard: focus the height field, type 186, wait for the debounce, read back the result.
 await p.locator('#height').focus(); await p.keyboard.type('186'); await p.waitForTimeout(900);
 const chosen = await p.evaluate(() => ({ out: document.getElementById('height-out').textContent.trim(), checked: document.querySelector('input[name="size"]:checked')?.value, cap: document.querySelector('[data-yours-cap]')?.textContent.trim() }));

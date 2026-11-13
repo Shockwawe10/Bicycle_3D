@@ -23,7 +23,7 @@ if (lost) {
 }
 const state = await p.evaluate(() => ({ cls: document.documentElement.className, posters: [...document.querySelectorAll('.plate__poster')].map(e => getComputedStyle(e).display + ' ' + getComputedStyle(e).backgroundImage.slice(-30)) }));
 console.log(JSON.stringify(state, null, 1));
-const spots = [['front', 0], ['build', 0.1], ['build', 0.6], ['detail', 0.05], ['detail', 0.3], ['detail', 0.52], ['detail', 0.74], ['yours', 0.2], ['book', 0]];
+const spots = [['front', 0], ['build', 0.1], ['build', 0.6], ['detail', 0], ['yours', 0.2], ['book', 0]];
 const shots = [];
 for (const [id, f] of spots) {
   await p.evaluate(([id, f]) => { const s = document.getElementById(id), top = s.getBoundingClientRect().top + scrollY, span = Math.max(0, s.offsetHeight - innerHeight); scrollTo(0, Math.round(top + f * span)); }, [id, f]);

@@ -22,7 +22,7 @@ const save = (name, dataUrl) => {
   writeFileSync(new URL(`${name}.webp`, out), bytes);
   console.log(`${name}.webp  ${(bytes.length / 1024).toFixed(0)} KB`);
 };
-const jobs = [['front'], ['build'], ...[0, 1, 2, 3, 4].map(i => ['tour', i]), ...[44, 49, 52, 54, 56, 58, 61].map(s => ['size', s])];
+const jobs = [['front'], ['build'], ['detail'], ...[44, 49, 52, 54, 56, 58, 61].map(s => ['size', s])];
 for (const [kind, arg] of jobs) {
   save(arg === undefined ? kind : `${kind}-${arg}`, await page.evaluate(([k, a]) => window.__bike.poster(k, a, 800), [kind, arg ?? null]));
 }

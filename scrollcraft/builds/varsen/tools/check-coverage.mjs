@@ -1,13 +1,13 @@
 // No bare half screen in a pinned act: node scrollcraft/builds/varsen/tools/check-coverage.mjs [port]
 // Why: the scroll-craft dead-scroll check passes as long as any pixel moves, so a 3D bike turning above a faded-out
-// copy block read as green (the iPhone hero gap, fixed in 962c495). This steps each pinned act (#front, #detail)
-// through its pin in 5% steps at 390x844 and 1440x900, screenshots each frame, and counts content pixels in the top
+// copy block read as green (the iPhone hero gap, fixed in 962c495). This steps each pinned act (every section with
+// data-sc-act="pin", read from the page) through its pin in 5% steps at 390x844 and 1440x900, screenshots each frame, and counts content pixels in the top
 // and bottom halves of the screen (below the phone's 52 px running head, right of the desktop's 76 px folio rail).
 // A content pixel is brighter than the frame's ground (its 25th-percentile luminance) by more than 30 levels: the
 // type, the paint, the plate. The hero's radial light (+21 at most) and the film grain stay below that.
 // Fails when either half drops under 1.5% content at any step. Exit code 1 on failure.
 import { chromium } from 'playwright';
-const port = process.argv[2] || '4500', MIN = 1.5, ACTS = ['front', 'detail'];
+const port = process.argv[2] || '4500', MIN = 1.5;
 const VIEWS = [{ w: 390, h: 844, top: 52, left: 0 }, { w: 1440, h: 900, top: 0, left: 76 }];
 const b = await chromium.launch({ channel: 'chrome', args: ['--enable-gpu', '--use-angle=d3d11', '--ignore-gpu-blocklist'] });
 const decoder = await (await b.newContext()).newPage();
@@ -31,6 +31,7 @@ for (const v of VIEWS) {
   await page.goto(`http://127.0.0.1:${port}/?qa=1`);
   await page.waitForFunction(() => window.__bike?.ready === true, null, { timeout: 90000 });
   await page.waitForTimeout(900);                    // the plate canvases fade in over 600 ms
+  const ACTS = await page.evaluate(() => [...document.querySelectorAll('main > [data-sc-act="pin"]')].map(s => s.id));
   for (const act of ACTS) {
     const rows = [];
     for (let k = 0; k <= 20; k++) {
