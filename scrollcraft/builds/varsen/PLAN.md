@@ -50,17 +50,20 @@ device kit does this, and it is the second half of the tell-someone sentence.
 (As first built, scroll also swept the bike through all seven sizes in a pinned chapter IV. The owner
 removed that chapter on 2026-11-13; the sizes now appear only when the visitor asks for one.)
 
-## The peak: In detail (III), revised 2026-11-13
+## The peak: In detail (II), revised 2026-11-13 (twice)
 
-The owner asked for "some kind of hero block or product experience block" in place of the Up close
-stills. One pinned stage, the copy column on the left over bare ground and the plate on the right:
-a held hero frame (low front three-quarter, chapter title and one line), then one orbit of the live
-size 56 through four holds (drivetrain from the drive side, the rear end from the brake side, the
-cockpit from ahead, the drive-side profile), each with its caption. az only decreases, so the camera
-never doubles back; between holds it glides (inOutCubic, distance in log space). Under reduced motion
-it cuts between the holds at the caption boundaries. The plate's inner edge (left on desktop, bottom
-on phones) gets a ground-coloured fade, so the close-ups dissolve instead of ending on a crop line.
-Camera clearance, sampled at plate aspects 0.8 to 1.2: never within 0.47 m of any part's bounding box.
+First a scroll tour (pin 4.4: a held hero frame, then one orbit through four holds). Then the owner asked for points
+on the bike to click instead, so II is one screen: the copy column on the left over bare ground, the plate on the
+right with the size 56 at its front three-quarter and five points on it (Frame, Drivetrain, Brakes, Wheels,
+Cockpit), each a 44 px target with a ring, a pulse and a label, projected from a 3D anchor every frame. Choosing one
+flies the camera to that part's view (the shorter way round, distance in log space, smootherstep, 0.8 to 1.3 s; a cut
+under reduced motion) while the column swaps its intro for the part's description. Back, Previous / Next (wrapping),
+the arrow keys and Escape move between them; focus goes to the part and back to its point. The intro and the parts
+share one grid cell, so nothing moves as they swap; on phones the plate takes the height the column leaves. The pulse
+runs only while II is on screen and the page is still (an endless animation cost the scroll 5 dropped frames a pass).
+Without WebGL or script the parts read as a list beside the poster.
+Checks: tools/check-detail-clearance.mjs (all 20 flights from rest, aspects 0.6 to 1.5: closest approach 0.47 m, the
+floor); tools/check-keyboard.mjs (Enter, arrows, Escape, focus).
 
 ## Fingerprint gate
 
@@ -74,12 +77,12 @@ row to clear. The row this build adds is written after verification.
 | Frontispiece | pin 1.8 | live 3D plate + kinetic h1 (greet) + parallax numeral | product first; the turn under the hand and the light are the open |
 | Glance | flow, band (0.4 to 0.6) | four figures, `in` staggered 90 ms | orientation before the story; replaced the chart chapter on 2026-11-13 (it repeated Find yours) |
 | I Build | flow, 3.5 to 3.9 measured, sticky plate | bespoke sticky plate (verify-state published) beside a text column | the build is read like a feature: text column scrolls, plate holds |
-| II In detail | **pin 4.4 (largest)** | bespoke camera tour on the live plate (verify-state published), one cue per hold, plate-edge fade | the peak gets the most room; a held frame first, then the orbit |
+| II In detail | flow, one screen | bespoke: points on the live plate, camera flights, a part column; plate-edge fade | the peak is chosen, not scrolled (owner, 2026-11-13); paced by the visitor |
 | III Yours | flow | the chooser (bespoke), numbers re-set to the chosen size | ownership: the visitor acts |
 | Close | flow, last | `reveal` on the booking plate, colophon | resolves and holds |
 
-Device families: pin, kinetic, parallax, flow + in, reveal, plus the bespoke live plates. Total 12.1
-viewport-heights measured at 1440x900 (13.0 at 390x844) after the glance band replaced the chart chapter, inside the 8 to 14 budget
+Device families: pin, kinetic, parallax, flow + in, reveal, plus the bespoke live plates. Total 8.7
+viewport-heights measured at 1440x900 (9.6 at 390x844) after In detail became one screen, inside the 8 to 14 budget
 on desktop and phone. Revised 2026-11-13: the Up close stills (flow) and the Seven sizes sweep (pin
 4.6) were removed at the owner's request, In detail took the peak, and the build steps went from 52
 to 46 svh so the peak keeps the most room.
@@ -111,9 +114,8 @@ screen before it arrives. Render on demand only.
 
 Motion: every scroll-driven value follows the scroll on a critically damped spring (OMEGA 10), which
 starts and stops at zero speed; the build's camera follows a Gaussian-smoothed copy of its framing
-path; the tour glides on smootherstep. Measured with tools/check-smoothness.mjs (the same wheel and
+path. (In detail's flights are time-driven, not scroll-driven: 0 dropped frames across all ten, desktop and phone.) Measured with tools/check-smoothness.mjs (the same wheel and
 trackpad input on the old and new code): build camera acceleration p95 38,171 to 1,774 px/s2, tour
 105,154 to 15,414, dropped frames 10 to 0, page work per frame 2.2 to 1.0 ms.
 
-Posters for browsers without WebGL are rendered from the same scene by tools/render-posters.mjs (the
-tour has one per hold).
+Posters for browsers without WebGL are rendered from the same scene by tools/render-posters.mjs.

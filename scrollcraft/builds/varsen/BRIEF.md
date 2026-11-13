@@ -102,13 +102,20 @@ of four real figures with one line each (7 sizes; 45 mm carbon rims; 2 x 12 spee
 model's own. The trust line ("built from those numbers, measured back against them") and its source moved into Find
 yours, beside the table it is about. The chapters renumber: I Build, II In detail, III Find yours, IV Book.
 
+Then, on In detail: "I don't want to details appear while scrolling. I wanted to be like points on the bike on which
+user can click, and it zooms out and tells exactly about which part of the bike it is." Done: the scroll tour (pin 4.4)
+is gone. In detail is one screen: the size 56 in three-quarter view with five points on it (Frame, Drivetrain, Brakes,
+Wheels, Cockpit). Choosing one flies the camera in to that part (read as "zooms in on it") while the column beside it
+says what it is, every fact the model's own; Back, Previous / Next, the arrow keys and Escape move between them. The
+visitor's own choice now drives the peak, not the scroll.
+
 ## Journey (authored, revised 2026-11-13)
 
 ```
 Frontispiece  Awe           the finished bike, yellow on black, lit like a car reveal; you can turn it
 Glance        Orientation   four real figures, one line each: what this bike is, at a glance
 I    Build    Fascination   it builds itself in the order a mechanic would
-II   Detail   Desire        a held hero frame, then one orbit in to the parts          <- PEAK
+II   Detail   Curiosity     points on the bike; choose one and the camera flies in   <- PEAK
 III  Yours    Ownership     give your height and it rebuilds itself as yours; every number sourced
 Close         Resolve       book the fitting, your size already filled in
 ```
@@ -120,31 +127,31 @@ Close         Resolve       book the fitting, your size already filled in
 | Frontispiece | Awe | A yellow bike alone in a dark studio. The key light comes up across its clearcoat and it turns under your hand. |
 | Glance | Orientation | Four large figures arrive one after another, each with a one-line fact. Quick, quiet, no picture. |
 | I Build | Fascination | The frame waits; fork, wheels, drivetrain, cockpit, saddle arrive in workshop order, nothing passing through anything. |
-| II In detail | Desire | It opens still: a low three-quarter frame and one line. Then the camera goes in close enough to count the chain links, swings round the back to the brake side, comes up to the cockpit from ahead, and pulls out to the profile. |
+| II In detail | Curiosity, then reward | The bike holds still with five pulsing points on it. You choose one and the camera flies in close: the chain link by link, round the back to the brake rotor, up to the cockpit. You go back, or on to the next. |
 | III Yours | Ownership and trust | You give your height; the bike rebuilds itself at your size and every number on the sheet changes. Each number is the published chart, and the page says so beside them. |
 | Close | Resolve | One calendar, your size already in it. The page stops. |
 
 No two adjacent rows share a feeling. Energy sits in the middle: calm acts (Glance, Yours) sit between
 the moving ones (Frontispiece, Build, In detail). Build and In detail are neighbours, so In detail
-opens on a held frame before anything moves: the quiet the peak arrives from.
+holds still until the visitor chooses: the quiet the peak arrives from is the visitor's own pause.
 
 ## The peak
 
-> "The camera went in so close I could count the chain links, then swung round the back to the brakes."
+> "I clicked the chain and the camera flew in close enough to count the links; then I went round to the brakes."
 
-It lives in III. It gets the most scroll room on the page (pin 4.4 against the build's 3.5 to 3.9),
-the page's only camera move that leaves the bike's own side, and a held frame in front of it.
+It lives in II, and it is the visitor's: a deliberate exception to the skill's rule that the peak gets the most scroll
+room. An interactive peak is paced by the visitor's choices, not by scroll distance (the owner asked for points to
+click, 2026-11-13), so II is one screen and the build (3.5 to 3.9) is now the longest act. The peak keeps the page's
+only camera moves that leave the bike's own side, and the stillness in front of them.
 
 ## Tell-someone sentence
 
-> It's the site where the camera takes you close enough to count the chain links, and then the bike
-> rebuilds itself at your height.
+> It's the site where you click a part of the bike and the camera flies in close enough to count the
+> chain links, and then the bike rebuilds itself at your height.
 
-The signature move (rebuild at your size) and the peak are two moments now; the sentence carries
-both, in the order the visitor meets them, and the peak's last frame is the profile chapter IV opens on.
+The signature move (rebuild at your size) and the peak are two moments; the sentence carries both, in the order the
+visitor meets them.
 
 ## Authored silence
 
-- **The opening of III** holds a still hero frame with one line before the camera moves (p 0 to
-  0.10): the quiet before the peak, not dead scroll.
-- **The end of III** holds the profile with one line ("Next, it rebuilds itself at yours") before IV.
+- **II** holds still until the visitor chooses a point: nothing in it is driven by scroll.
