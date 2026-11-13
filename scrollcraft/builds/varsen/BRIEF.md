@@ -109,6 +109,14 @@ Wheels, Cockpit). Choosing one flies the camera in to that part (read as "zooms 
 says what it is, every fact the model's own; Back, Previous / Next, the arrow keys and Escape move between them. The
 visitor's own choice now drives the peak, not the scroll.
 
+Then: "we have the duplication of the text on the first section when the vehicle is assembling, and on the second when
+it's tells much in details ... maybe point to the other things, or not point, just change the text." Done: the points stay,
+and each fact now lives in one section. At a glance: the four headline figures with plain words, no other numbers. The
+build: the assembly story (what goes on, in what order and why, how it moves), with the saddle height its one number.
+In detail: the specs and what only shows up close (four-arm spider, 11-tooth jockey wheels, 30-hole rotors on six-arm
+carriers, radial front and two-cross rear lacing, file-tread tyres, flattened bar tops), every figure read from the
+model. The chart geometry stays in Find yours alone.
+
 ## Journey (authored, revised 2026-11-13)
 
 ```
