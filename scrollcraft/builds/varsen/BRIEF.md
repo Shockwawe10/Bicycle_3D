@@ -82,6 +82,13 @@ yours) stays and becomes chapter IV; the bike still rebuilds itself at the visit
 nothing changes size under the scroll any more. The journey, curve and peak below are re-authored to
 fit (the owner directed the change; the new shape is **authored**).
 
+**2026-11-13, later.** "There is also be good to add like an arrow that shows people so they need to scroll it
+down to see how the bicycle creates actually. So it's not very intuitive for the user." Done, against the skill's
+default (it bans scroll cues: "they are looking at the hero; they know"): the owner has seen visitors miss that
+scrolling builds the bike. The cue says what scrolling does ("Scroll to see it built"), sits beside the hero's action
+as a quieter second link, fades once the visitor scrolls, and links to the build; the build's caption adds "It builds
+as you scroll".
+
 ## Journey (authored, revised 2026-11-13)
 
 ```

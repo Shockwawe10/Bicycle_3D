@@ -54,7 +54,11 @@
       <div class="front__copy" data-sc-cue="0 0.6 0">
         <h1 class="front__title" data-sc-kinetic="lines">Built to the millimetre</h1>
         <p class="front__lede">A carbon road bike placed tube by tube from a published geometry chart, in all seven sizes.</p>
-        <a class="action" href="#book">Book a fitting</a>
+        <div class="front__actions">
+          <a class="action" href="#book">Book a fitting</a>
+          <!-- the owner's call (2026-11-13): visitors did not see that scrolling builds the bike. Fades once they scroll. -->
+          <a class="scroll-cue" href="#build" data-sc-cue="0 0.12 0 0.5"><span>Scroll<span class="scroll-cue__more"> to see it built</span></span><svg class="scroll-cue__arrow" viewBox="0 0 12 26" aria-hidden="true"><path d="M6 1v22M1.5 18.5 6 24l4.5-5.5"/></svg></a>
+        </div>
       </div>
     </div>
   </section>
@@ -94,7 +98,7 @@
       <div class="build__hold">
         <figure class="plate plate--build" data-plate="build">
           <div class="plate__poster" aria-hidden="true"></div>
-          <figcaption class="plate__cap">Plate 3. The assembly, size 56.</figcaption>
+          <figcaption class="plate__cap">Plate 3. The assembly, size 56. It builds as you scroll.</figcaption>
         </figure>
       </div>
       <div class="build__text">
