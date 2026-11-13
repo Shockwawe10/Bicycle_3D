@@ -85,21 +85,42 @@ async function makeTextures() {                   // one texture per slice: canv
     x.strokeStyle = '#3c3c3c'; x.lineWidth = 6;
     for (let i = -w; i < 2 * w; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + w, w); x.stroke(); }
   }, { repeat: [0.5, 0.5] });
-  const word = (text, font, size, w, h, track, fill) => canvasTexture(w, h, (x) => {
-    x.clearRect(0, 0, w, h); x.fillStyle = fill; x.font = `${font.replace('SIZE', size)}`; x.textBaseline = 'middle'; x.textAlign = 'center';
-    x.letterSpacing = `${Math.round(size * track)}px`; x.fillText(text, w / 2, h / 2 + size * 0.04);
-  }, { color: true });
+  // A line of text that fills its strip: the measured cap height is `cap` of the texture's height, the line is
+  // centred on it, and it is narrowed only if it would overrun 94% of the width. The texture has the strip's own
+  // aspect, so the letters are not stretched when it is mapped on.
+  const word = (text, aspect, cap, track, fill) => {
+    const w = 2048, h = Math.round(w / aspect);
+    const t = canvasTexture(w, h, (x) => {
+      x.clearRect(0, 0, w, h); x.fillStyle = fill; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+      const set = size => { x.font = `800 ${size}px "Archivo Expanded", sans-serif`; x.letterSpacing = `${(size * track).toFixed(1)}px`; };
+      set(100); let size = 100 * h * cap / x.measureText('H').actualBoundingBoxAscent;
+      set(size); const wide = x.measureText(text).width; if (wide > w * 0.94) set(size *= w * 0.94 / wide);
+      x.fillText(text, w / 2, h / 2 + x.measureText('H').actualBoundingBoxAscent / 2);
+    }, { color: true });
+    t.anisotropy = 8;                               // the rims are often seen at a slant
+    return t;
+  };
   // decals in the page's own face (Archivo, expanded): black on the yellow frame, yellow on the black rims
-  await slice(); const decal = word('VARSEN', '800 SIZEpx "Archivo Expanded", sans-serif', 88, 1024, 128, 0.16, LOOK.decalInk);
-  await slice(); const rimDecal = word('VARSEN · CARBON 45', '700 SIZEpx "Archivo Expanded", sans-serif', 60, 1024, 96, 0.1, LOOK.rimInk);
+  const [r0, r1] = rimStrip(), rimAspect = ((r0 + r1) / 2 * 2 * DECAL.rimArc) / (r1 - r0);
+  await slice(); const decal = word('VARSEN', DECAL.tube[0] / DECAL.tube[1], 0.62, 0.16, LOOK.decalInk);
+  await slice(); const rimDecal = word('VARSEN · CARBON 45', rimAspect, 0.6, 0.08, LOOK.rimInk);
   await slice();
   return { tread, tape, decal, rimDecal };
+}
+/** Decal sizes, shared by the textures and the geometry: the down-tube wordmark (length, height in metres), the rim
+    strip's half-arc (radians) and its inset from the spoke bed and the hook (metres). */
+const DECAL = { tube: [0.3, 0.034], rimArc: 0.62, rimInset: [0.012, 0.008] };
+function rimStrip() {
+  const flange = CHART.bsd / 2 * MM + BUILD.rimFlange * MM, bed = flange - BUILD.rimDepth * MM;
+  return [bed + DECAL.rimInset[0], flange - DECAL.rimInset[1]];
 }
 /** The model's finish. Gloss yellow paint over black carbon; decals black on paint, yellow on the rims. */
 export const LOOK = { paint: 0xffbe00, decalInk: '#121212', rimInk: '#ffc21a' };
 export async function makeMaterials() {
   const T = await makeTextures();
-  const decal = map => new THREE.MeshStandardMaterial({ map, alphaTest: 0.5, roughness: 0.45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  // blended, not alpha-tested: a hard 0.5 cut gave stair-stepped letters and broke thin strokes once the texture
+  // was minified; blending keeps the mip-filtered edge. Drawn after the paint, so they never write depth.
+  const decal = map => new THREE.MeshStandardMaterial({ map, transparent: true, alphaTest: 0.02, depthWrite: false, roughness: 0.45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   const M = {
     paint: new THREE.MeshPhysicalMaterial({ color: LOOK.paint, roughness: 0.26, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.06 }),
     carbon: new THREE.MeshStandardMaterial({ color: 0x17181a, roughness: 0.34, metalness: 0.15 }),
@@ -273,15 +294,20 @@ function roundedShape(poly, r) {
   });
   return s;
 }
-/** Flat arc strip (rim decals): u runs along the arc, v from inner to outer radius. */
-function arcStripGeometry(r0, r1, a0, a1, segs, z, mirror) {
-  const pos = [], uv = [], nor = [], idx = [];
+/** Arc strip (rim decals): u runs along the arc, v from inner to outer radius; zAt(r) lays it on the rim's sidewall
+    (its sign is the side), so the strip follows the wall instead of standing in front of its inner slope. */
+function arcStripGeometry(r0, r1, a0, a1, segs, zAt, mirror, rings = 6) {
+  const pos = [], uv = [], idx = [], R1 = rings + 1, front = zAt((r0 + r1) / 2) > 0;
   for (let i = 0; i <= segs; i++) {
     const t = i / segs, a = lerp(a1, a0, t);
-    for (const [r, v] of [[r0, 0], [r1, 1]]) { pos.push(r * Math.cos(a), r * Math.sin(a), z); uv.push(mirror ? 1 - t : t, v); nor.push(0, 0, Math.sign(z)); }
+    for (let j = 0; j <= rings; j++) { const v = j / rings, r = lerp(r0, r1, v); pos.push(r * Math.cos(a), r * Math.sin(a), zAt(r)); uv.push(mirror ? 1 - t : t, v); }
   }
-  for (let i = 0; i < segs; i++) { const a = 2 * i; z > 0 ? idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) : idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  for (let i = 0; i < segs; i++) for (let j = 0; j < rings; j++) {
+    const v00 = i * R1 + j, v01 = v00 + 1, v10 = v00 + R1, v11 = v10 + 1;
+    front ? idx.push(v00, v10, v01, v01, v10, v11) : idx.push(v00, v01, v10, v01, v11, v10);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  g.computeVertexNormals();
   return g;
 }
 
@@ -323,12 +349,24 @@ async function buildFrame(J, M) {                 // origin = BB
   }
   // rear flat-mount caliper on the non-drive chainstay, outboard of the rotor
   const cal = rbox(0.056, 0.024, 0.022, 0.008, M.dark, 'rearCaliper'); cal.position.copy(V(J.RA[0] + 52, J.RA[1] + 26, -67.5)); cal.rotation.z = rad(-12); g.add(cal);
-  // wordmark on both sides of the down tube, where its section is flattest
-  const tMid = 0.42, hMid = lerp(0.0195, 0.03, sm(tMid)) + 0.0007, mid = dtA.clone().lerp(dtB, tMid), ang = Math.atan2(dtB.y - dtA.y, dtB.x - dtA.x) + Math.PI;
+  // wordmark on both sides of the down tube, where its section is flattest. The tube widens towards the BB, so a flat
+  // card would sink into it at that end (it took the V): every vertex is set onto the tube's own superellipse section
+  // (the same profile as the tube above: half-depth w, half-width h, exponent 2.8), 0.7 mm proud of it.
+  const [DW, DH] = DECAL.tube, dtLen = dtA.distanceTo(dtB), dtU = dtB.clone().sub(dtA).normalize(), dtS = new THREE.Vector3(-dtU.y, dtU.x, 0);
+  const tubeZ = (t, s) => { const w = lerp(0.0245, 0.031, t), h = lerp(0.0195, 0.03, sm(t)); return h * Math.max(0, 1 - Math.abs(s / w) ** 2.8) ** (1 / 2.8); };
+  const tMid = 0.42, mid = dtA.clone().lerp(dtB, tMid), ang = Math.atan2(dtB.y - dtA.y, dtB.x - dtA.x) + Math.PI;
   for (const side of [1, -1]) {
-    const d = mesh(new THREE.PlaneGeometry(0.2, 0.025), M.decal, 'decal');
-    d.position.copy(mid).add(new THREE.Vector3(0, 0, hMid * side));
+    const d = mesh(new THREE.PlaneGeometry(DW, DH, 48, 6), M.decal, 'decal');
+    d.position.copy(mid);
     d.rotation.set(0, side > 0 ? 0 : Math.PI, side > 0 ? ang : -ang);
+    d.updateMatrix();
+    const inv = d.matrix.clone().invert(), pos = d.geometry.attributes.position, p = new THREE.Vector3(), rel = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {           // the card stays parallel to the frame plane, so only z changes
+      p.fromBufferAttribute(pos, i).applyMatrix4(d.matrix); rel.subVectors(p, dtA).setZ(0);
+      p.z = side * (tubeZ(Math.min(1, Math.max(0, rel.dot(dtU) / dtLen)), rel.dot(dtS)) + 0.0007);
+      p.applyMatrix4(inv); pos.setXYZ(i, p.x, p.y, p.z);
+    }
+    d.geometry.computeVertexNormals();
     g.add(d);
   }
   return g;
@@ -373,8 +411,14 @@ async function buildWheel(rear, M, shared, CH) {  // origin = axle; wheel plane 
     .map(([r, z]) => new THREE.Vector2(r, z));
   const rim = new THREE.LatheGeometry(prof, 120); rim.rotateX(Math.PI / 2); spin.add(mesh(rim, M.rim, 'rim'));
   await slice();
+  // the outer sidewall, spoke bed to hook (prof[18] down to prof[14], the +z side): the decal strip lies on it, 0.2 mm proud
+  const wall = prof.slice(14, 19).reverse(), wallZ = r => {
+    for (let k = 1; k < wall.length; k++) if (r <= wall[k].x) return lerp(wall[k - 1].y, wall[k].y, (r - wall[k - 1].x) / (wall[k].x - wall[k - 1].x));
+    return wall[wall.length - 1].y;
+  };
+  const [s0, s1] = rimStrip();
   for (const side of [1, -1]) for (const a of [Math.PI / 2, -Math.PI / 2])
-    spin.add(mesh(arcStripGeometry(bed + 0.012, flange - 0.008, a - 0.42, a + 0.42, 48, 0.0143 * side, side < 0), M.rimDecal, 'rimDecal'));
+    spin.add(mesh(arcStripGeometry(s0, s1, a - DECAL.rimArc, a + DECAL.rimArc, 72, r => side * (wallZ(r) + 0.0002), side < 0), M.rimDecal, 'rimDecal'));
   const valve = axleCyl(0.003, 0.034, M.steel, 'valve'); valve.rotation.set(0, 0, 0); valve.geometry.rotateX(-Math.PI / 2); valve.position.set(0, -(bed - 0.012), 0); spin.add(valve);
   // hub: shell with flanges (lathe), end caps
   const old = (rear ? BUILD.rearOLD : BUILD.frontOLD) * MM, fl = rear ? [[0.020, 0.024], [-0.030, 0.024]] : [[0.032, 0.022], [-0.032, 0.022]];

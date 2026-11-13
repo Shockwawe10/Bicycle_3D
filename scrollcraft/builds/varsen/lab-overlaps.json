@@ -1,12 +1,12 @@
 {
  "44": {
-  "ms": 402,
+  "ms": 496,
   "samples": 1,
   "pairTests": 66,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -18,7 +18,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -26,7 +26,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
@@ -118,13 +118,13 @@
   ]
  },
  "49": {
-  "ms": 427,
+  "ms": 481,
   "samples": 1,
   "pairTests": 66,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -136,7 +136,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -144,7 +144,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
@@ -236,13 +236,13 @@
   ]
  },
  "52": {
-  "ms": 400,
+  "ms": 474,
   "samples": 1,
   "pairTests": 66,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -254,7 +254,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -262,7 +262,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
@@ -354,13 +354,13 @@
   ]
  },
  "54": {
-  "ms": 379,
+  "ms": 433,
   "samples": 1,
   "pairTests": 66,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -372,7 +372,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -380,7 +380,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
@@ -472,13 +472,13 @@
   ]
  },
  "56": {
-  "ms": 8498,
+  "ms": 8953,
   "samples": 5699,
   "pairTests": 70309,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -490,7 +490,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -498,7 +498,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
@@ -598,13 +598,13 @@
   ]
  },
  "58": {
-  "ms": 419,
+  "ms": 507,
   "samples": 1,
   "pairTests": 66,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -616,7 +616,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -624,7 +624,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
@@ -716,13 +716,13 @@
   ]
  },
  "61": {
-  "ms": 382,
+  "ms": 437,
   "samples": 1,
   "pairTests": 66,
   "bodies": [
    {
     "name": "frame",
-    "triangles": 13664
+    "triangles": 14812
    },
    {
     "name": "fork",
@@ -734,7 +734,7 @@
    },
    {
     "name": "wheelF/spin",
-    "triangles": 17168
+    "triangles": 20240
    },
    {
     "name": "wheelR",
@@ -742,7 +742,7 @@
    },
    {
     "name": "wheelR/spin",
-    "triangles": 28124
+    "triangles": 31196
    },
    {
     "name": "drivetrain",
