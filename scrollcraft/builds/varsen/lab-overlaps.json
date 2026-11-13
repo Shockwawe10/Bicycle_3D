@@ -1,0 +1,836 @@
+{
+ "44": {
+  "ms": 402,
+  "samples": 1,
+  "pairTests": 66,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5216
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   }
+  ]
+ },
+ "49": {
+  "ms": 427,
+  "samples": 1,
+  "pairTests": 66,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5216
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   }
+  ]
+ },
+ "52": {
+  "ms": 400,
+  "samples": 1,
+  "pairTests": 66,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5216
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   }
+  ]
+ },
+ "54": {
+  "ms": 379,
+  "samples": 1,
+  "pairTests": 66,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5192
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   }
+  ]
+ },
+ "56": {
+  "ms": 8498,
+  "samples": 5699,
+  "pairTests": 70309,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5192
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      0.16187,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0.0059,
+    "pAtMax": 0.16187499999999802
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      0.75141,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0.0055,
+    "pAtMax": 0.7514062500000609
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      0.54559,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 0.5620937500000505
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      0.63366,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 0.6456562500000498
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      0.89466,
+      0.89516
+     ],
+     [
+      0.89566,
+      0.89616
+     ],
+     [
+      0.89716,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0.0119,
+    "pAtMax": 0.8946562500000557
+   }
+  ]
+ },
+ "58": {
+  "ms": 419,
+  "samples": 1,
+  "pairTests": 66,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5192
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   }
+  ]
+ },
+ "61": {
+  "ms": 382,
+  "samples": 1,
+  "pairTests": 66,
+  "bodies": [
+   {
+    "name": "frame",
+    "triangles": 13664
+   },
+   {
+    "name": "fork",
+    "triangles": 5216
+   },
+   {
+    "name": "wheelF",
+    "triangles": 796
+   },
+   {
+    "name": "wheelF/spin",
+    "triangles": 17168
+   },
+   {
+    "name": "wheelR",
+    "triangles": 796
+   },
+   {
+    "name": "wheelR/spin",
+    "triangles": 28124
+   },
+   {
+    "name": "drivetrain",
+    "triangles": 8568
+   },
+   {
+    "name": "drivetrain/crankset",
+    "triangles": 9192
+   },
+   {
+    "name": "drivetrain/crankNDS",
+    "triangles": 1432
+   },
+   {
+    "name": "drivetrain/chain",
+    "triangles": 42112
+   },
+   {
+    "name": "handlebar",
+    "triangles": 12248
+   },
+   {
+    "name": "saddle",
+    "triangles": 7444
+   }
+  ],
+  "overlaps": [],
+  "fits": [
+   {
+    "shaft": "fork:steerer",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "fork:steerer",
+    "host": "handlebar",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "drivetrain/crankset:spindle",
+    "host": "drivetrain/crankNDS",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": null
+   },
+   {
+    "shaft": "saddle:seatpost",
+    "host": "frame",
+    "ranges": [
+     [
+      1,
+      1
+     ]
+    ],
+    "maxDeviationMm": 0,
+    "pAtMax": 1
+   }
+  ]
+ }
+}
