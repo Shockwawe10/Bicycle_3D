@@ -98,12 +98,18 @@ html { background: var(--sc-canvas); }
 .skip:focus { top: var(--sc-4); }
 
 /* --------------------------------------------------------------- chrome */
+/* The renderer's own canvas is never shown: each plate copies its picture into a canvas of its own (.plate__gl), which
+   scrolls with the page. #gl keeps a screen-sized box so its drawing buffer can hold any plate. */
 #gl {
   position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh;
-  z-index: 2; pointer-events: none; display: block;
+  visibility: hidden; pointer-events: none; display: block;
+}
+.plate__gl {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
   opacity: 0; transition: opacity 600ms var(--sc-ease-out);
 }
-.gl-ready #gl { opacity: 1; }
+.gl-ready .plate__gl { opacity: 1; }
+.no-webgl .plate__gl { display: none; }
 
 .folio {
   position: fixed; z-index: 60; inset: 0 auto 0 0; width: var(--folio-w);
@@ -196,13 +202,9 @@ main { padding-left: var(--folio-w); }
   #detail .plate--detail, #detail .detail__copy { position: relative; inset: auto; translate: none; width: auto; max-width: 40rem; }
   #detail .plate--detail { aspect-ratio: 16 / 10; max-width: none; }
 }
-/* The dimension lines ride a fixed layer just above the canvas (#gl, z 2); app.js lays each one over its plate. */
-.dims-layer {
-  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh;
-  z-index: 3; pointer-events: none; overflow: hidden;
-}
-.no-webgl .dims-layer { display: none; }
-.dims { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; visibility: hidden; }
+/* The dimension lines sit in their plate, over its canvas, and scroll with it. */
+.dims { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.no-webgl .dims { display: none; }
 /* A drawing, not a sticker: hairlines, faint dashed extensions, small nodes on the measured points, quiet labels */
 .dims line { fill: none; vector-effect: non-scaling-stroke; shape-rendering: geometricPrecision; }
 .dims .dims__line { stroke: var(--sc-accent); stroke-width: 1; }
@@ -287,18 +289,16 @@ main { padding-left: var(--folio-w); }
 /* ------------------------------------------------- in detail (III, the peak) */
 /* One pinned stage: the copy column on the left over bare ground, the plate on the right running to the edge.
    The type never sits on the bike: the plate starts where the column ends. */
-.detail { background: var(--graphite); }   /* flat: the fade over the plate's inner edge is this colour */
+.detail { background: var(--graphite); }
 .plate--detail { position: absolute; inset: 0 0 0 38%; }
 /* the caption sits in the copy column's foot, on bare ground (in the plate it would be under the close-ups) */
 .plate--detail .plate__cap { left: calc(var(--sc-gutter) - 61.29%); right: auto; bottom: var(--sc-5); }   /* 61.29% = 38 / 62 of the plate */
-.plate--detail .plate__poster { background-size: cover; -webkit-mask-image: linear-gradient(to right, transparent, #000 17%); mask-image: linear-gradient(to right, transparent, #000 17%); }
-.sc-grain { z-index: 4; }   /* the film grain lies over everything drawn, the dims layer and this fade included, so no edge shows where it stops */
-.plate-fade {
-  position: absolute; left: 0; top: 0; visibility: hidden; pointer-events: none;
-  --g: var(--graphite);
-  background: linear-gradient(to right, var(--g) 0%, color-mix(in oklab, var(--g) 88%, transparent) 20%, color-mix(in oklab, var(--g) 55%, transparent) 48%, color-mix(in oklab, var(--g) 20%, transparent) 76%, transparent 100%);
+/* the plate meets the copy mid-screen: its inner edge fades out (a mask), so the close-ups dissolve, never end on a crop */
+.plate--detail .plate__poster { background-size: cover; }
+.plate--detail .plate__poster, .plate--detail .plate__gl {
+  -webkit-mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.45) 8%, rgb(0 0 0 / 0.85) 13%, #000 18%);
+  mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.45) 8%, rgb(0 0 0 / 0.85) 13%, #000 18%);
 }
-.plate-fade--bottom { background: linear-gradient(to top, var(--g) 0%, color-mix(in oklab, var(--g) 88%, transparent) 20%, color-mix(in oklab, var(--g) 55%, transparent) 48%, color-mix(in oklab, var(--g) 20%, transparent) 76%, transparent 100%); }
 .detail__copy {
   position: absolute; z-index: 5; left: var(--sc-gutter); top: 50%; translate: 0 -50%;
   width: calc(38% - 2 * var(--sc-gutter)); max-width: 27rem;
@@ -376,7 +376,10 @@ main { padding-left: var(--folio-w); }
   /* the tour on phones: the plate on top under the running head, the copy beneath it */
   .plate--detail { inset: 3.25rem 0 auto 0; height: 56svh; }   /* starts under the running head: its top edge is the bar's */
   .plate--detail .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); top: calc(100% + var(--sc-2)); bottom: auto; }
-  .plate--detail .plate__poster { -webkit-mask-image: linear-gradient(to top, transparent, #000 26%); mask-image: linear-gradient(to top, transparent, #000 26%); }
+  .plate--detail .plate__poster, .plate--detail .plate__gl {
+    -webkit-mask-image: linear-gradient(to top, transparent, rgb(0 0 0 / 0.45) 10%, rgb(0 0 0 / 0.85) 18%, #000 26%);
+    mask-image: linear-gradient(to top, transparent, rgb(0 0 0 / 0.45) 10%, rgb(0 0 0 / 0.85) 18%, #000 26%);
+  }
   .detail__copy { top: auto; bottom: clamp(1.5rem, 5svh, 3rem); right: var(--sc-gutter); width: auto; max-width: none; translate: none; }
   .detail__intro .ch__title { font-size: clamp(2.2rem, 10vw, 3.2rem); }
   .detail__lede { margin-top: var(--sc-3); font-size: var(--sc-t-base); }
@@ -387,5 +390,5 @@ main { padding-left: var(--folio-w); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #gl { transition: none; }
+  .plate__gl { transition: none; }
 }

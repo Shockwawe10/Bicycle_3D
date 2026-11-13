@@ -23,15 +23,23 @@ if (window.ScrollCraft) ScrollCraft.mount(document.body);
    Scroll progress, measured from the DOM (not from the engine), damped for the 3D.
    ===================================================================================== */
 const sec = { front: $('#front'), chart: $('#chart'), build: $('#build'), detail: $('#detail'), yours: $('#yours'), book: $('#book') };
-function pinnedP(el) { const r = el.getBoundingClientRect(), span = r.height - innerHeight; return span > 1 ? clamp01(-r.top / span) : (r.top < 0 ? 1 : 0); }
-function flowP(el) { const r = el.getBoundingClientRect(); return clamp01((innerHeight - r.top) / (r.height + innerHeight)); }
-const TAU_S = 0.17;
-const damped = {};
+// Both take a rect measured at the top of the frame (measure()), so a frame reads layout once, before it writes.
+function pinnedP(r) { const span = r.height - innerHeight; return span > 1 ? clamp01(-r.top / span) : (r.top < 0 ? 1 : 0); }
+function flowP(r) { return clamp01((innerHeight - r.top) / (r.height + innerHeight)); }
+/* Every scroll-driven value follows its target on a critically damped spring (the exact solution, so it is the same at
+   any frame rate). A first-order lag jumps to full speed the instant the target moves, which is what a wheel notch
+   looked like; the spring starts and stops at zero speed and never overshoots. OMEGA 10: 90% of a step in 0.39 s,
+   99% in 0.66 s; at a steady scroll it trails by 0.2 s of travel. */
+const OMEGA = 10;
+const damped = {}, dampedV = {};
 function follow(key, target, dt) {
   const cur = damped[key];
-  if (cur === undefined || RM.matches || dt === 0) return (damped[key] = target);
-  const v = cur + (target - cur) * (1 - Math.exp(-dt / TAU_S));
-  return (damped[key] = Math.abs(v - target) < 1e-4 ? target : v);
+  if (cur === undefined || RM.matches) { dampedV[key] = 0; return (damped[key] = target); }   // first frame, or reduced motion: no easing
+  const v0 = dampedV[key] || 0, e0 = cur - target, ex = Math.exp(-OMEGA * dt), k = (v0 + OMEGA * e0) * dt;
+  let e = (e0 + k) * ex, v = (v0 - OMEGA * k) * ex;
+  if (Math.abs(e) < 1e-4 && Math.abs(v) < 1e-3) e = v = 0;   // settle exactly, so the loop stops
+  dampedV[key] = v;
+  return (damped[key] = target + e);
 }
 
 /* =====================================================================================
@@ -144,11 +152,42 @@ function buildVolumes(base) {
     return { a, dur: 0.15 * (own.w[1] - own.w[0]), corners: boxCorners(box), target: box.getCenter(new THREE.Vector3()) };
   });
 }
-function buildView(tt) {
-  const V = gl.buildVols;
-  let k = 0; while (k < V.length - 1 && tt >= V[k + 1].a) k++;
-  const cur = V[k], prev = V[Math.max(0, k - 1)], blend = k === 0 ? 1 : smooth(cur.a, cur.a + cur.dur, tt);
-  return { az: lerp(30, 16, tt), el: lerp(13, 7, tt), fov: 19, corners: cur.corners, target: cur.target, margin: 0.06, from: prev, blend };
+/* The build's camera. The framing volumes are steps (a new one as each part starts), and stepping between them over a
+   few percent of the scroll was the sharpest jolt on the page (measured: tools/check-smoothness.mjs). The camera follows
+   a smoothed copy instead: the stepped framing (target, and distance in log space) sampled finely and smoothed with a
+   Gaussian of sigma 0.03 of the build, led by one sigma so each part is mostly in frame as it fades in. One path per plate
+   aspect (the fit depends on it), cached. */
+const BUILD_FOV = 19, buildAz = tt => lerp(30, 16, tt), buildEl = tt => lerp(13, 7, tt);
+const buildPaths = new Map();
+function buildPath(aspect) {
+  const key = aspect.toFixed(2);
+  if (buildPaths.has(key)) return buildPaths.get(key);
+  const V = gl.buildVols, N = 240, SIG = 0.03, raw = [];
+  for (let i = 0; i <= N; i++) {
+    const tt = clamp01(i / N + SIG);                   // led by one sigma
+    let k = 0; while (k < V.length - 1 && tt >= V[k + 1].a) k++;
+    axes(buildAz(tt), buildEl(tt));
+    raw.push([V[k].target, Math.log(fitDistance({ fov: BUILD_FOV, corners: V[k].corners, target: V[k].target, margin: 0.06 }, aspect))]);
+  }
+  const R = Math.ceil(3 * SIG * N), wts = Array.from({ length: 2 * R + 1 }, (_, j) => Math.exp(-0.5 * ((j - R) / (SIG * N)) ** 2));
+  const path = raw.map((_, i) => {
+    const t = new THREE.Vector3(); let ld = 0, sw = 0;
+    for (let j = -R; j <= R; j++) { const s = raw[Math.min(N, Math.max(0, i + j))], wt = wts[j + R]; t.addScaledVector(s[0], wt); ld += s[1] * wt; sw += wt; }
+    return [t.multiplyScalar(1 / sw), ld / sw];
+  });
+  buildPaths.set(key, path);
+  return path;
+}
+const _bt = new THREE.Vector3();
+function aimBuild(cam, tt, aspect) {
+  const path = buildPath(aspect), N = path.length - 1, x = clamp01(tt) * N, i = Math.min(N - 1, Math.floor(x)), f = x - i;
+  _bt.lerpVectors(path[i][0], path[i + 1][0], f);
+  const d = Math.exp(lerp(path[i][1], path[i + 1][1], f));
+  axes(buildAz(tt), buildEl(tt));
+  cam.fov = BUILD_FOV; cam.aspect = aspect;
+  cam.position.copy(_bt).addScaledVector(_w, d); cam.up.copy(UP); cam.lookAt(_bt);
+  cam.near = Math.max(0.02, d - 4); cam.far = d + 4;
+  cam.updateProjectionMatrix();
 }
 const boxCorners = b => [0, 1, 2, 3, 4, 5, 6, 7].map(i => new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z));
 function ringCorners(b) {                           // yaw-invariant: the bike's turning circle at its bottom and top
@@ -253,13 +292,18 @@ function frontView(p) {
    and az only ever decreases, so the tour is one orbit: the front three-quarter, the drive side, round the back to the
    rotor side, the cockpit from ahead, and out to the drive-side profile that "Find yours" opens on. No path goes near
    the bike: sampled at plate aspects 0.8 to 1.2, the camera never comes within 0.47 m of any part's bounding box. */
+// The glides get their scroll room by size of swing (the 78-degree rear-end-to-cockpit glide is the longest); the
+// captions (index.html) cut at each glide's midpoint: 0.155, 0.385, 0.605, 0.845.
 const TOUR = [
-  { at: [0.00, 0.12], az: 40, el: 3, fov: 20, whole: true, margin: 0.02 },
-  { at: [0.22, 0.36], az: -14, el: 9, fov: 24, part: 'drivetrain', off: [-0.17, 0.0, 0.04], r: 0.33 },
-  { at: [0.46, 0.58], az: -140, el: 8, fov: 24, part: 'wheelR', off: [0.0, 0.0, -0.04], r: 0.21 },
-  { at: [0.68, 0.80], az: -218, el: 14, fov: 24, part: 'handlebar', off: [0.0, -0.05, 0.0], r: 0.27 },
-  { at: [0.92, 1.00], az: -354, el: 2, fov: 17, whole: true, margin: 0.08 },
+  { at: [0.00, 0.10], az: 40, el: 3, fov: 20, whole: true, margin: 0.02 },
+  { at: [0.21, 0.33], az: -14, el: 9, fov: 24, part: 'drivetrain', off: [-0.17, 0.0, 0.04], r: 0.33 },
+  { at: [0.44, 0.54], az: -140, el: 8, fov: 24, part: 'wheelR', off: [0.0, 0.0, -0.04], r: 0.21 },
+  { at: [0.67, 0.78], az: -218, el: 14, fov: 24, part: 'handlebar', off: [0.0, -0.05, 0.0], r: 0.27 },
+  { at: [0.91, 1.00], az: -354, el: 2, fov: 17, whole: true, margin: 0.08 },
 ];
+// smootherstep: zero speed and zero acceleration at both ends, acceleration continuous in between (inOutCubic flips its
+// acceleration from +12 to -12 at the midpoint, which was the tour's sharpest jolt)
+const smoother = u => u * u * u * (u * (u * 6 - 15) + 10);
 function tourDistance(s, aspect) {
   axes(s.az, s.el);
   if (s.whole) return fitDistance({ fov: s.fov, corners: gl.tourCorners, target: s.target, margin: s.margin }, aspect);
@@ -274,7 +318,7 @@ function aimTour(cam, p, aspect) {
   let k = 0;
   if (b !== a && p > a.at[1]) {
     const u = clamp01((p - a.at[1]) / (b.at[0] - a.at[1]));
-    k = RM.matches ? (u < 0.5 ? 0 : 1) : EASE.inOutCubic(u);   // reduced motion: a cut between holds, no travel
+    k = RM.matches ? (u < 0.5 ? 0 : 1) : smoother(u);   // reduced motion: a cut between holds, no travel
   }
   const dA = tourDistance(a, aspect), dB = tourDistance(b, aspect);
   const d = Math.exp(lerp(Math.log(dA), Math.log(dB), k));      // zoom in log space: an even push-in, not a lurch
@@ -297,7 +341,7 @@ function plateSpec(name) {
     case 'build': {
       const tb = damped.build ?? 0, tt = clamp01((tb - 0.06) / 0.86);
       if (RM.matches) return { bikes: [[gl.base, assemblyInPlace(tt), 1]], yaw: 0, view: gl.buildStill, t: tt };
-      return { bikes: [[gl.base, assembly(tt), 1]], yaw: 0, view: buildView(tt), t: tt };
+      return { bikes: [[gl.base, assembly(tt), 1]], yaw: 0, cam: aspect => aimBuild(gl.camera, tt, aspect), t: tt };
     }
     case 'detail': {
       const p = damped.detail ?? 0;
@@ -333,37 +377,12 @@ function makeDims(svg) {
   const nodes = el('g', { class: 'dims__nodes' });
   return { svg, stack: dim('stack'), reach: dim('reach'), wb: dim('wb'), nodes: ['BB', 'HTT', 'RA', 'FA'].map(() => el('circle', { class: 'dims__node', r: '2.6' }, nodes)), nodesG: nodes };
 }
-// The dimension lines live on their own fixed layer just above the canvas. Left in a pinned chapter's plate they sit in
-// the sticky stage's stacking context (z 1), under the canvas (z 2), and the bike paints over its own labels.
-const dimsLayer = document.createElement('div');
-dimsLayer.className = 'dims-layer'; dimsLayer.setAttribute('aria-hidden', 'true'); canvas.after(dimsLayer);
+// The dimension lines stay in their plate, above the plate's own canvas, so they scroll with it on the compositor.
 const DIMS = Object.fromEntries($$('[data-plate] .dims').map(s => {
   const plate = s.closest('[data-plate]');
   if (plate.closest('.ch--graphite')) s.classList.add('dims--graphite');   // the text halo takes the chapter's ground
-  dimsLayer.append(s);
   return [plate.dataset.plate, makeDims(s)];
 }));
-// The tour's plate runs to the screen edges but meets the copy mid-screen, where its close-ups would end on a hard crop
-// line. A ground-coloured fade over that inner edge (the left on desktop, the bottom on phones), placed in the same frame
-// the canvas draws, dissolves them into the ground.
-const plateFade = document.createElement('div'); plateFade.className = 'plate-fade'; dimsLayer.append(plateFade);
-let fadeOn = false, fadeKey = '';
-function placeFade(r) {
-  const phone = innerWidth <= 860;
-  const w = phone ? r.width : Math.min(260, Math.max(90, r.width * 0.17)), h = phone ? Math.min(190, Math.max(70, r.height * 0.26)) : r.height;
-  // whole pixels, reaching one past the plate's edge: a fractional edge lets a column of the canvas through
-  const x = Math.floor(phone ? r.left : r.left - 1), y = Math.floor(phone ? r.bottom - h : r.top), W = Math.ceil(w + (phone ? 0 : 1)), H = Math.ceil(h + (phone ? 1 : 0));
-  const key = `${phone} ${x} ${y} ${W} ${H}`;
-  if (key !== fadeKey) { fadeKey = key; plateFade.classList.toggle('plate-fade--bottom', phone); Object.assign(plateFade.style, { transform: `translate(${x}px, ${y}px)`, width: `${W}px`, height: `${H}px` }); }
-  if (!fadeOn) { plateFade.style.visibility = 'visible'; fadeOn = true; }
-}
-/** Lay a plate's dimension layer over the plate's on-screen rectangle, in the same frame the canvas draws it. */
-function placeDims(name, r) {
-  const D = DIMS[name]; if (!D) return;
-  const key = `${r.left.toFixed(1)} ${r.top.toFixed(1)} ${r.width.toFixed(1)} ${r.height.toFixed(1)}`;
-  if (D.rect !== key) { D.rect = key; Object.assign(D.svg.style, { transform: `translate(${r.left}px, ${r.top}px)`, width: `${r.width}px`, height: `${r.height}px` }); }
-  if (!D.on) { D.svg.style.visibility = 'visible'; D.on = true; }
-}
 const _p = new THREE.Vector3();
 function project(bike, xmm, ymm, cam, w, h) {
   _p.set(xmm * MM, ymm * MM, 0); bike.root.localToWorld(_p); _p.project(cam);
@@ -405,39 +424,67 @@ function drawDims(name, spec, cam, w, h) {
 }
 
 /* =====================================================================================
-   Rendering: one canvas, a scissor per visible plate.
+   Rendering: one WebGL renderer, kept off screen; each plate shows the bike in its own 2D canvas, in the page.
+   A fixed canvas drawn from the page's script could only follow the page a frame late while the browser scrolls it
+   on its own thread, so a plate's bike swam against its own caption and dimension lines. Canvases in the page scroll
+   with everything else. A plate is drawn only when its picture changes (its signature: size, light, camera, the
+   bikes and their state), so scrolling past a still plate costs no rendering at all.
    ===================================================================================== */
 function sizeCanvas() {
   if (!gl) return;
   const w = innerWidth, h = canvas.clientHeight || innerHeight;
   gl.renderer.setSize(w, h, false); gl.cw = w; gl.ch = h;
 }
-function renderPlates() {
-  const { renderer, scene, camera, spinner } = gl, W = gl.cw, H = gl.ch;
-  renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
+const plateGL = Object.fromEntries(Object.entries(plateEls).map(([name, el]) => {
+  const cv = document.createElement('canvas'); cv.className = 'plate__gl'; cv.setAttribute('aria-hidden', 'true');
+  const poster = el.querySelector('.plate__poster'); poster ? poster.after(cv) : el.prepend(cv);   // under the dims and the caption
+  return [name, { cv, ctx: null, sig: '' }];
+}));
+const _vp = new THREE.Vector4();
+function plateSignature(spec, r, pr) {
+  const e = gl.camera.matrixWorld.elements, q = gl.camera.projectionMatrix.elements;
+  let s = `${Math.round(r.width * pr)}x${Math.round(r.height * pr)}|${light.t.toFixed(3)}|${spec.yaw.toFixed(4)}|${RM.matches}`;
+  for (const [b, st, a] of spec.bikes) s += `|${b.chart.size}:${a.toFixed(3)}:${st === ASSEMBLED ? 'A' : (spec.t ?? 0).toFixed(4)}`;
+  for (let i = 0; i < 16; i++) s += ',' + e[i].toFixed(5);
+  for (let i = 0; i < 16; i++) s += ',' + q[i].toFixed(5);
+  return s;
+}
+/** Draw the scene (already posed and aimed) at the off-screen canvas's top-left, then copy it into the plate's canvas. */
+function drawPlate(P, r) {
+  const { renderer, scene, camera } = gl;
+  if (r.width > gl.cw || r.height > gl.ch) {        // a plate larger than the screen: grow the drawing buffer to hold it
+    const w = Math.max(gl.cw, Math.ceil(r.width)), h = Math.max(gl.ch, Math.ceil(r.height));
+    renderer.setSize(w, h, false); gl.cw = w; gl.ch = h;
+  }
+  const y = gl.ch - r.height;
+  renderer.setViewport(0, y, r.width, r.height); renderer.setScissor(0, y, r.width, r.height); renderer.setScissorTest(true);
+  renderer.getCurrentViewport(_vp);                 // in drawing-buffer pixels, as GL rounded them
+  PLATE_PX.value.copy(_vp);
+  renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
+  const w = _vp.z, h = _vp.w, srcY = canvas.height - (_vp.y + h);
+  if (P.cv.width !== w || P.cv.height !== h) { P.cv.width = w; P.cv.height = h; }
+  P.ctx ||= P.cv.getContext('2d');
+  P.ctx.clearRect(0, 0, w, h); P.ctx.drawImage(canvas, 0, srcY, w, h, 0, 0, w, h);
+}
+function renderPlates(rects) {
+  const { renderer, camera, spinner } = gl, H = innerHeight, pr = renderer.getPixelRatio();
   let drawn = 0;
-  const labelled = new Set();
   for (const [name, el] of Object.entries(plateEls)) {
-    const r = el.getBoundingClientRect();
-    if (r.bottom <= 0 || r.top >= H || r.right <= 0 || r.left >= W || r.width < 4 || r.height < 4) continue;
+    const r = rects[name], P = plateGL[name];
+    // near the screen, not only on it: a plate is drawn half a screen before it arrives, never as it arrives
+    if (r.bottom < -H * 0.5 || r.top > H * 1.5 || r.width < 4 || r.height < 4) continue;
     const spec = plateSpec(name); if (!spec) continue;
     for (const b of gl.all) b.root.visible = false;
     for (const [b, st, a] of spec.bikes) { b.root.visible = true; pose(b, st, a); }
     spinner.rotation.y = spec.yaw;
     if (spec.cam) spec.cam(r.width / r.height); else aim(camera, spec.view, r.width / r.height);
-    const x = r.left, y = H - r.bottom, pr = renderer.getPixelRatio();
-    renderer.setViewport(x, y, r.width, r.height);
-    PLATE_PX.value.set(x * pr, y * pr, r.width * pr, r.height * pr);
-    const sx = Math.max(0, x), sy = Math.max(0, y);
-    renderer.setScissor(sx, sy, Math.min(W, x + r.width) - sx, Math.min(H, y + r.height) - sy);
-    renderer.render(scene, camera);
-    if (spec.dims?.bike) { drawDims(name, spec.dims, camera, r.width, r.height); placeDims(name, r); labelled.add(name); }
+    camera.updateMatrixWorld();
+    const sig = plateSignature(spec, r, pr);
+    if (sig !== P.sig) { drawPlate(P, r); P.sig = sig; drawn++; }
+    if (spec.dims?.bike) { spec.dims.bike.root.updateWorldMatrix(true, false); drawDims(name, spec.dims, camera, r.width, r.height); }
+    if (trace.on && spec.bikes[0]) { const b = spec.bikes[0][0], J = b.J; b.root.updateWorldMatrix(true, false); trace.plates[name] = [[0, 0], J.FA, J.RA].flatMap(([x, y]) => project(b, x, y, camera, r.width, r.height).map(n => +n.toFixed(2))); }
     if (name === 'build' || name === 'detail') el.dataset.scVerifyState = spec.t.toFixed(3);
-    if (name === 'detail') { placeFade(r); labelled.add('fade'); }
-    drawn++;
   }
-  for (const [name, D] of Object.entries(DIMS)) if (D.on && !labelled.has(name)) { D.svg.style.visibility = 'hidden'; D.on = false; }
-  if (fadeOn && !labelled.has('fade')) { plateFade.style.visibility = 'hidden'; fadeOn = false; }
   spinner.rotation.y = 0;
   return drawn;
 }
@@ -477,7 +524,7 @@ function syncPosters() {
     if (el) el.style.backgroundImage = `url(assets/posters/${file}.webp)`;
     shownPoster[name] = key;
   };
-  const stop = tourStop(pinnedP(sec.detail));
+  const stop = tourStop(pinnedP(sec.detail.getBoundingClientRect()));
   set('detail', stop, `tour-${stop}`);
   set('yours', yours.size, `size-${yours.size}`);
 }
@@ -486,13 +533,27 @@ function syncPosters() {
    The loop: damped progress, plate rendering, DOM updates. Runs only while something moves.
    ===================================================================================== */
 let raf = 0, last = 0, dirty = true;
+// Smoothness trace (tools/check-smoothness.mjs): per frame, what it cost and where each plate put the bike within the
+// plate (bottom bracket and both axles, plate px: the animation alone, not the page's scroll). Off unless a check turns it on.
+const trace = { on: false, frames: [], plates: null };
 function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+/** Every layout read the frame needs, in one place at its start: section and plate rectangles. */
+const measured = { sec: {}, plates: {} };
+function measure() {
+  for (const [k, el] of Object.entries(sec)) measured.sec[k] = el.getBoundingClientRect();
+  for (const [k, el] of Object.entries(plateEls)) measured.plates[k] = el.getBoundingClientRect();
+  return measured;
+}
 function frame(now) {
   raf = 0;
+  const t0 = performance.now();
+  if (trace.on) trace.plates = {};
+  // after an idle stretch the first step is one frame long: the gap is not elapsed motion, and 0 would snap
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60, consecutive = last !== 0;
   let moving = false;
-  const targets = { front: pinnedP(sec.front), chart: flowP(sec.chart), build: pinnedP(sec.build), detail: pinnedP(sec.detail) };
-  for (const [k, v] of Object.entries(targets)) { const before = damped[k]; follow(k, v, consecutive ? dt : 0); if (damped[k] !== v) moving = true; if (before !== damped[k]) dirty = true; }
+  const M = measure(), S = M.sec;
+  const targets = { front: pinnedP(S.front), chart: flowP(S.chart), build: pinnedP(S.build), detail: pinnedP(S.detail) };
+  for (const [k, v] of Object.entries(targets)) { const before = damped[k]; follow(k, v, dt); if (damped[k] !== v || dampedV[k]) moving = true; if (before !== damped[k]) dirty = true; }
   if (!spin.drag && spin.vel !== 0) {
     spin.yaw += spin.vel * dt; spin.yaw = Math.atan2(Math.sin(spin.yaw), Math.cos(spin.yaw)); spin.vel *= Math.exp(-dt / 0.45);
     if (Math.abs(spin.vel) < 0.02) spin.vel = 0; moving = true; dirty = true;
@@ -502,14 +563,15 @@ function frame(now) {
     yours.t = Math.min(1, yours.t + dt / 0.75); moving = true; dirty = true;
     if (yours.t >= 1) { yours.size = yours.to.chart.size; yours.from = yours.to = null; }
   }
-  updateDOM();
+  updateDOM(M);
   if (gl?.ready) {
     applyLight();
-    renderPlates();
+    renderPlates(M.plates);
     if (consecutive && moving) sampleFrame(dt * 1000, now);
   }
   dirty = false;
   if (moving) { last = now; kick(); } else last = 0;
+  if (trace.on) trace.frames.push({ now, cost: performance.now() - t0, y: scrollY, p: { ...damped }, plates: trace.plates });
 }
 addEventListener('scroll', () => { dirty = true; kick(); }, { passive: true });
 addEventListener('resize', () => { sizeCanvas(); kick(); }, { passive: true });
@@ -529,10 +591,10 @@ const folioLinks = Object.fromEntries($$('[data-folio]').map(a => [a.dataset.fol
 const stepEls = $$('.step'), STEP_OF = ['frame', 'fork', 'wheels', 'wheels', 'drivetrain', 'cockpit', 'saddle'];
 const frontFigure = $('.front__figure');
 const dom = { chapter: '', step: '' };
-function updateDOM() {
+function updateDOM(M) {                             // writes only: the rectangles were read in measure()
   const mid = innerHeight * 0.45;
   let chapter = '';
-  for (const s of $$('[data-chapter]')) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) chapter = s.dataset.chapter; }
+  for (const [k, el] of Object.entries(sec)) { const r = M.sec[k]; if (el.dataset.chapter && r.top <= mid && r.bottom > mid) chapter = el.dataset.chapter; }
   if (chapter !== dom.chapter) { for (const [k, a] of Object.entries(folioLinks)) a.setAttribute('aria-current', k === chapter ? 'true' : 'false'); dom.chapter = chapter; }
   const tb = clamp01(((damped.build ?? 0) - 0.06) / 0.86);
   let k = 0; STAGES.forEach((s, i) => { if (tb >= s.w[0] - 0.01) k = i; });
@@ -744,6 +806,7 @@ defineLive(window.__bike, {
   useSize: s => { qaBike = s === 56 ? null : bikeOf(s); return s === 56 || !!qaBike; },
   choose, ensureSize, bikeOf, get spin() { return { yaw: spin.yaw, vel: spin.vel } },
   poster: (kind, arg, cssW) => renderPoster(kind, arg, cssW),
+  trace: { start: () => { trace.frames = []; trace.on = true; }, stop: () => { trace.on = false; return trace.frames; } },
   aimTour: (p, aspect) => { aimTour(gl.camera, p, aspect); return { pos: gl.camera.position.toArray(), near: gl.camera.near }; },
   settled: () => new Promise(res => { kick(); let n = 0; const chk = () => (++n > 3 && !raf ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }),
 });

@@ -96,8 +96,18 @@ chapter I picks the bike up with its dimension lines.
 
 ## Rendering
 
-One fixed, transparent WebGL canvas above the section grounds and below the type, pointer-events off.
-Each plate is a DOM box; every frame the bike is drawn into each visible plate's rectangle (scissor),
-with that plate's camera and that plate's state (assembly, size, yaw); the tour (III) aims the camera
-along its orbit from the act's damped progress. Render on demand only. Posters for browsers without
-WebGL are rendered from the same scene by tools/render-posters.mjs (the tour has one per hold).
+One WebGL renderer with its canvas kept off screen. Each plate has its own 2D canvas in the page: the
+bike is drawn with that plate's camera and state (assembly, size, yaw) and copied in. The browser
+scrolls those canvases with the page, so a bike never trails its own caption or dimension lines
+(a single fixed canvas, drawn from script, followed the page a frame late; revised 2026-11-13). A
+plate is drawn only when its picture changes (a signature of size, light, camera and bikes), half a
+screen before it arrives. Render on demand only.
+
+Motion: every scroll-driven value follows the scroll on a critically damped spring (OMEGA 10), which
+starts and stops at zero speed; the build's camera follows a Gaussian-smoothed copy of its framing
+path; the tour glides on smootherstep. Measured with tools/check-smoothness.mjs (the same wheel and
+trackpad input on the old and new code): build camera acceleration p95 38,171 to 1,774 px/s2, tour
+105,154 to 15,414, dropped frames 10 to 0, page work per frame 2.2 to 1.0 ms.
+
+Posters for browsers without WebGL are rendered from the same scene by tools/render-posters.mjs (the
+tour has one per hold).

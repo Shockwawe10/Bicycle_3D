@@ -126,5 +126,5 @@ both, in the order the visitor meets them, and the peak's last frame is the prof
 ## Authored silence
 
 - **The opening of III** holds a still hero frame with one line before the camera moves (p 0 to
-  0.12): the quiet before the peak, not dead scroll.
+  0.10): the quiet before the peak, not dead scroll.
 - **The end of III** holds the profile with one line ("Next, it rebuilds itself at yours") before IV.
