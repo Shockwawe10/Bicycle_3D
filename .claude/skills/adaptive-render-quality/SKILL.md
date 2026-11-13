@@ -20,6 +20,11 @@ description: Adapt three.js render cost to the device by stepping the pixel rati
   - no shadow maps (one contact-shadow quad instead);
   - share materials, with one shared transparent twin set when fades never overlap;
   - PMREM at 128 on touch, 256 on desktop.
+- **Sharp at rest:** the levels above set the cost of motion frames, and a step down rarely comes back on a
+  render-on-demand page (the step-up counter only runs during motion). So once the page settles (about 140 ms with no
+  frame), redraw what is on screen once at min(devicePixelRatio, 3), capped by pixel count, with a buffer the size of
+  the subject; then restore the level. Stills get the full resolution, motion costs what it did. Make the test settle
+  hook wait for that pass, or screenshots race it. (Varsen build: 1.5x to 3x on a 3x phone, 11 to 20 ms a pass.)
 - **Report** level and dpr on a debug object (`window.__bike.quality`), so tests can read what ran.
 - **Every runtime `renderer.setSize()` or `setPixelRatio()` must schedule a redraw.** `setSize` clears the
   canvas, so a quality step on the last frame of a scroll otherwise leaves it blank until the next

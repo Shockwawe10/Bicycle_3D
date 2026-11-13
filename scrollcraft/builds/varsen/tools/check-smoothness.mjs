@@ -1,5 +1,5 @@
 // Scroll smoothness of the Varsen build, measured:
-//   node scrollcraft/builds/varsen/tools/check-smoothness.mjs [label] [w] [h] [port]
+//   node scrollcraft/builds/varsen/tools/check-smoothness.mjs [label] [w] [h] [port] [dpr]
 // Scrolls the whole page twice, the way people do, with the page's own trace on (window.__bike.trace):
 //   wheel     notches of 100 px in bursts, each animated the way browsers animate a wheel notch (scrollBy, smooth);
 //   trackpad  a steady stream of small deltas, applied at once (as a trackpad sends them).
@@ -12,9 +12,9 @@
 // Writes the raw trace and the summary to qa/tmp/smooth-<label>.json (ignored), so two runs can be compared.
 import { chromium } from 'playwright';
 import { writeFileSync, mkdirSync } from 'node:fs';
-const [label = 'run', w = '1440', h = '900', port = '4500'] = process.argv.slice(2);
+const [label = 'run', w = '1440', h = '900', port = '4500', dpr = '1'] = process.argv.slice(2);
 const b = await chromium.launch({ channel: 'chrome', args: ['--enable-gpu', '--use-angle=d3d11', '--ignore-gpu-blocklist'] });
-const page = await (await b.newContext({ viewport: { width: +w, height: +h } })).newPage();
+const page = await (await b.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: +dpr, ...(+dpr > 1 ? { isMobile: true, hasTouch: true } : {}) })).newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
 await page.goto(`http://127.0.0.1:${port}/?qa=1`);
@@ -38,12 +38,12 @@ async function pass(kind) {
     for (let y = 0; y < end; y += 14) { await page.mouse.wheel(0, 14); await page.waitForTimeout(16); }
   }
   await page.waitForTimeout(900);
-  return page.evaluate(() => { window.__rafOn = false; return { frames: window.__bike.trace.stop(), raf: window.__raf, loaf: window.__loaf }; });
+  return page.evaluate(() => { window.__rafOn = false; return { frames: window.__bike.trace.stop(), raf: window.__raf, loaf: window.__loaf, rest: (window.__bike.restMs || []).splice(0) }; });
 }
 
 const q = (a, f) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(f * (s.length - 1)))]; };
 const r1 = n => Math.round(n * 10) / 10;
-function summarise({ frames, raf, loaf }) {
+function summarise({ frames, raf, loaf, rest = [] }) {
   const iv = raf.slice(1).map((t, i) => t - raf[i]).filter(d => d < 500), med = q(iv, 0.5);
   const cost = frames.map(f => f.cost);
   const motion = {};
@@ -68,7 +68,7 @@ function summarise({ frames, raf, loaf }) {
     if (speed.length > 5) motion[name] = { frames: speed.length, speedP95: Math.round(q(speed, 0.95)), accP95: Math.round(q(acc, 0.95)), accMax: Math.round(q(acc, 1)), jerkP95: Math.round(q(jumps, 0.95)) };
   }
   return { frames: frames.length, pacing: { p50: r1(med), p95: r1(q(iv, 0.95)), max: r1(q(iv, 1)), slow: iv.filter(d => d > 1.5 * med).length, of: iv.length },
-    cost: { p50: r1(q(cost, 0.5)), p95: r1(q(cost, 0.95)), max: r1(q(cost, 1)) }, longFrames: loaf.length, motion };
+    cost: { p50: r1(q(cost, 0.5)), p95: r1(q(cost, 0.95)), max: r1(q(cost, 1)) }, longFrames: loaf.length, rest: { passes: rest.length, p50: r1(q(rest, 0.5)), max: r1(q(rest, 1)) }, motion };
 }
 
 const out = {};
@@ -80,6 +80,7 @@ for (const [kind, { summary }] of Object.entries(out)) {
   console.log(`\n== ${label} / ${kind}: ${summary.frames} traced frames`);
   console.log(`pacing ms  p50 ${summary.pacing.p50}  p95 ${summary.pacing.p95}  max ${summary.pacing.max}  slow ${summary.pacing.slow}/${summary.pacing.of}`);
   console.log(`cost ms    p50 ${summary.cost.p50}  p95 ${summary.cost.p95}  max ${summary.cost.max}   long frames ${summary.longFrames}`);
+  console.log(`sharp-at-rest passes ${summary.rest.passes}: p50 ${summary.rest.p50} ms, max ${summary.rest.max} ms`);
   for (const [n, m] of Object.entries(summary.motion)) console.log(`${n.padEnd(7)} frames ${String(m.frames).padStart(4)}  speed p95 ${String(m.speedP95).padStart(5)} px/s  accel p95 ${String(m.accP95).padStart(6)}  max ${String(m.accMax).padStart(6)} px/s2  accel jump p95 ${m.jerkP95}`);
 }
 if (errors.length) console.log('page errors', errors);

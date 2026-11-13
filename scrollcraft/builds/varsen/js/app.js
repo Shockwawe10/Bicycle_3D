@@ -468,6 +468,51 @@ function drawPlate(P, r) {
   P.ctx ||= P.cv.getContext('2d');
   P.ctx.clearRect(0, 0, w, h); P.ctx.drawImage(canvas, 0, srcY, w, h, 0, 0, w, h);
 }
+/** Pose the bikes and aim the camera for one plate; returns its spec (null if it shows nothing). */
+function preparePlate(name, r) {
+  const { camera, spinner } = gl, spec = plateSpec(name); if (!spec) return null;
+  for (const b of gl.all) b.root.visible = false;
+  for (const [b, st, a] of spec.bikes) { b.root.visible = true; pose(b, st, a); }
+  spinner.rotation.y = spec.yaw;
+  if (spec.cam) spec.cam(r.width / r.height); else aim(camera, spec.view, r.width / r.height);
+  camera.updateMatrixWorld();
+  return spec;
+}
+/* Sharp at rest. While anything moves, plates draw at the adaptive level (QUALITY: at most 1.5x on phones, lower if
+   frames run slow). Once the page settles, the plates on screen are drawn once more at the screen's own resolution
+   (devicePixelRatio, at most 3, and at most REST_PX pixels a plate), so a still bike is as sharp as the screen allows
+   while scroll and flight frames cost what they did. A plate drawn this way keeps its image until its picture changes. */
+const REST_PX = 3.2e6;
+let restTimer = 0;
+function scheduleRest() { clearTimeout(restTimer); restTimer = setTimeout(restPass, 140); }
+function restPass() {
+  restTimer = 0;
+  if (!gl?.ready || raf) return;                    // something moves again: the next settle schedules it
+  const t0 = performance.now();
+  const { renderer, scene, camera, spinner } = gl, level = renderer.getPixelRatio(), H = innerHeight;
+  let resized = false;
+  for (const [name, el] of Object.entries(plateEls)) {
+    const r = el.getBoundingClientRect(), P = plateGL[name];
+    if (r.bottom <= 0 || r.top >= H || r.width < 4 || r.height < 4) continue;          // on screen only
+    const pr = Math.min(devicePixelRatio || 1, 3, Math.sqrt(REST_PX / (r.width * r.height)));
+    if (pr < level * 1.2 || (P.rest && P.rest === P.sig)) continue;                    // little to gain, or done
+    const spec = preparePlate(name, r); if (!spec) continue;
+    const sig = plateSignature(spec, r, level);
+    const w = Math.ceil(r.width), h = Math.ceil(r.height);
+    renderer.setPixelRatio(pr); renderer.setSize(w, h, false); resized = true;   // a buffer the plate's own size
+    renderer.setViewport(0, 0, r.width, r.height); renderer.setScissor(0, 0, r.width, r.height); renderer.setScissorTest(true);
+    renderer.getCurrentViewport(_vp); PLATE_PX.value.copy(_vp);
+    renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
+    const cw = _vp.z, ch = _vp.w, srcY = canvas.height - (_vp.y + ch);
+    if (P.cv.width !== cw || P.cv.height !== ch) { P.cv.width = cw; P.cv.height = ch; }
+    P.ctx ||= P.cv.getContext('2d');
+    P.ctx.clearRect(0, 0, cw, ch); P.ctx.drawImage(canvas, 0, srcY, cw, ch, 0, 0, cw, ch);
+    P.sig = sig; P.rest = sig;
+  }
+  spinner.rotation.y = 0;
+  if (resized) { renderer.setPixelRatio(level); sizeCanvas(); }   // back to the motion level and the screen's size
+  if (resized) (window.__bike.restMs ||= []).push(+(performance.now() - t0).toFixed(1));   // what a pass cost (QA reads it)
+}
 function renderPlates(rects) {
   const { renderer, camera, spinner } = gl, H = innerHeight, pr = renderer.getPixelRatio();
   let drawn = 0;
@@ -475,12 +520,7 @@ function renderPlates(rects) {
     const r = rects[name], P = plateGL[name];
     // near the screen, not only on it: a plate is drawn half a screen before it arrives, never as it arrives
     if (r.bottom < -H * 0.5 || r.top > H * 1.5 || r.width < 4 || r.height < 4) continue;
-    const spec = plateSpec(name); if (!spec) continue;
-    for (const b of gl.all) b.root.visible = false;
-    for (const [b, st, a] of spec.bikes) { b.root.visible = true; pose(b, st, a); }
-    spinner.rotation.y = spec.yaw;
-    if (spec.cam) spec.cam(r.width / r.height); else aim(camera, spec.view, r.width / r.height);
-    camera.updateMatrixWorld();
+    const spec = preparePlate(name, r); if (!spec) continue;
     const sig = plateSignature(spec, r, pr);
     if (sig !== P.sig) { drawPlate(P, r); P.sig = sig; drawn++; }
     if (spec.dims?.bike) { spec.dims.bike.root.updateWorldMatrix(true, false); drawDims(name, spec.dims, camera, r.width, r.height); }
@@ -574,7 +614,7 @@ function frame(now) {
     if (consecutive && moving) sampleFrame(dt * 1000, now);
   }
   dirty = false;
-  if (moving) { last = now; kick(); } else last = 0;
+  if (moving) { last = now; kick(); } else { last = 0; if (gl?.ready) scheduleRest(); }
   if (trace.on) trace.frames.push({ now, cost: performance.now() - t0, y: scrollY, p: { ...damped }, plates: trace.plates });
 }
 addEventListener('scroll', () => { dirty = true; kick(); }, { passive: true });
@@ -881,7 +921,8 @@ defineLive(window.__bike, {
   // the camera on a flight in II: from view a to view b (-1 the overview), k in 0..1 along it
   detailCam: (a, b, k, aspect) => { applyView(gl.camera, mixView(resolveView(a, aspect), resolveView(b, aspect), smoother(k)), aspect); return { pos: gl.camera.position.toArray(), near: gl.camera.near }; },
   parts: PARTS.length, openPart: i => openPart(i), closeParts: () => closeParts(), get detail() { return { cur: detail.cur, flying: !!detail.anim }; },
-  settled: () => new Promise(res => { kick(); let n = 0; const chk = () => (++n > 3 && !raf ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }),
+  // settled: no frame pending and no sharp-at-rest pass waiting, so a screenshot shows the final, full-resolution image
+  settled: () => new Promise(res => { kick(); let n = 0; const chk = () => (++n > 3 && !raf && !restTimer ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }),
 });
 
 initGL().then(() => { window.__bike.ready = true; }, err => { console.error(err); html.classList.add('no-webgl'); window.__bike.ready = true; });

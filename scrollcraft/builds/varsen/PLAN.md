@@ -112,6 +112,11 @@ scrolls those canvases with the page, so a bike never trails its own caption or 
 plate is drawn only when its picture changes (a signature of size, light, camera and bikes), half a
 screen before it arrives. Render on demand only.
 
+Sharp at rest (2026-11-13): motion frames draw at the adaptive level (at most 1.5x on phones); 140 ms after the page
+settles, the plates on screen are drawn once more at the screen's own resolution (devicePixelRatio up to 3, at most
+3.2 MP a plate), only where that is at least 1.2x the level. On a 3x phone a still plate went from 1.5 to 3 image pixels
+per CSS pixel; a pass costs 11 to 20 ms and runs only while nothing moves.
+
 Motion: every scroll-driven value follows the scroll on a critically damped spring (OMEGA 10), which
 starts and stops at zero speed; the build's camera follows a Gaussian-smoothed copy of its framing
 path. (In detail's flights are time-driven, not scroll-driven: 0 dropped frames across all ten, desktop and phone.) Measured with tools/check-smoothness.mjs (the same wheel and
