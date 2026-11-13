@@ -30,11 +30,10 @@
     <svg viewBox="-8.14 8 116.28 84" aria-hidden="true"><path d="M-8.14 8.00 L7.51 8.00 L26.84 73.28 L87.64 8.00 L108.14 8.00 L29.91 92.00 L16.75 92.00 Z"/></svg>
   </a>
   <ol class="folio__list">
-    <li><a href="#chart" data-folio="chart"><span class="folio__n">I</span><span class="folio__t">The chart</span></a></li>
-    <li><a href="#build" data-folio="build"><span class="folio__n">II</span><span class="folio__t">The build</span></a></li>
-    <li><a href="#detail" data-folio="detail"><span class="folio__n">III</span><span class="folio__t">In detail</span></a></li>
-    <li><a href="#yours" data-folio="yours"><span class="folio__n">IV</span><span class="folio__t">Find yours</span></a></li>
-    <li><a href="#book" data-folio="book"><span class="folio__n">V</span><span class="folio__t">Book a fitting</span></a></li>
+    <li><a href="#build" data-folio="build"><span class="folio__n">I</span><span class="folio__t">The build</span></a></li>
+    <li><a href="#detail" data-folio="detail"><span class="folio__n">II</span><span class="folio__t">In detail</span></a></li>
+    <li><a href="#yours" data-folio="yours"><span class="folio__n">III</span><span class="folio__t">Find yours</span></a></li>
+    <li><a href="#book" data-folio="book"><span class="folio__n">IV</span><span class="folio__t">Book a fitting</span></a></li>
   </ol>
 </nav>
 
@@ -65,49 +64,32 @@
     </div>
   </section>
 
-  <!-- I. THE CHART: a hard cut to graphite; the numbers draw themselves onto the side elevation -->
-  <section id="chart" class="ch ch--graphite" data-sc-act="flow" data-chapter="chart">
-    <div class="spread spread--chart">
-      <header class="ch__head" data-sc-in>
-        <p class="ch__n">I</p>
-        <h2 class="ch__title">Every number is published</h2>
-      </header>
-      <figure class="plate plate--chart" data-plate="chart">
-        <div class="plate__poster" aria-hidden="true"></div>
-        <svg class="dims" aria-hidden="true"></svg>
-        <figcaption class="plate__cap">Plate 2. Side elevation with the chart's own dimensions.</figcaption>
-      </figure>
-      <div class="ch__body sc-stack" data-sc-in data-sc-stagger="60">
-        <p class="ch__lede">The size 56 has a 555&nbsp;mm stack, a 398&nbsp;mm reach and a 73.5° head angle. The model is built from those numbers and nothing else, then measured back against them before this page shows it.</p>
-        <dl class="sheet">
-          <div><dt>Stack</dt><dd>555 mm</dd></div>
-          <div><dt>Reach</dt><dd>398 mm</dd></div>
-          <div><dt>Head angle</dt><dd>73.5°</dd></div>
-          <div><dt>Seat angle</dt><dd>73.5°</dd></div>
-          <div><dt>Chainstay</dt><dd>410 mm</dd></div>
-          <div><dt>Bottom-bracket drop</dt><dd>72 mm</dd></div>
-          <div><dt>Wheelbase</dt><dd>991 mm</dd></div>
-          <div><dt>Trail</dt><dd>53.5 mm</dd></div>
-        </dl>
-        <p class="note">Geometry: the Specialized Tarmac SL7 frameset, 2022, as listed by <a href="https://bikeinsights.com/bikes/5c670d973584300017e37aa3-specialized-bicycles-tarmac?build=sl7-frameset&amp;version=2022" rel="noopener" target="_blank">Bike Insights</a>. Varsen is a concept; the chart is its engineering input.</p>
-      </div>
-    </div>
+  <!-- AT A GLANCE: four real figures, one line each, revealed one after another. Not a chapter (no folio entry):
+       the overview between the frontispiece and the story. Every figure is the model's own (js/bike.js, js/sizes.js). -->
+  <section id="glance" class="ch ch--graphite glance" data-sc-act="flow" aria-labelledby="glance-title">
+    <h2 class="sr-only" id="glance-title">Varsen R1 at a glance</h2>
+    <ul class="glance__list" data-sc-stagger="90">
+      <li class="glance__item" data-sc-in><p class="glance__fig" aria-hidden="true">7</p><h3 class="glance__label">Sizes</h3><p class="glance__text">44 to 61, every one built from the same published chart.</p></li>
+      <li class="glance__item" data-sc-in><p class="glance__fig" aria-hidden="true">45<span class="glance__unit">mm</span></p><h3 class="glance__label">Carbon rims</h3><p class="glance__text">On 26&nbsp;mm tyres, stopped by 160 and 140&nbsp;mm disc rotors.</p></li>
+      <li class="glance__item" data-sc-in><p class="glance__fig" aria-hidden="true">2<span class="glance__x">×</span>12</p><h3 class="glance__label">Speeds</h3><p class="glance__text">52/36 chainrings, an 11–30 cassette, 170&nbsp;mm cranks.</p></li>
+      <li class="glance__item" data-sc-in><p class="glance__fig" aria-hidden="true">1<span class="glance__unit">piece</span></p><h3 class="glance__label">Cockpit</h3><p class="glance__text">Bar and stem in one carbon piece: 100&nbsp;mm at −6°, 420&nbsp;mm wide.</p></li>
+    </ul>
   </section>
 
-  <!-- II. THE BUILD: the plate holds while the text column is read; parts arrive in workshop order -->
+  <!-- I. THE BUILD: the plate holds while the text column is read; parts arrive in workshop order -->
   <section id="build" class="ch ch--black build" data-sc-act="flow" data-chapter="build">
     <div class="build__grid">
       <div class="build__hold">
         <figure class="plate plate--build" data-plate="build">
           <div class="plate__poster" aria-hidden="true"></div>
-          <figcaption class="plate__cap">Plate 3. The assembly, size 56.<span class="plate__cap-more"> It builds as you scroll.</span></figcaption>
+          <figcaption class="plate__cap">Plate 2. The assembly, size 56.<span class="plate__cap-more"> It builds as you scroll.</span></figcaption>
           <!-- the hero's cue, smaller: visible while the bike is still being built, gone once the saddle lands (app.js) -->
           <p class="build-cue" aria-hidden="true"><span class="build-cue__long">Keep scrolling</span><span class="build-cue__short">Scroll</span><svg class="scroll-cue__arrow" viewBox="0 0 12 26"><path d="M6 1v22M1.5 18.5 6 24l4.5-5.5"/></svg></p>
         </figure>
       </div>
       <div class="build__text">
         <header class="ch__head" data-sc-in>
-          <p class="ch__n">II</p>
+          <p class="ch__n">I</p>
           <h2 class="ch__title">Built in the order a mechanic would</h2>
         </header>
         <ol class="steps">
@@ -122,16 +104,16 @@
     </div>
   </section>
 
-  <!-- III. IN DETAIL: the peak. A held hero frame first (the quiet), then one orbit round the bike, holding on each
+  <!-- II. IN DETAIL: the peak. A held hero frame first (the quiet), then one orbit round the bike, holding on each
        part while its caption is read, and out to the profile that chapter IV opens on -->
   <section id="detail" class="ch ch--graphite" data-sc-act="pin" data-sc-span="4.4" data-chapter="detail">
     <div data-sc-stage class="detail">
       <figure class="plate plate--detail" data-plate="detail">
         <div class="plate__poster" aria-hidden="true"></div>
-        <figcaption class="plate__cap">Plate 4. Size 56, at close range.</figcaption>
+        <figcaption class="plate__cap">Plate 3. Size 56, at close range.</figcaption>
       </figure>
       <div class="detail__copy detail__intro" data-sc-cue="0 0.155 0 0">
-        <p class="ch__n">III</p>
+        <p class="ch__n">II</p>
         <h2 class="ch__title">In detail</h2>
         <p class="detail__lede">Close enough to count the chain links. Every part is modelled, down to the bolts.</p>
       </div>
@@ -154,16 +136,16 @@
     </div>
   </section>
 
-  <!-- IV. YOURS: give a height or pick a size; the bike rebuilds itself at it, and the size goes into the booking -->
+  <!-- III. YOURS: give a height or pick a size; the bike rebuilds itself at it, and the size goes into the booking -->
   <section id="yours" class="ch ch--black" data-sc-act="flow" data-chapter="yours">
     <div class="spread spread--yours">
       <figure class="plate plate--yours" data-plate="yours">
         <div class="plate__poster" aria-hidden="true"></div>
         <svg class="dims" aria-hidden="true"></svg>
-        <figcaption class="plate__cap" data-yours-cap>Plate 5. Size 56, rebuilt from its chart.</figcaption>
+        <figcaption class="plate__cap" data-yours-cap>Plate 4. Size 56, rebuilt from its chart.</figcaption>
       </figure>
       <div class="yours__panel sc-stack" data-sc-in data-sc-stagger="60">
-        <p class="ch__n">IV</p>
+        <p class="ch__n">III</p>
         <h2 class="ch__title" id="yours-title">Find yours</h2>
         <!-- a group, not a form: there is nothing to submit, and a form without script would put the height in the URL -->
         <div class="chooser" data-chooser role="group" aria-labelledby="yours-title">
@@ -196,7 +178,7 @@
           <div><dt>Head angle</dt><dd><span data-sheet="headAngle">73.5</span>°</dd></div>
           <div><dt>Trail</dt><dd><span data-sheet="trail">53.5</span> mm</dd></div>
         </dl>
-        <p class="note">Rider heights come from a retailer's reference chart (<a href="https://www.bikemart.com/collections/non-electric-adult-bikes/products/tarmac-sl7-sport-performance-road-bikes" rel="noopener" target="_blank">Bike Mart</a>), not the maker's. Cockpit and cranks are shown as on the size 56. A fitting confirms all of it.</p>
+        <p class="note">Every number here is the published geometry of the Specialized Tarmac SL7 frameset, 2022, as listed by <a href="https://bikeinsights.com/bikes/5c670d973584300017e37aa3-specialized-bicycles-tarmac?build=sl7-frameset&amp;version=2022" rel="noopener" target="_blank">Bike Insights</a>: the model is built from those numbers and measured back against them before this page shows it. Rider heights come from a retailer's reference chart (<a href="https://www.bikemart.com/collections/non-electric-adult-bikes/products/tarmac-sl7-sport-performance-road-bikes" rel="noopener" target="_blank">Bike Mart</a>), not the maker's. Cockpit and cranks are shown as on the size 56. A fitting confirms all of it.</p>
       </div>
     </div>
   </section>
@@ -205,7 +187,7 @@
   <section id="book" class="ch ch--yellow book" data-sc-act="flow" data-chapter="book">
     <div class="book__grid">
       <div class="book__lead" data-sc-in>
-        <p class="ch__n">V</p>
+        <p class="ch__n">IV</p>
         <h2 class="ch__title">Book a fitting</h2>
         <p class="book__size">Size <b data-your-size>56</b> goes into the booking with you.</p>
       </div>

@@ -22,10 +22,9 @@ if (window.ScrollCraft) ScrollCraft.mount(document.body);
 /* =====================================================================================
    Scroll progress, measured from the DOM (not from the engine), damped for the 3D.
    ===================================================================================== */
-const sec = { front: $('#front'), chart: $('#chart'), build: $('#build'), detail: $('#detail'), yours: $('#yours'), book: $('#book') };
-// Both take a rect measured at the top of the frame (measure()), so a frame reads layout once, before it writes.
+const sec = { front: $('#front'), glance: $('#glance'), build: $('#build'), detail: $('#detail'), yours: $('#yours'), book: $('#book') };
+// It takes a rect measured at the top of the frame (measure()), so a frame reads layout once, before it writes.
 function pinnedP(r) { const span = r.height - innerHeight; return span > 1 ? clamp01(-r.top / span) : (r.top < 0 ? 1 : 0); }
-function flowP(r) { return clamp01((innerHeight - r.top) / (r.height + innerHeight)); }
 /* Every scroll-driven value follows its target on a critically damped spring (the exact solution, so it is the same at
    any frame rate). A first-order lag jumps to full speed the instant the target moves, which is what a wheel notch
    looked like; the spring starts and stops at zero speed and never overshoots. OMEGA 10: 90% of a step in 0.39 s,
@@ -337,7 +336,6 @@ function plateSpec(name) {
       const p = RM.matches ? 0 : damped.front ?? 0;      // reduced motion: the camera holds its opening angle
       return { bikes: [[gl.base, ASSEMBLED, 1]], yaw: spin.yaw * (1 - smooth(0.05, 0.85, p)), view: frontView(p) };
     }
-    case 'chart': return { bikes: [[gl.base, ASSEMBLED, 1]], yaw: 0, view: gl.chartView, dims: { bike: gl.base, p: smooth(0.22, 0.62, damped.chart ?? 1) } };
     case 'build': {
       const tb = damped.build ?? 0, tt = clamp01((tb - 0.06) / 0.86);
       if (RM.matches) return { bikes: [[gl.base, assemblyInPlace(tt), 1]], yaw: 0, view: gl.buildStill, t: tt };
@@ -495,7 +493,6 @@ function renderPlates(rects) {
    ===================================================================================== */
 const POSTERS = {
   front: () => [gl.base, frontView(0), 16 / 10],
-  chart: () => [gl.base, gl.chartView, 16 / 10],
   build: () => [gl.base, gl.buildStill, 4 / 3],
   size: s => [bikeOf(s), gl.sizeView, 16 / 10],
   tour: i => [gl.base, (cam, aspect) => aimTour(cam, (TOUR[i].at[0] + TOUR[i].at[1]) / 2, aspect), 16 / 10],
@@ -552,7 +549,7 @@ function frame(now) {
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60, consecutive = last !== 0;
   let moving = false;
   const M = measure(), S = M.sec;
-  const targets = { front: pinnedP(S.front), chart: flowP(S.chart), build: pinnedP(S.build), detail: pinnedP(S.detail) };
+  const targets = { front: pinnedP(S.front), build: pinnedP(S.build), detail: pinnedP(S.detail) };
   for (const [k, v] of Object.entries(targets)) { const before = damped[k]; follow(k, v, dt); if (damped[k] !== v || dampedV[k]) moving = true; if (before !== damped[k]) dirty = true; }
   if (!spin.drag && spin.vel !== 0) {
     spin.yaw += spin.vel * dt; spin.yaw = Math.atan2(Math.sin(spin.yaw), Math.cos(spin.yaw)); spin.vel *= Math.exp(-dt / 0.45);
@@ -651,7 +648,7 @@ const yourSize = $$('[data-your-size]'), yoursCap = $('[data-yours-cap]');
 function setSheet(c) {
   for (const k of ['stack', 'reach', 'ett', 'seatTube', 'standover', 'wheelbase', 'headAngle', 'trail']) sheet[k].textContent = c[k];
   for (const e of yourSize) e.textContent = c.size;
-  if (yoursCap) yoursCap.textContent = `Plate 5. Size ${c.size}, rebuilt from its chart.`;
+  if (yoursCap) yoursCap.textContent = `Plate 4. Size ${c.size}, rebuilt from its chart.`;
 }
 async function choose(size) {
   const c = BY_SIZE[size]; if (!c) return;
@@ -750,10 +747,8 @@ async function initGL() {
   const floor = new THREE.Group(); floor.add(floorPool(), fadeAtPlateEdges(shadowBlob())); scene.add(floor);
   const camera = new THREE.PerspectiveCamera(24, 1, 0.05, 20);
   Object.assign(gl, { scene, camera, spinner, base, base56: raw, bikes: new Map([[56, base]]), all: [base], M, FADE_A: FADE, FADE_B, key, rim, floor });
-  // fits: the hero ring, the build's travel, the size chapter's largest frame
+  // fits: the hero ring, the build's travel, the chooser's largest frame
   gl.ring = ringCorners(base.box); gl.ringTarget = new THREE.Vector3(0, (base.box.min.y + base.box.max.y) / 2, 0);
-  const chartBox = base.box.clone(); chartBox.min.y -= 0.08; chartBox.max.y += 0.06; chartBox.max.x += 0.11;   // room for the wheelbase line below, reach above, stack ahead
-  gl.chartView = { az: 0, el: 1.2, fov: 16, corners: boxCorners(chartBox), target: chartBox.getCenter(new THREE.Vector3()), margin: 0.05 };
   gl.buildVols = buildVolumes(base);
   gl.buildStill = { az: 16, el: 7, fov: 19, corners: boxCorners(base.box), target: base.box.getCenter(new THREE.Vector3()), margin: 0.06 };   // the build's last angle, held
   const big = base.box.clone(); big.expandByVector(new THREE.Vector3(0.05, 0.08, 0)); big.max.x += 0.09;   // until the 61 exists; replaced below

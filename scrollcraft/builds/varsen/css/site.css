@@ -187,7 +187,6 @@ main { padding-left: var(--folio-w); }
 .no-webgl .plate__poster { display: block; }
 /* Posters rendered from the same scene (tools/render-posters.mjs). The tour and the chooser switch theirs in app.js. */
 .plate--front .plate__poster { background-image: url(../assets/posters/front.webp); }
-.plate--chart .plate__poster { background-image: url(../assets/posters/chart.webp); }
 .plate--build .plate__poster { background-image: url(../assets/posters/build.webp); }
 .plate--detail .plate__poster { background-image: url(../assets/posters/tour-0.webp); }
 .plate--yours .plate__poster { background-image: url(../assets/posters/size-56.webp); }   /* the chooser's default */
@@ -292,12 +291,29 @@ main { padding-left: var(--folio-w); }
 /* ----------------------------------------------------------- spreads */
 .spread { display: grid; gap: var(--sc-6) var(--sc-7); padding: var(--sc-section) var(--sc-gutter); }
 .ch__head { align-self: start; }
-.spread--chart { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); grid-template-areas: "head head" "plate body"; align-items: center; }
-.spread--chart .ch__head { grid-area: head; }
-.plate--chart { grid-area: plate; aspect-ratio: 16 / 10; }
-/* The dimensioned plates set their caption under the figure, clear of the wheelbase line */
-.plate--chart .plate__cap, .plate--yours .plate__cap { top: 100%; bottom: auto; padding-top: var(--sc-3); }
-.spread--chart .ch__body { grid-area: body; }
+/* The dimensioned plate sets its caption under the figure, clear of the wheelbase line */
+.plate--yours .plate__cap { top: 100%; bottom: auto; padding-top: var(--sc-3); }
+
+/* ------------------------------------------------------- at a glance (band) */
+/* Four real figures between the frontispiece and the story: a large figure, a label in the accent, one line. Ruled
+   like the sheets, revealed one after another as the band scrolls in. Not a chapter: no numeral, no folio entry. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.glance__list {
+  list-style: none; margin: 0; padding: var(--sc-9) var(--sc-gutter);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sc-6) var(--sc-7);
+}
+.glance__item { border-top: 1px solid var(--hair); padding-top: var(--sc-5); }
+.glance__fig {
+  margin: 0; font-family: var(--sc-font-display); font-weight: 800; line-height: 0.9; letter-spacing: -0.01em;
+  font-size: clamp(2.6rem, 1.3rem + 3.2vw, 4.8rem); color: var(--sc-ink); font-variant-numeric: tabular-nums;
+}
+.glance__unit { margin-left: 0.18em; font-size: 0.36em; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sc-ink-soft); }
+.glance__x { margin: 0 0.08em; font-weight: 600; color: var(--sc-accent); }
+.glance__label {
+  margin: var(--sc-4) 0 var(--sc-2); font-family: var(--sc-font-text); font-size: var(--sc-t-xs); font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--sc-accent);
+}
+.glance__text { margin: 0; max-width: 28ch; font-size: var(--sc-t-sm); line-height: 1.55; color: var(--sc-ink-soft); text-wrap: pretty; }
 
 .sheet { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-top: 1px solid var(--hair); }
 .sheet > div { padding: var(--sc-3) 0; border-bottom: 1px solid var(--hair); display: flex; justify-content: space-between; gap: var(--sc-3); }
@@ -398,11 +414,11 @@ main { padding-left: var(--folio-w); }
   .front__copy .front__title { font-size: clamp(2.3rem, 10.5vw, 3.4rem); }
   .front__lede { font-size: var(--sc-t-base); }
   .front__actions { flex-wrap: nowrap; justify-content: space-between; }
-  .spread--chart, .spread--yours { grid-template-columns: 1fr; grid-template-areas: none; }
-  .spread--chart .ch__head, .plate--chart, .spread--chart .ch__body { grid-area: auto; }
-  .plate--chart, .plate--yours { aspect-ratio: 4 / 3; margin-inline: calc(-1 * var(--sc-gutter)); margin-bottom: var(--sc-4); }
+  .spread--yours { grid-template-columns: 1fr; grid-template-areas: none; }
+  .plate--yours { aspect-ratio: 4 / 3; margin-inline: calc(-1 * var(--sc-gutter)); margin-bottom: var(--sc-4); }
   /* full-bleed on phones: the caption steps out under the plate, back on the gutter, clear of the wheelbase label */
-  .plate--chart .plate__cap, .plate--yours .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); padding-top: var(--sc-2); }
+  .plate--yours .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); padding-top: var(--sc-2); }
+  .glance__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-6) var(--sc-5); padding-block: var(--sc-8); }
   .build__grid { grid-template-columns: 1fr; }
   .build__hold { position: sticky; top: 3.25rem; z-index: 1; height: 46svh; background: var(--sc-canvas); }
   .plate--build { position: absolute; inset: 0; height: auto; }

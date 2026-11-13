@@ -15,7 +15,7 @@ const hidden = await p.evaluate(() => [...document.querySelectorAll('h1, h2, h3,
 }).map(e => e.tagName + ': ' + e.textContent.trim().slice(0, 40)));
 console.log('text hidden by opacity 0:', hidden.length ? hidden : 'none');
 const shots = [];
-for (const id of ['front', 'chart', 'build', 'detail', 'yours', 'book']) {
+for (const id of ['front', 'glance', 'build', 'detail', 'yours', 'book']) {
   await p.evaluate(id => document.getElementById(id).scrollIntoView(), id); await p.waitForTimeout(300);
   const f = `qa/tmp/nojs-${w}-${id}.png`; await p.screenshot({ path: f }); shots.push(`${id}=${f}`);
 }

@@ -72,14 +72,14 @@ row to clear. The row this build adds is written after verification.
 | Act | Span | Device | Why this one |
 |---|---|---|---|
 | Frontispiece | pin 1.8 | live 3D plate + kinetic h1 (greet) + parallax numeral | product first; the turn under the hand and the light are the open |
-| I Chart | flow | `in` + dimension lines drawn from the act's `--sc-p`, projected from the 3D joints | trust arrives with the lines; reading, not watching |
-| II Build | flow, 3.5 to 3.9 measured, sticky plate | bespoke sticky plate (verify-state published) beside a text column | the build is read like a feature: text column scrolls, plate holds |
-| III In detail | **pin 4.4 (largest)** | bespoke camera tour on the live plate (verify-state published), one cue per hold, plate-edge fade | the peak gets the most room; a held frame first, then the orbit |
-| IV Yours | flow | the chooser (bespoke), numbers re-set to the chosen size | ownership: the visitor acts |
+| Glance | flow, band (0.4 to 0.6) | four figures, `in` staggered 90 ms | orientation before the story; replaced the chart chapter on 2026-11-13 (it repeated Find yours) |
+| I Build | flow, 3.5 to 3.9 measured, sticky plate | bespoke sticky plate (verify-state published) beside a text column | the build is read like a feature: text column scrolls, plate holds |
+| II In detail | **pin 4.4 (largest)** | bespoke camera tour on the live plate (verify-state published), one cue per hold, plate-edge fade | the peak gets the most room; a held frame first, then the orbit |
+| III Yours | flow | the chooser (bespoke), numbers re-set to the chosen size | ownership: the visitor acts |
 | Close | flow, last | `reveal` on the booking plate, colophon | resolves and holds |
 
-Device families: pin, kinetic, parallax, flow + in, reveal, plus the bespoke live plates. Total 12.5
-viewport-heights measured at 1440x900 (13.6 at 390x844, 14.8 at 360x640), inside the 8 to 14 budget
+Device families: pin, kinetic, parallax, flow + in, reveal, plus the bespoke live plates. Total 12.1
+viewport-heights measured at 1440x900 (13.0 at 390x844) after the glance band replaced the chart chapter, inside the 8 to 14 budget
 on desktop and phone. Revised 2026-11-13: the Up close stills (flow) and the Seven sizes sweep (pin
 4.6) were removed at the owner's request, In detail took the peak, and the build steps went from 52
 to 46 svh so the peak keeps the most room.

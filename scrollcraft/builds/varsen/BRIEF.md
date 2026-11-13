@@ -94,14 +94,22 @@ smaller "Keep scrolling" with the same arrow at the bottom right of the assembly
 while parts are still to come and gone as the saddle lands. Phones say "Scroll", and the caption drops its last
 sentence there so the two never collide.
 
+Then, on the chart chapter: "I think that we don't need this section anymore, because later we have the exact same
+measurements ... maybe replace it with something else ... maybe some features abilities or something like that."
+Chosen from three proposals: **an at-a-glance band**. The chart chapter (side view, technical drawing, geometry table)
+is gone; its drawing and table live on in Find yours. In its place, between the frontispiece and the build, a short band
+of four real figures with one line each (7 sizes; 45 mm carbon rims; 2 x 12 speeds; a one-piece cockpit), every one the
+model's own. The trust line ("built from those numbers, measured back against them") and its source moved into Find
+yours, beside the table it is about. The chapters renumber: I Build, II In detail, III Find yours, IV Book.
+
 ## Journey (authored, revised 2026-11-13)
 
 ```
 Frontispiece  Awe           the finished bike, yellow on black, lit like a car reveal; you can turn it
-I    Chart    Trust         its numbers drawn onto it as a technical drawing, each one sourced
-II   Build    Fascination   it builds itself in the order a mechanic would
-III  Detail   Desire        a held hero frame, then one orbit in to the parts          <- PEAK
-IV   Yours    Ownership     give your height and it rebuilds itself as yours
+Glance        Orientation   four real figures, one line each: what this bike is, at a glance
+I    Build    Fascination   it builds itself in the order a mechanic would
+II   Detail   Desire        a held hero frame, then one orbit in to the parts          <- PEAK
+III  Yours    Ownership     give your height and it rebuilds itself as yours; every number sourced
 Close         Resolve       book the fitting, your size already filled in
 ```
 
@@ -110,13 +118,13 @@ Close         Resolve       book the fitting, your size already filled in
 | Act | Feeling | What on screen causes it |
 |---|---|---|
 | Frontispiece | Awe | A yellow bike alone in a dark studio. The key light comes up across its clearcoat and it turns under your hand. |
-| I Chart | Trust | A technical drawing draws itself onto the side view; every number is real and footnoted. |
-| II Build | Fascination | The frame waits; fork, wheels, drivetrain, cockpit, saddle arrive in workshop order, nothing passing through anything. |
-| III In detail | Desire | It opens still: a low three-quarter frame and one line. Then the camera goes in close enough to count the chain links, swings round the back to the brake side, comes up to the cockpit from ahead, and pulls out to the profile. |
-| IV Yours | Ownership | You give your height; the bike rebuilds itself at your size and every number on the sheet changes. |
+| Glance | Orientation | Four large figures arrive one after another, each with a one-line fact. Quick, quiet, no picture. |
+| I Build | Fascination | The frame waits; fork, wheels, drivetrain, cockpit, saddle arrive in workshop order, nothing passing through anything. |
+| II In detail | Desire | It opens still: a low three-quarter frame and one line. Then the camera goes in close enough to count the chain links, swings round the back to the brake side, comes up to the cockpit from ahead, and pulls out to the profile. |
+| III Yours | Ownership and trust | You give your height; the bike rebuilds itself at your size and every number on the sheet changes. Each number is the published chart, and the page says so beside them. |
 | Close | Resolve | One calendar, your size already in it. The page stops. |
 
-No two adjacent rows share a feeling. Energy sits in the middle: calm acts (Chart, Yours) sit between
+No two adjacent rows share a feeling. Energy sits in the middle: calm acts (Glance, Yours) sit between
 the moving ones (Frontispiece, Build, In detail). Build and In detail are neighbours, so In detail
 opens on a held frame before anything moves: the quiet the peak arrives from.
 
