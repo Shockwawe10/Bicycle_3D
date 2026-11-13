@@ -92,12 +92,13 @@ to 46 svh so the peak keeps the most room.
 | Plane | Asset and depth | Independent movement | Contact / occlusion |
 |---|---|---|---|
 | Far | Studio: near-black ground, a soft floor falloff, grain | none | nothing duplicated |
-| Mid | The size figure "56", very low contrast, behind the bike | rises at 0.6x and dims on scroll | the bike occludes it |
+| Mid | The model figure "R1" (was the size, "56"), very low contrast, behind the bike | rises at 0.6x and dims on scroll | the bike occludes it |
 | Focal | The live bike, gloss yellow, its contact shadow | turns from three-quarter to profile on scroll; drag to turn | stays on its shadow |
 | Near | Headline, one line, the action link | 1x | never overlaps the bike |
 | Atmosphere | The key light sweeping the clearcoat on arrival | once, then follows the turn | none |
 
-Opening: three-quarter view, the key light sweeps across the paint, "56" behind. Midpoint: halfway
+Opening: three-quarter view, the key light sweeps across the paint, "R1" behind, and "New · Varsen R1 · The flagship
+road bike" reading up the right edge (under the masthead on phones). Midpoint: halfway
 to profile, the figure risen and dim. Exit: pure profile, which is where chapter I picks the bike up
 with its dimension lines. The headline, lede and action stay for the whole pin (revised 2026-11-13:
 when they faded at 0.6, the rest of the pin was the bike over an empty half screen, a gap on phones);

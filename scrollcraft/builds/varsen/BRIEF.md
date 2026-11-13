@@ -117,6 +117,12 @@ In detail: the specs and what only shows up close (four-arm spider, 11-tooth joc
 carriers, radial front and two-cross rear lacing, file-tread tyres, flattened bar tops), every figure read from the
 model. The chart geometry stays in Find yours alone.
 
+Then: "the background of this scene, we have like 56 ... I want to add the brand model like R1. And it should be stated
+across the side that is specifically the new, the most highest reliable model, etc." Done: the figure reads "R1", and a
+line reads up the right edge: "New · Varsen R1 · The flagship road bike". "The most reliable" was left out on purpose: the
+brief is "trusted" and Varsen has no reliability data, so an unbacked superlative is the one claim it cannot make. It
+can be added with a source if the owner has one.
+
 ## Journey (authored, revised 2026-11-13)
 
 ```

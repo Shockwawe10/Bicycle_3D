@@ -240,6 +240,13 @@ main { padding-left: var(--folio-w); }
   color: color-mix(in oklab, var(--sc-ink) 6%, var(--sc-canvas));
 }
 .front__figure { font-size: clamp(14rem, 36vw, 36rem); right: 3vw; top: 4vh; }
+/* the side line: read upward along the right edge, in the gutter, clear of the plate */
+.front__side {
+  position: absolute; z-index: 5; right: var(--sc-5); top: 50%; margin: 0;
+  writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); white-space: nowrap;
+  font-size: var(--sc-t-xs); font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--sc-ink-soft);
+}
+.front__side-new { color: var(--sc-accent); }
 /* The plate stops above the copy: app.js measures the copy into --front-copy, so a short screen keeps the caption clear */
 .plate--front { position: absolute; inset: 6vh var(--sc-gutter) max(31vh, calc(clamp(2rem, 6vh, 4.5rem) + var(--front-copy, 12rem) + 3rem)) var(--sc-gutter); }
 .plate--front .plate__cap { left: auto; right: 0; bottom: calc(-1 * var(--sc-5)); }
@@ -476,6 +483,9 @@ main { padding-left: var(--folio-w); }
   main { padding-top: 0; }
   .masthead { top: calc(3.25rem + var(--sc-3)); }
   .front__figure { font-size: 62vw; right: 2vw; top: 14vh; }
+  /* phones: the plate runs edge to edge, so the side line runs under the masthead instead */
+  .front__side { writing-mode: horizontal-tb; transform: none; top: calc(3.25rem + var(--sc-3) + 1.75rem); left: var(--sc-gutter); right: auto; letter-spacing: 0.16em; }
+  .front__side-model { display: none; }
   .plate--front { inset: 15svh 0 max(38svh, calc(clamp(1.5rem, 4svh, 3rem) + var(--front-copy, 17rem) + 2.75rem)) 0; }
   .plate--front .plate__cap { left: var(--sc-gutter); bottom: calc(-1 * var(--sc-5)); }
   .front__copy { grid-template-columns: 1fr; grid-template-areas: "title" "lede" "action"; gap: var(--sc-3); bottom: clamp(1.5rem, 4svh, 3rem); }
