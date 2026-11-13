@@ -104,35 +104,57 @@
     </div>
   </section>
 
-  <!-- II. IN DETAIL: the peak. A held hero frame first (the quiet), then one orbit round the bike, holding on each
-       part while its caption is read, and out to the profile that chapter IV opens on -->
-  <section id="detail" class="ch ch--graphite" data-sc-act="pin" data-sc-span="4.4" data-chapter="detail">
-    <div data-sc-stage class="detail">
+  <!-- II. IN DETAIL: the peak, and the visitor's own. The bike in three-quarter view with five points on it; choose one
+       and the camera flies in to that part while this column says what it is (owner, 2026-11-13: points to click,
+       not a scroll tour). Without WebGL or script the parts read as a list beside the poster. -->
+  <section id="detail" class="ch ch--graphite" data-sc-act="flow" data-chapter="detail">
+    <div class="detail" data-detail>
+      <div class="detail__copy">
+        <!-- the intro and the five parts share one cell, sized to the tallest, so nothing moves as they swap -->
+        <div class="detail__panels">
+        <div class="detail__intro">
+          <p class="ch__n">II</p>
+          <h2 class="ch__title" id="detail-title">In detail</h2>
+          <p class="detail__lede">Every part is modelled, down to the bolts.<span class="detail__how"> Choose a point on the bike to look closer.</span></p>
+        </div>
+        <article class="part" id="part-frame" tabindex="-1" aria-labelledby="part-frame-h">
+          <h3 id="part-frame-h">Frame and fork</h3>
+          <p>Carbon, aero-profiled, built from the size 56's published chart: 555&nbsp;mm stack, 398&nbsp;mm reach. The down tube deepens from 49 to 62&nbsp;mm into the bottom bracket; the fork has 44.4&nbsp;mm of offset and 53.5&nbsp;mm of trail.</p>
+        </article>
+        <article class="part" id="part-drivetrain" tabindex="-1" aria-labelledby="part-drivetrain-h">
+          <h3 id="part-drivetrain-h">Drivetrain</h3>
+          <p>52/36 chainrings on 170&nbsp;mm cranks, into an 11–30 twelve-speed cassette. The chain is solved link by link: 112 links, every roller seated.</p>
+        </article>
+        <article class="part" id="part-brakes" tabindex="-1" aria-labelledby="part-brakes-h">
+          <h3 id="part-brakes-h">Brakes</h3>
+          <p>Flat-mount disc calipers on the side away from the chain: a 140&nbsp;mm rotor at the rear, a 160&nbsp;mm rotor up front. The rear wheel runs on a 142&nbsp;mm thru-axle through slotted dropouts.</p>
+        </article>
+        <article class="part" id="part-wheels" tabindex="-1" aria-labelledby="part-wheels-h">
+          <h3 id="part-wheels-h">Wheels</h3>
+          <p>45&nbsp;mm deep carbon rims on 26&nbsp;mm tyres, each laced with 24 bladed spokes. The front turns on a 100&nbsp;mm thru-axle.</p>
+        </article>
+        <article class="part" id="part-cockpit" tabindex="-1" aria-labelledby="part-cockpit-h">
+          <h3 id="part-cockpit-h">Cockpit</h3>
+          <p>One piece of carbon: a 100&nbsp;mm stem at −6° and a 420&nbsp;mm bar, taped through the drops.</p>
+        </article>
+        </div>
+        <div class="part-nav" role="group" aria-label="Parts">
+          <button class="part-nav__back" type="button" data-part-back>The whole bike</button>
+          <button class="part-nav__step" type="button" data-part-step="-1" aria-label="Previous part"><span class="part-nav__word">Previous</span></button>
+          <button class="part-nav__step" type="button" data-part-step="1" aria-label="Next part"><span class="part-nav__word">Next</span></button>
+        </div>
+      </div>
       <figure class="plate plate--detail" data-plate="detail">
         <div class="plate__poster" aria-hidden="true"></div>
-        <figcaption class="plate__cap">Plate 3. Size 56, at close range.</figcaption>
+        <div class="spots" role="group" aria-label="Points on the bike">
+          <button class="spot" type="button" data-spot="0" aria-controls="part-frame"><span class="spot__dot" aria-hidden="true"></span><span class="spot__label">Frame<span class="sr-only">, look closer</span></span></button>
+          <button class="spot" type="button" data-spot="1" aria-controls="part-drivetrain"><span class="spot__dot" aria-hidden="true"></span><span class="spot__label">Drivetrain<span class="sr-only">, look closer</span></span></button>
+          <button class="spot" type="button" data-spot="2" aria-controls="part-brakes"><span class="spot__dot" aria-hidden="true"></span><span class="spot__label">Brakes<span class="sr-only">, look closer</span></span></button>
+          <button class="spot" type="button" data-spot="3" aria-controls="part-wheels"><span class="spot__dot" aria-hidden="true"></span><span class="spot__label">Wheels<span class="sr-only">, look closer</span></span></button>
+          <button class="spot" type="button" data-spot="4" aria-controls="part-cockpit"><span class="spot__dot" aria-hidden="true"></span><span class="spot__label">Cockpit<span class="sr-only">, look closer</span></span></button>
+        </div>
+        <figcaption class="plate__cap">Plate 3. Size 56.</figcaption>
       </figure>
-      <div class="detail__copy detail__intro" data-sc-cue="0 0.155 0 0">
-        <p class="ch__n">II</p>
-        <h2 class="ch__title">In detail</h2>
-        <p class="detail__lede">Close enough to count the chain links. Every part is modelled, down to the bolts.</p>
-      </div>
-      <div class="detail__copy detail__cap" data-sc-cue="0.155 0.385 0 0">
-        <h3>Drivetrain</h3>
-        <p>52/36 chainrings on 170&nbsp;mm cranks, into an 11–30 twelve-speed cassette. The chain is solved link by link: 112 links, every roller seated.</p>
-      </div>
-      <div class="detail__copy detail__cap" data-sc-cue="0.385 0.605 0 0">
-        <h3>Rear end</h3>
-        <p>The brake side: a 140&nbsp;mm rotor and its caliper, and a 142&nbsp;mm thru-axle through slotted dropouts.</p>
-      </div>
-      <div class="detail__copy detail__cap" data-sc-cue="0.605 0.845 0 0">
-        <h3>Cockpit</h3>
-        <p>One piece of carbon: a 100&nbsp;mm stem at −6° and a 420&nbsp;mm bar, taped through the drops.</p>
-      </div>
-      <div class="detail__copy detail__cap" data-sc-cue="0.845 1 0 0">
-        <h3>The whole</h3>
-        <p>That is the size 56. Next, it rebuilds itself at yours.</p>
-      </div>
     </div>
   </section>
 

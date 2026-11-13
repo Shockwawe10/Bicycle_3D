@@ -285,50 +285,56 @@ function frontView(p) {
   return { az: lerp(30, 4, P), el: lerp(7, 2.5, P), fov: 15, corners: gl.ring, target: gl.ringTarget, margin: 0.03 };
 }
 
-/* ---------- III, in detail: one orbit round the size 56, holding on each part while its caption is read ----------
-   A stop is a hold window in the act's progress, a view angle, and what to frame: the whole bike (box fit) or a point on
-   a part with the radius of the region round it (fitted to the plate at any aspect). Between holds the camera glides,
-   and az only ever decreases, so the tour is one orbit: the front three-quarter, the drive side, round the back to the
-   rotor side, the cockpit from ahead, and out to the drive-side profile that "Find yours" opens on. No path goes near
-   the bike: sampled at plate aspects 0.8 to 1.2, the camera never comes within 0.47 m of any part's bounding box. */
-// The glides get their scroll room by size of swing (the 78-degree rear-end-to-cockpit glide is the longest); the
-// captions (index.html) cut at each glide's midpoint: 0.155, 0.385, 0.605, 0.845.
-const TOUR = [
-  { at: [0.00, 0.10], az: 40, el: 3, fov: 20, whole: true, margin: 0.02 },
-  { at: [0.21, 0.33], az: -14, el: 9, fov: 24, part: 'drivetrain', off: [-0.17, 0.0, 0.04], r: 0.33 },
-  { at: [0.44, 0.54], az: -140, el: 8, fov: 24, part: 'wheelR', off: [0.0, 0.0, -0.04], r: 0.21 },
-  { at: [0.67, 0.78], az: -218, el: 14, fov: 24, part: 'handlebar', off: [0.0, -0.05, 0.0], r: 0.27 },
-  { at: [0.91, 1.00], az: -354, el: 2, fov: 17, whole: true, margin: 0.08 },
+/* ---------- II, in detail: points on the bike; choose one and the camera flies in to that part ----------
+   The overview frames the whole size 56 from the front three-quarter (az 40). Each part has its own view: an angle and
+   a point on the part with the radius of the region round it (fitted to the plate at any aspect). The camera flies
+   between any two views on the shorter way round, distance in log space (an even push-in), on smootherstep. `anchor`
+   is where the point sits on the bike (root-local mm, z toward the drive side), projected into the plate each frame.
+   Every path, overview to part and part to part, is checked by tools/check-detail-clearance.mjs. */
+const OVERVIEW = { az: 40, el: 3, fov: 20, margin: 0.07 };
+const PARTS = [
+  { id: 'frame', az: 10, el: 3, fov: 24, part: 'frame', at: J => [J.DTH[0] * 0.58 * MM, J.DTH[1] * 0.58 * MM, 0], r: 0.3,
+    // the middle of the top tube (on the wordmark the point would cover it): STT 4% toward BB to HTT 12% toward HTB
+    anchor: J => [0.5 * (0.96 * J.STT[0] + 0.88 * J.HTT[0] + 0.12 * J.HTB[0]), 0.5 * (0.96 * J.STT[1] + 0.88 * J.HTT[1] + 0.12 * J.HTB[1]), 16] },
+  { id: 'drivetrain', az: -14, el: 9, fov: 24, part: 'drivetrain', off: [-0.17, 0.0, 0.04], r: 0.33,
+    anchor: () => [0, 0, 45] },                                                     // the crank spider
+  { id: 'brakes', az: -136, el: 8, fov: 24, part: 'wheelR', off: [0.0, 0.0, -0.04], r: 0.21,
+    anchor: J => [J.RA[0], J.RA[1], 0] },                                           // the rear hub, the rotor behind it
+  { id: 'wheels', az: 24, el: 4, fov: 24, part: 'wheelF', off: [0.0, 0.0, 0.0], r: 0.4,
+    anchor: J => [J.FA[0] + 296 * Math.cos(rad(40)), J.FA[1] + 296 * Math.sin(rad(40)), 14] },   // the rim decal
+  { id: 'cockpit', az: 142, el: 14, fov: 24, part: 'handlebar', off: [0.0, -0.05, 0.0], r: 0.27,
+    anchor: J => [(J.STEM[0] + J.BAR[0]) / 2, (J.STEM[1] + J.BAR[1]) / 2, 0] },     // the stem
 ];
-// smootherstep: zero speed and zero acceleration at both ends, acceleration continuous in between (inOutCubic flips its
-// acceleration from +12 to -12 at the midpoint, which was the tour's sharpest jolt)
+// smootherstep: zero speed and zero acceleration at both ends, acceleration continuous in between
 const smoother = u => u * u * u * (u * (u * 6 - 15) + 10);
-function tourDistance(s, aspect) {
-  axes(s.az, s.el);
-  if (s.whole) return fitDistance({ fov: s.fov, corners: gl.tourCorners, target: s.target, margin: s.margin }, aspect);
-  const v = rad(s.fov / 2), h = Math.atan(Math.tan(v) * aspect);
-  return s.r / Math.sin(Math.min(v, h));
-}
-const _tt = new THREE.Vector3();
-function aimTour(cam, p, aspect) {
-  const S = gl.tour;
-  let i = 0; while (i < S.length - 1 && p >= S[i + 1].at[0]) i++;
-  const a = S[i], b = S[Math.min(i + 1, S.length - 1)];
-  let k = 0;
-  if (b !== a && p > a.at[1]) {
-    const u = clamp01((p - a.at[1]) / (b.at[0] - a.at[1]));
-    k = RM.matches ? (u < 0.5 ? 0 : 1) : smoother(u);   // reduced motion: a cut between holds, no travel
+const detail = { cur: -1, anim: null, focusSpot: null };        // cur -1: the overview
+/** A view resolved for a plate aspect: angle, field of view, target and distance. */
+function resolveView(i, aspect) {
+  if (i < 0) {
+    axes(OVERVIEW.az, OVERVIEW.el);
+    const target = gl.detailTarget, d = fitDistance({ fov: OVERVIEW.fov, corners: gl.detailCorners, target, margin: OVERVIEW.margin }, aspect);
+    return { az: OVERVIEW.az, el: OVERVIEW.el, fov: OVERVIEW.fov, target, d };
   }
-  const dA = tourDistance(a, aspect), dB = tourDistance(b, aspect);
-  const d = Math.exp(lerp(Math.log(dA), Math.log(dB), k));      // zoom in log space: an even push-in, not a lurch
-  _tt.lerpVectors(a.target, b.target, k);
-  axes(lerp(a.az, b.az, k), lerp(a.el, b.el, k));
-  cam.fov = lerp(a.fov, b.fov, k); cam.aspect = aspect;
-  cam.position.copy(_tt).addScaledVector(_w, d); cam.up.copy(UP); cam.lookAt(_tt);
-  cam.near = Math.max(0.02, d - 4); cam.far = d + 4;
+  const s = PARTS[i], v = rad(s.fov / 2), h = Math.atan(Math.tan(v) * aspect);
+  return { az: s.az, el: s.el, fov: s.fov, target: gl.partTargets[i], d: s.r / Math.sin(Math.min(v, h)) };
+}
+const shortArc = d => ((d % 360) + 540) % 360 - 180;               // the signed angle the shorter way round
+function mixView(a, b, k) {
+  return { az: a.az + shortArc(b.az - a.az) * k, el: lerp(a.el, b.el, k), fov: lerp(a.fov, b.fov, k),
+    target: new THREE.Vector3().lerpVectors(a.target, b.target, k), d: Math.exp(lerp(Math.log(a.d), Math.log(b.d), k)) };
+}
+function detailView(aspect, now = performance.now()) {
+  const A = detail.anim, to = resolveView(detail.cur, aspect);
+  if (!A) return to;
+  return mixView(A.from, to, smoother(clamp01(A.dur ? (now - A.t0) / A.dur : 1)));
+}
+function applyView(cam, v, aspect) {
+  axes(v.az, v.el);
+  cam.fov = v.fov; cam.aspect = aspect;
+  cam.position.copy(v.target).addScaledVector(_w, v.d); cam.up.copy(UP); cam.lookAt(v.target);
+  cam.near = Math.max(0.02, v.d - 4); cam.far = v.d + 4;
   cam.updateProjectionMatrix();
 }
-const tourStop = p => { let i = 0, best = Infinity; TOUR.forEach((s, j) => { const c = (s.at[0] + s.at[1]) / 2, dd = Math.abs(p - c); if (dd < best) { best = dd; i = j; } }); return i; };
 function plateSpec(name) {
   const t = performance.now();
   switch (name) {
@@ -341,10 +347,8 @@ function plateSpec(name) {
       if (RM.matches) return { bikes: [[gl.base, assemblyInPlace(tt), 1]], yaw: 0, view: gl.buildStill, t: tt };
       return { bikes: [[gl.base, assembly(tt), 1]], yaw: 0, cam: aspect => aimBuild(gl.camera, tt, aspect), t: tt };
     }
-    case 'detail': {
-      const p = damped.detail ?? 0;
-      return { bikes: [[gl.base, ASSEMBLED, 1]], yaw: 0, cam: aspect => aimTour(gl.camera, p, aspect), t: p };
-    }
+    case 'detail':
+      return { bikes: [[gl.base, ASSEMBLED, 1]], yaw: 0, cam: aspect => applyView(gl.camera, detailView(aspect), aspect), t: detail.cur };
     case 'yours': {
       const out = yours.to && yours.t < 1 ? [[yours.from, ASSEMBLED, 1 - smooth(0, 0.45, yours.t)], [yours.to, ASSEMBLED, smooth(0.5, 1, yours.t)]] : [[bikeOf(yours.size) || gl.base, ASSEMBLED, 1]];
       const shown = yours.to && yours.t < 0.5 ? yours.from : (yours.to || bikeOf(yours.size) || gl.base);
@@ -382,8 +386,8 @@ const DIMS = Object.fromEntries($$('[data-plate] .dims').map(s => {
   return [plate.dataset.plate, makeDims(s)];
 }));
 const _p = new THREE.Vector3();
-function project(bike, xmm, ymm, cam, w, h) {
-  _p.set(xmm * MM, ymm * MM, 0); bike.root.localToWorld(_p); _p.project(cam);
+function project(bike, xmm, ymm, cam, w, h, zmm = 0) {
+  _p.set(xmm * MM, ymm * MM, zmm * MM); bike.root.localToWorld(_p); _p.project(cam);
   return [(_p.x + 1) / 2 * w, (1 - _p.y) / 2 * h];
 }
 function drawDims(name, spec, cam, w, h) {
@@ -481,7 +485,8 @@ function renderPlates(rects) {
     if (sig !== P.sig) { drawPlate(P, r); P.sig = sig; drawn++; }
     if (spec.dims?.bike) { spec.dims.bike.root.updateWorldMatrix(true, false); drawDims(name, spec.dims, camera, r.width, r.height); }
     if (trace.on && spec.bikes[0]) { const b = spec.bikes[0][0], J = b.J; b.root.updateWorldMatrix(true, false); trace.plates[name] = [[0, 0], J.FA, J.RA].flatMap(([x, y]) => project(b, x, y, camera, r.width, r.height).map(n => +n.toFixed(2))); }
-    if (name === 'build' || name === 'detail') el.dataset.scVerifyState = spec.t.toFixed(3);
+    if (name === 'build') el.dataset.scVerifyState = spec.t.toFixed(3);
+    if (name === 'detail') { el.dataset.scVerifyState = String(spec.t); placeSpots(camera, r); }
   }
   spinner.rotation.y = 0;
   return drawn;
@@ -495,7 +500,7 @@ const POSTERS = {
   front: () => [gl.base, frontView(0), 16 / 10],
   build: () => [gl.base, gl.buildStill, 4 / 3],
   size: s => [bikeOf(s), gl.sizeView, 16 / 10],
-  tour: i => [gl.base, (cam, aspect) => aimTour(cam, (TOUR[i].at[0] + TOUR[i].at[1]) / 2, aspect), 16 / 10],
+  detail: () => [gl.base, (cam, aspect) => applyView(cam, resolveView(-1, aspect), aspect), 16 / 10],
 };
 function renderPoster(kind, arg, cssW = 800) {
   const [bike, view, aspect] = POSTERS[kind](arg), cssH = Math.round(cssW / aspect);
@@ -511,8 +516,8 @@ function renderPoster(kind, arg, cssW = 800) {
   dirty = true; kick();                                 // the page's next frame redraws its plates over the region
   return out.toDataURL('image/webp', 0.9);
 }
-/** Without WebGL the tour shows the poster of its nearest stop, and the chooser the chosen size's. */
-const shownPoster = { detail: -1, yours: 0 };
+/** Without WebGL the chooser shows the chosen size's poster. */
+const shownPoster = { yours: 0 };
 function syncPosters() {
   if (!html.classList.contains('no-webgl')) return;
   const set = (name, key, file) => {
@@ -521,8 +526,6 @@ function syncPosters() {
     if (el) el.style.backgroundImage = `url(assets/posters/${file}.webp)`;
     shownPoster[name] = key;
   };
-  const stop = tourStop(pinnedP(sec.detail.getBoundingClientRect()));
-  set('detail', stop, `tour-${stop}`);
   set('yours', yours.size, `size-${yours.size}`);
 }
 
@@ -549,13 +552,17 @@ function frame(now) {
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60, consecutive = last !== 0;
   let moving = false;
   const M = measure(), S = M.sec;
-  const targets = { front: pinnedP(S.front), build: pinnedP(S.build), detail: pinnedP(S.detail) };
+  const targets = { front: pinnedP(S.front), build: pinnedP(S.build) };
   for (const [k, v] of Object.entries(targets)) { const before = damped[k]; follow(k, v, dt); if (damped[k] !== v || dampedV[k]) moving = true; if (before !== damped[k]) dirty = true; }
   if (!spin.drag && spin.vel !== 0) {
     spin.yaw += spin.vel * dt; spin.yaw = Math.atan2(Math.sin(spin.yaw), Math.cos(spin.yaw)); spin.vel *= Math.exp(-dt / 0.45);
     if (Math.abs(spin.vel) < 0.02) spin.vel = 0; moving = true; dirty = true;
   }
   if (light.t < 1) { light.t = Math.min(1, light.t + dt / 1.8); moving = true; dirty = true; }
+  if (detail.anim) {                                // a flight in II: draw every frame until it lands
+    moving = true; dirty = true;
+    if (now - detail.anim.t0 >= detail.anim.dur) { detail.anim = null; landed(); }
+  }
   if (yours.to && yours.t < 1) {
     yours.t = Math.min(1, yours.t + dt / 0.75); moving = true; dirty = true;
     if (yours.t >= 1) { yours.size = yours.to.chart.size; yours.from = yours.to = null; }
@@ -637,6 +644,72 @@ frontPlate.addEventListener('keydown', e => {
   if (RM.matches) { spin.yaw = Math.atan2(Math.sin(spin.yaw + dir * KEY_TURN), Math.cos(spin.yaw + dir * KEY_TURN)); spin.vel = 0; }
   else spin.vel += dir * KEY_TURN / 0.45;           // momentum decays with tau 0.45 s, so the glide covers KEY_TURN
   dirty = true; kick();
+});
+
+/* =====================================================================================
+   In detail: the points on the bike, and the column that says what each part is.
+   ===================================================================================== */
+const detailEl = $('[data-detail]'), spotsEl = $('.spots', detailEl), spotEls = $$('.spot', detailEl), partEls = $$('.part', detailEl);
+const spotPos = spotEls.map(() => '');
+/** Lay each point over its anchor, projected with the plate's own camera. Only at the overview: in a close-up the
+    points are hidden, and a flight back shows them once it lands. */
+function placeSpots(cam, r) {
+  if (detail.cur >= 0 || detail.anim) return;
+  const b = gl.base; b.root.updateWorldMatrix(true, false);
+  PARTS.forEach((p, i) => {
+    const [x, y, z] = p.anchor(b.J), q = project(b, x, y, cam, r.width, r.height, z);
+    const key = `${q[0].toFixed(1)},${q[1].toFixed(1)}`;
+    if (spotPos[i] === key) return;
+    spotPos[i] = key;
+    spotEls[i].style.transform = `translate(${q[0].toFixed(1)}px, ${q[1].toFixed(1)}px)`;
+    spotEls[i].classList.toggle('spot--left', q[0] > r.width * 0.72);   // near the right edge: the label goes left
+  });
+}
+function flyTo(i) {
+  const r = plateEls.detail.getBoundingClientRect(), aspect = r.width / r.height, now = performance.now();
+  const from = detailView(aspect, now), to = resolveView(i, aspect);
+  const swing = Math.abs(shortArc(to.az - from.az)) + Math.abs(Math.log(to.d / from.d)) * 40;   // degrees, plus zoom
+  detail.anim = { from, t0: now, dur: RM.matches ? 0 : Math.min(1300, 650 + swing * 3.2) };
+  detail.cur = i; dirty = true; kick();
+}
+function openPart(i, focus = true) {
+  if (!gl?.ready || i < 0 || i >= PARTS.length) return;
+  flyTo(i);
+  detailEl.classList.add('is-open', 'spots-off'); spotsEl.inert = true;
+  partEls.forEach((el, k) => el.classList.toggle('is-open', k === i));
+  if (focus) partEls[i].focus({ preventScroll: true });
+}
+function closeParts() {
+  if (detail.cur < 0) return;
+  // the column's buttons vanish as it swaps back, so remember now whether focus was here: it goes to this part's point
+  detail.focusSpot = detailEl.contains(document.activeElement) ? spotEls[detail.cur] : null;
+  flyTo(-1);
+  detailEl.classList.remove('is-open');            // the column returns at once; the points when the camera lands
+  partEls.forEach(el => el.classList.remove('is-open'));
+}
+function landed() {
+  if (detail.cur >= 0) return;
+  detailEl.classList.remove('spots-off'); spotsEl.inert = false;
+  spotPos.fill('');                                 // re-place them for the plate as it is now
+  if (detail.focusSpot) detail.focusSpot.focus({ preventScroll: true });
+  detail.focusSpot = null;
+}
+spotEls.forEach((el, i) => el.addEventListener('click', () => openPart(i)));
+// the points pulse only while the section is on screen: endless animations off screen still cost scroll frames
+new IntersectionObserver(es => es.forEach(e => detailEl.classList.toggle('is-live', e.isIntersecting))).observe(detailEl);
+let scrollIdle = 0;                                 // and not while the page is scrolling: it restarts 250 ms after it stops
+addEventListener('scroll', () => {
+  if (!scrollIdle) detailEl.classList.add('is-scrolling');
+  clearTimeout(scrollIdle); scrollIdle = setTimeout(() => { detailEl.classList.remove('is-scrolling'); scrollIdle = 0; }, 250);
+}, { passive: true });
+$('[data-part-back]', detailEl).addEventListener('click', closeParts);
+$$('[data-part-step]', detailEl).forEach(el => el.addEventListener('click', () => openPart((detail.cur + +el.dataset.partStep + PARTS.length) % PARTS.length)));
+detailEl.addEventListener('keydown', e => {
+  if (detail.cur < 0) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeParts(); }
+  else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !e.target.closest('input')) {
+    e.preventDefault(); openPart((detail.cur + (e.key === 'ArrowRight' ? 1 : -1) + PARTS.length) % PARTS.length);
+  }
 });
 
 /* =====================================================================================
@@ -766,9 +839,8 @@ async function initGL() {
   base.posed = null; pose(base, ASSEMBLED);
   // the tour's stops in world space, read off the assembled size 56 (the tour never shows another size)
   base.root.updateMatrixWorld(true);
-  gl.tourCorners = boxCorners(base.box);
-  gl.tour = TOUR.map(s => ({ ...s, target: s.whole ? base.box.getCenter(new THREE.Vector3())
-    : base.parts[s.part].localToWorld(new THREE.Vector3(...s.off).divide(base.parts[s.part].scale)) }));
+  gl.detailCorners = boxCorners(base.box); gl.detailTarget = base.box.getCenter(new THREE.Vector3());
+  gl.partTargets = PARTS.map(p => { const g = base.parts[p.part], o = p.at ? p.at(base.J) : p.off; return g.localToWorld(new THREE.Vector3(...o).divide(g.scale)); });
   window.__bike.steps.compile = Math.round(performance.now() - t1);
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); html.classList.remove('gl-ready'); html.classList.add('no-webgl', 'gl-lost'); gl.ready = false; frontPlate.removeAttribute('tabindex'); syncPosters(); kick(); }, false);
   gl.ready = true;
@@ -806,7 +878,9 @@ defineLive(window.__bike, {
   choose, ensureSize, bikeOf, get spin() { return { yaw: spin.yaw, vel: spin.vel } },
   poster: (kind, arg, cssW) => renderPoster(kind, arg, cssW),
   trace: { start: () => { trace.frames = []; trace.on = true; }, stop: () => { trace.on = false; return trace.frames; } },
-  aimTour: (p, aspect) => { aimTour(gl.camera, p, aspect); return { pos: gl.camera.position.toArray(), near: gl.camera.near }; },
+  // the camera on a flight in II: from view a to view b (-1 the overview), k in 0..1 along it
+  detailCam: (a, b, k, aspect) => { applyView(gl.camera, mixView(resolveView(a, aspect), resolveView(b, aspect), smoother(k)), aspect); return { pos: gl.camera.position.toArray(), near: gl.camera.near }; },
+  parts: PARTS.length, openPart: i => openPart(i), closeParts: () => closeParts(), get detail() { return { cur: detail.cur, flying: !!detail.anim }; },
   settled: () => new Promise(res => { kick(); let n = 0; const chk = () => (++n > 3 && !raf ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }),
 });
 

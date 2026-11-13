@@ -35,7 +35,7 @@ html { background: var(--sc-canvas); }
 ::selection { background: var(--sc-accent); color: var(--sc-accent-ink); }
 
 /* ------------------------------------------------------------------ type */
-.ch__title, .front__title, .masthead__word, .front__figure, .folio__n, .step h3, .detail__cap h3, .ch__n {
+.ch__title, .front__title, .masthead__word, .front__figure, .folio__n, .step h3, .part h3, .ch__n {
   font-family: var(--sc-font-display);
   font-weight: 800;
   text-transform: uppercase;
@@ -162,7 +162,6 @@ main { padding-left: var(--folio-w); }
 /* The engine sizes a pinned act (span x 100vh, inline) and makes its stage sticky when it starts. The same layout is
    reserved here, so the page does not jump by a screen and more when it does. Keep these in step with data-sc-span. */
 [data-sc-act="pin"][data-sc-span="1.8"] { height: 180vh; }
-[data-sc-act="pin"][data-sc-span="4.4"] { height: 440vh; }
 [data-sc-act="pin"] > [data-sc-stage] {
   position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; z-index: var(--sc-z-stage);
 }
@@ -188,18 +187,24 @@ main { padding-left: var(--folio-w); }
 /* Posters rendered from the same scene (tools/render-posters.mjs). The tour and the chooser switch theirs in app.js. */
 .plate--front .plate__poster { background-image: url(../assets/posters/front.webp); }
 .plate--build .plate__poster { background-image: url(../assets/posters/build.webp); }
-.plate--detail .plate__poster { background-image: url(../assets/posters/tour-0.webp); }
+.plate--detail .plate__poster { background-image: url(../assets/posters/detail.webp); }
 .plate--yours .plate__poster { background-image: url(../assets/posters/size-56.webp); }   /* the chooser's default */
 /* Without JavaScript nothing scroll-driven runs: every cue and reveal rests visible, the posters stand in, and the
-   tour (four captions on one pinned stage) unpins into a plain column so its captions do not stack on each other. */
+   parts of In detail read as a list. */
 @media (scripting: none) {
   [data-sc-cue], [data-sc-in], [data-sc-stagger] > * { opacity: 1; transform: none; }
   .plate__poster { display: block; }
   .drag-hint { display: none; }
-  #detail[data-sc-act="pin"] { height: auto; }
-  #detail > [data-sc-stage] { position: relative; height: auto; overflow: visible; padding: var(--sc-section) var(--sc-gutter); display: grid; gap: var(--sc-6); }
-  #detail .plate--detail, #detail .detail__copy { position: relative; inset: auto; translate: none; width: auto; max-width: 40rem; }
-  #detail .plate--detail { aspect-ratio: 16 / 10; max-width: none; }
+  /* In detail: no points to choose, so the parts read as a list beside the poster (the same layout as .no-webgl).
+     :root raises these over the In detail rules further down the file. */
+  :root .detail { height: auto; overflow: visible; display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); align-items: start; }
+  :root .detail__copy { position: static; translate: none; width: auto; max-width: 30rem; padding: var(--sc-section) var(--sc-gutter); }
+  :root .plate--detail { position: sticky; top: 12vh; inset: auto; height: auto; aspect-ratio: 16 / 10; }   /* stays beside the list */
+  :root .plate--detail .plate__cap { left: 0; right: auto; top: 100%; bottom: auto; }
+  :root .detail__panels { display: block; }
+  :root .part { visibility: visible; margin-top: var(--sc-6); }
+  :root .spots, :root .part-nav, :root .detail__how { display: none; }
+  @media (max-width: 860px) { :root .detail { grid-template-columns: 1fr; } :root .plate--detail { position: relative; top: auto; order: -1; aspect-ratio: 4 / 3; } }
 }
 /* The dimension lines sit in their plate, over its canvas, and scroll with it. */
 .dims { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
@@ -336,10 +341,10 @@ main { padding-left: var(--folio-w); }
 .step.is-now h3 { color: var(--sc-accent); }
 .step.is-now p { color: var(--sc-ink); }
 
-/* ------------------------------------------------- in detail (III, the peak) */
-/* One pinned stage: the copy column on the left over bare ground, the plate on the right running to the edge.
-   The type never sits on the bike: the plate starts where the column ends. */
-.detail { background: var(--graphite); }
+/* --------------------------------------------------- in detail (II, the peak) */
+/* One screen: the copy column on the left over bare ground, the plate on the right running to the edge, with the
+   points on the bike. The type never sits on the bike: the plate starts where the column ends. */
+.detail { position: relative; height: 100vh; height: 100svh; overflow: clip; background: var(--graphite); }
 .plate--detail { position: absolute; inset: 0 0 0 38%; }
 /* the caption sits in the copy column's foot, on bare ground (in the plate it would be under the close-ups) */
 .plate--detail .plate__cap { left: calc(var(--sc-gutter) - 61.29%); right: auto; bottom: var(--sc-5); }   /* 61.29% = 38 / 62 of the plate */
@@ -355,8 +360,71 @@ main { padding-left: var(--folio-w); }
 }
 .detail__intro .ch__title { font-size: clamp(2.4rem, 1.2rem + 3.6vw, 4.6rem); }
 .detail__lede { margin-top: var(--sc-5); }
-.detail__cap h3 { margin: 0 0 var(--sc-4); font-size: var(--sc-t-xl); letter-spacing: 0; color: var(--sc-accent); }
-.detail__cap p { margin: 0; font-size: var(--sc-t-lg); line-height: 1.5; max-width: 30ch; color: var(--sc-ink); text-wrap: pretty; }
+/* the parts: one shown at a time, in place of the intro, while the camera is on it. The intro and the parts share one
+   grid cell (sized to the tallest) and swap by visibility, so the column, and on phones the plate above it, never move. */
+.detail__panels { display: grid; align-items: center; }
+.detail__panels > * { grid-area: 1 / 1; }
+.part { visibility: hidden; }
+.part:focus { outline: none; }                       /* focus lands here so a screen reader reads the part; not a control */
+.part h3 { margin: 0 0 var(--sc-4); font-size: var(--sc-t-xl); letter-spacing: 0; color: var(--sc-accent); }
+.part p { margin: 0; font-size: var(--sc-t-lg); line-height: 1.5; max-width: 32ch; color: var(--sc-ink); text-wrap: pretty; }
+.detail.is-open .detail__intro { visibility: hidden; }
+.detail.is-open .part.is-open { visibility: visible; animation: part-in 320ms var(--sc-ease-out); }
+@keyframes part-in { from { opacity: 0; transform: translateY(6px); } }
+.part-nav { display: flex; visibility: hidden; flex-wrap: nowrap; align-items: center; gap: var(--sc-1) var(--sc-5); margin-top: var(--sc-6); }
+.detail.is-open .part-nav { visibility: visible; }
+.part-nav button {
+  min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 600 var(--sc-t-xs)/1 var(--sc-font-text); letter-spacing: 0.14em; text-transform: uppercase; color: var(--sc-ink-soft);
+  transition: color var(--sc-d-fast) var(--sc-ease-out);
+}
+.part-nav .part-nav__back { color: var(--sc-accent); box-shadow: inset 0 -2px 0 currentColor; min-height: 36px; margin-right: var(--sc-3); }
+.part-nav__step[data-part-step="-1"]::before { content: "\2190\00a0"; }
+.part-nav__step[data-part-step="1"]::after { content: "\00a0\2192"; }
+@media (hover: hover) and (pointer: fine) { .part-nav button:hover, .part-nav .part-nav__back:hover { color: var(--sc-ink); } }
+.part-nav button:active { transform: translateY(1px); }
+/* the points: a 44 px target centred on the anchor (app.js sets the translate), a ring with a dot, a pulse, a label */
+.spots { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: none; transition: opacity 280ms var(--sc-ease-out); }
+.gl-ready .spots { display: block; }
+.detail.spots-off .spots { opacity: 0; }
+.spot {
+  position: absolute; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0;
+  display: grid; place-items: center; border: 0; background: none; cursor: pointer; pointer-events: auto; color: var(--sc-ink);
+}
+.spot__dot {
+  position: relative; width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle, var(--sc-accent) 0 3.5px, transparent 4.5px), color-mix(in oklab, var(--sc-canvas) 55%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--sc-accent);
+  transition: transform var(--sc-d-fast) var(--sc-ease-out);
+}
+.spot__dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--sc-accent); opacity: 0; }
+/* the pulse runs only while the section is on screen and the page is still (app.js sets .is-live and .is-scrolling):
+   endless animations cost the trackpad scroll 5 dropped frames a pass (tools/check-smoothness.mjs, three runs), and
+   1 while the section itself scrolled by (two runs); 0 with both gates */
+.detail.is-live:not(.is-scrolling) .spot__dot::after { animation: spot-pulse 2.6s ease-out infinite; }
+@keyframes spot-pulse { 0% { transform: scale(1); opacity: 0.7; } 70%, 100% { transform: scale(2.1); opacity: 0; } }
+.spot__label {
+  position: absolute; left: 100%; top: 50%; translate: -8px -50%; padding: 5px 8px; border-radius: 2px; white-space: nowrap;
+  font-size: 0.66rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  background: color-mix(in oklab, var(--sc-canvas) 80%, transparent); color: var(--sc-ink);
+  transition: background-color var(--sc-d-fast) var(--sc-ease-out), color var(--sc-d-fast) var(--sc-ease-out);
+}
+.spot--left .spot__label { left: auto; right: 100%; translate: 8px -50%; }
+@media (hover: hover) and (pointer: fine) {
+  .spot:hover .spot__dot { transform: scale(1.15); }
+  .spot:hover .spot__label { background: var(--sc-accent); color: var(--sc-accent-ink); }
+}
+.spot:focus-visible { outline: none; }
+.spot:focus-visible .spot__dot { outline: 2px solid var(--sc-accent); outline-offset: 4px; }
+.spot:focus-visible .spot__label { background: var(--sc-accent); color: var(--sc-accent-ink); }
+/* without WebGL: no points to choose, so the parts read as a list beside the poster */
+.no-webgl .detail { height: auto; overflow: visible; display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); align-items: start; }
+.no-webgl .detail__copy { position: static; translate: none; width: auto; max-width: 30rem; padding: var(--sc-section) var(--sc-gutter); }
+.no-webgl .plate--detail { position: sticky; top: 12vh; inset: auto; height: auto; aspect-ratio: 16 / 10; }   /* stays beside the list */
+.no-webgl .plate--detail .plate__cap { left: 0; right: auto; top: 100%; bottom: auto; }
+.no-webgl .detail__panels { display: block; }
+.no-webgl .part { visibility: visible; margin-top: var(--sc-6); }
+.no-webgl .part-nav, .no-webgl .detail__how { display: none; }
 
 /* ---------------------------------------------------------------- yours */
 .spread--yours { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: center; }
@@ -424,25 +492,37 @@ main { padding-left: var(--folio-w); }
   .plate--build { position: absolute; inset: 0; height: auto; }
   .build__text { padding-top: var(--sc-6); }
   .step { min-height: 46svh; }
-  /* the tour on phones: the plate on top under the running head, the copy beneath it */
-  .plate--detail { inset: 3.25rem 0 auto 0; height: 56svh; }   /* starts under the running head: its top edge is the bar's */
-  .plate--detail .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); top: calc(100% + var(--sc-2)); bottom: auto; }
+  /* in detail on phones: the plate on top under the running head, the copy beneath it */
+  /* a column: the plate (under the running head) takes the height the copy leaves, so the two never overlap */
+  .detail { display: flex; flex-direction: column; }
+  .plate--detail { order: -1; position: relative; inset: auto; flex: 1 1 auto; min-height: 0; height: auto; margin-top: 3.25rem; }
+  .plate--detail .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); top: auto; bottom: var(--sc-2); }
   .plate--detail .plate__poster, .plate--detail .plate__gl {
     -webkit-mask-image: linear-gradient(to top, transparent, rgb(0 0 0 / 0.45) 10%, rgb(0 0 0 / 0.85) 18%, #000 26%);
     mask-image: linear-gradient(to top, transparent, rgb(0 0 0 / 0.45) 10%, rgb(0 0 0 / 0.85) 18%, #000 26%);
   }
-  .detail__copy { top: auto; bottom: clamp(1.5rem, 5svh, 3rem); right: var(--sc-gutter); width: auto; max-width: none; translate: none; }
+  .detail__copy { position: relative; inset: auto; translate: none; width: auto; max-width: none; flex: none; padding: var(--sc-3) var(--sc-gutter) clamp(1.25rem, 4svh, 2.5rem); }
+  .detail__panels { align-items: end; }
   .detail__intro .ch__title { font-size: clamp(2.2rem, 10vw, 3.2rem); }
   .detail__lede { margin-top: var(--sc-3); font-size: var(--sc-t-base); }
-  .detail__cap h3 { margin-bottom: var(--sc-2); }
-  .detail__cap p { font-size: var(--sc-t-base); }
+  .part h3 { margin-bottom: var(--sc-2); }
+  .part p { font-size: var(--sc-t-base); }
+  .part-nav { margin-top: var(--sc-3); gap: var(--sc-1) var(--sc-4); }
+  .no-webgl .detail { grid-template-columns: 1fr; }
+  .no-webgl .plate--detail { position: relative; top: auto; order: -1; aspect-ratio: 4 / 3; }
   .book__grid { grid-template-columns: 1fr; }
   .picker__row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-@media (max-width: 520px) { .scroll-cue__more { display: none; } }   /* "Scroll" and the arrow fit beside the action */
+@media (max-width: 520px) {
+  .scroll-cue__more { display: none; }
+  .part-nav__word { display: none; }                /* Previous and Next as arrows; their aria-labels name them */
+  .part-nav__step { min-width: 44px; }
+}   /* "Scroll" and the arrow fit beside the action */
 
 @media (prefers-reduced-motion: reduce) {
+  .spot__dot::after { animation: none !important; opacity: 0; }   /* over the .is-live rule, which is more specific */
+  .detail.is-open .part.is-open { animation: none; }
   .scroll-cue__arrow { animation: none; }
   .plate__gl { transition: none; }
 }
