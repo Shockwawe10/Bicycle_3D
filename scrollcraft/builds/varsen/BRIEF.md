@@ -123,6 +123,11 @@ line reads up the right edge: "New · Varsen R1 · The flagship road bike". "The
 brief is "trusted" and Varsen has no reliability data, so an unbacked superlative is the one claim it cannot make. It
 can be added with a source if the owner has one.
 
+Then: "the title ... should be more visible. It's right now it's not really visible and not really there. So maybe you
+read the skill taste and place it whenever it feels right." Done per the taste skill (nothing tilted; the first screen
+says what is sold): the line moved from the margin to directly above the headline, as a solid yellow NEW tag and the
+model line in the display face.
+
 ## Journey (authored, revised 2026-11-13)
 
 ```

@@ -97,8 +97,9 @@ to 46 svh so the peak keeps the most room.
 | Near | Headline, one line, the action link | 1x | never overlaps the bike |
 | Atmosphere | The key light sweeping the clearcoat on arrival | once, then follows the turn | none |
 
-Opening: three-quarter view, the key light sweeps across the paint, "R1" behind, and "New · Varsen R1 · The flagship
-road bike" reading up the right edge (under the masthead on phones). Midpoint: halfway
+Opening: three-quarter view, the key light sweeps across the paint, "R1" behind. Above the headline, on its edge, the
+model line: a solid NEW tag, then "Varsen R1 · The flagship road bike" (two lines on phones). It first ran up the right
+edge, rotated; the owner found it hard to see, and the taste skill rules out tilted type. Midpoint: halfway
 to profile, the figure risen and dim. Exit: pure profile, which is where chapter I picks the bike up
 with its dimension lines. The headline, lede and action stay for the whole pin (revised 2026-11-13:
 when they faded at 0.6, the rest of the pin was the bike over an empty half screen, a gap on phones);

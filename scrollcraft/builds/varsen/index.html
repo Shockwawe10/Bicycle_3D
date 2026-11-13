@@ -46,8 +46,6 @@
         <span class="masthead__word">Varsen</span>
       </header>
       <p class="front__figure" aria-hidden="true">R1</p>
-      <!-- along the side: what this bike is (owner, 2026-11-13). True claims only: no unbacked superlatives -->
-      <p class="front__side"><span class="front__side-new">New</span><span class="front__side-model"> · Varsen R1</span> · The flagship road bike</p>
       <figure class="plate plate--front" data-plate="front">
         <div class="plate__poster" aria-hidden="true"></div>
         <figcaption class="plate__cap">Plate 1. Varsen R1, size 56. <span class="drag-hint"><span class="drag-hint__pointer">Drag to turn it.</span><span class="drag-hint__keys">Turn it with the arrow keys.</span></span></figcaption>
@@ -55,7 +53,12 @@
       <!-- the copy stays for the whole pin (no cue): when it faded at 0.6, the rest of the pin was a bike over an empty
            half screen, which on a phone read as a gap (owner, 2026-11-13). Only the scroll cue inside it fades. -->
       <div class="front__copy">
-        <h1 class="front__title" data-sc-kinetic="lines">Built to the millimetre</h1>
+        <!-- what is sold, right above the headline on its edge (owner, 2026-11-13: more visible than a margin line).
+             True claims only: no unbacked superlatives -->
+        <div class="front__head">
+          <p class="front__kicker"><span class="front__new">New</span><span>Varsen R1</span><span class="front__kicker-sep" aria-hidden="true">·</span><span class="front__kicker-more">The flagship road bike</span></p>
+          <h1 class="front__title" data-sc-kinetic="lines">Built to the millimetre</h1>
+        </div>
         <p class="front__lede">A carbon road bike placed tube by tube from a published geometry chart, in all seven sizes.</p>
         <div class="front__actions">
           <a class="action" href="#book">Book a fitting</a>
