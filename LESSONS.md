@@ -19,3 +19,21 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: The user picked 'Licensed downloaded model', I started vendoring loaders, then the user asked about time and budget and switched to the procedural route: one wasted round trip and an interrupted install to revert.
 - Why: The options said 'likely adds several MB' but gave no time estimate and no number against the 600 KB budget; the comparison came only after the user asked.
 - tags: communication,options,fix-applied (memory: options-state-costs.md)
+
+## 2026-11-13 -- In a pinned scroll act, check that neither half of the screen goes bare at any p: the scroll-craft dead-scroll check passes as long as any pixel moves, so a 3D subject turning above a faded-out copy block reads as green. On the 390x844 contact sheet, inspect every pinned act's frames after its last copy cue ends.
+- Expected: The Varsen hero (pin 1.8) would stay full while the bike turned to profile; the harness reported no dead scroll on every pass.
+- Actual: The hero copy had data-sc-cue="0 0.6 0", so from p 0.6 to 1 (about 270 px of scroll on a phone) the bike turned above an empty lower half. I read the mobile sheet twice and called it fine; the owner found the gap on an iPhone. Fixed in 962c495 by removing the copy's cue.
+- Why: The harness's dead-scroll rule only asks whether frames differ, and the turning bike made every frame differ. I looked at the sheet for collisions and clipping, not for empty area.
+- tags: qa,scroll-craft,layout,mobile,fix-proposed (CLAUDE.md rule + tools/check-coverage.mjs)
+
+## 2026-11-13 -- Before tuning scroll-driven motion, trace it (scrollcraft/builds/varsen/tools/check-smoothness.mjs) on the working tree and on HEAD (git archive HEAD, served on port 4502), with subject positions in plate-local coordinates; and grep the build for the rules of the project skill it implements. The Varsen loop passed dt = 0 on the first frame after idle, which the follow treated as snap-to-target, against damped-scroll-progress's own rule (first frame uses 1/60).
+- Expected: The scroll easing (tau 0.17 s) would smooth every frame.
+- Actual: Every scroll from rest jumped in one frame and the loop then stopped: 104 traced frames for 661 scrolled. My first trace recorded viewport coordinates, so page scroll swamped it (360,724 px/s2 on every plate) until I switched to plate-local. After the fix (c6f906b): build camera accel p95 38,171 to 1,774 px/s2, tour 105,154 to 15,414, dropped frames 10 to 0.
+- Why: follow(k, v, consecutive ? dt : 0) plus 'if dt === 0 snap'; and the shared-canvas design meant the bike also trailed the browser's compositor scroll by a frame. The skill's rule was right; the build did not follow it and nothing checked it.
+- tags: performance,scroll,smoothness,fix-applied (.claude/skills/damped-scroll-progress/SKILL.md, tools/check-smoothness.mjs), fix-proposed (CLAUDE.md rule)
+
+## 2026-11-13 -- Commit and push each verified unit of work to main (ub-mode Commit and Push), and take every number in a commit message from a run on that exact tree; run a variance claim at least twice before writing it.
+- Expected: Finished, verified work would be committed and pushed in small ordered commits, each saying why, what and how it was proved.
+- Actual: The whole redesign sat uncommitted across sessions until the owner said I had 'forgot to push'. Then one message said 'mobile 90' from a stale Lighthouse run (re-measured 89, reworded before push), and c6f906b says 'run to run within about 10%' before any repeat run: a later repeat held p95 within 7% but one max moved 24%.
+- Why: I treated 'not yet approved to replace the live root page' as 'do not commit', and wrote commit messages from memory of earlier measurements instead of the run on the tree being committed.
+- tags: git,process,commit,fix-applied (memory: commit-and-push-per-ub-mode.md), fix-proposed (CLAUDE.md rule)
