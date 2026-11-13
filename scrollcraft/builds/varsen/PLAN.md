@@ -36,7 +36,8 @@ from one to the next with no fade (cue ramps of 0), and they sit in their own co
   beneath. The one action, "Book a fitting", is a text link. Beside it, at the owner's request (a
   deliberate exception to the skill's no-scroll-cue rule, see BRIEF.md), a quieter link "Scroll to see
   it built" with a slowly drifting arrow: it fades once the visitor has scrolled about 50 px and
-  links to the build. Phones show "Scroll" and the arrow, on the action's row.
+  links to the build. Phones show "Scroll" and the arrow, on the action's row. The build plate carries
+  a smaller "Keep scrolling" cue (bottom right, opposite the caption) until the saddle lands.
 - **Close:** the booking. Your size, your sheet, one calendar. Then the colophon with every source.
 
 ## Signature move: rebuild at your size

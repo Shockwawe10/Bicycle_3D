@@ -98,7 +98,9 @@
       <div class="build__hold">
         <figure class="plate plate--build" data-plate="build">
           <div class="plate__poster" aria-hidden="true"></div>
-          <figcaption class="plate__cap">Plate 3. The assembly, size 56. It builds as you scroll.</figcaption>
+          <figcaption class="plate__cap">Plate 3. The assembly, size 56.<span class="plate__cap-more"> It builds as you scroll.</span></figcaption>
+          <!-- the hero's cue, smaller: visible while the bike is still being built, gone once the saddle lands (app.js) -->
+          <p class="build-cue" aria-hidden="true"><span class="build-cue__long">Keep scrolling</span><span class="build-cue__short">Scroll</span><svg class="scroll-cue__arrow" viewBox="0 0 12 26"><path d="M6 1v22M1.5 18.5 6 24l4.5-5.5"/></svg></p>
         </figure>
       </div>
       <div class="build__text">

@@ -589,7 +589,7 @@ const SIZE_LIST = SIZES.map(s => s.size);            // the chooser's sizes, in 
 /* ---------- DOM: folio, the build's current step, the hero figure ---------- */
 const folioLinks = Object.fromEntries($$('[data-folio]').map(a => [a.dataset.folio, a]));
 const stepEls = $$('.step'), STEP_OF = ['frame', 'fork', 'wheels', 'wheels', 'drivetrain', 'cockpit', 'saddle'];
-const frontFigure = $('.front__figure');
+const frontFigure = $('.front__figure'), buildCue = $('.build-cue');
 const dom = { chapter: '', step: '' };
 function updateDOM(M) {                             // writes only: the rectangles were read in measure()
   const mid = innerHeight * 0.45;
@@ -600,6 +600,10 @@ function updateDOM(M) {                             // writes only: the rectangl
   let k = 0; STAGES.forEach((s, i) => { if (tb >= s.w[0] - 0.01) k = i; });
   const step = STEP_OF[k];
   if (step !== dom.step) { for (const e of stepEls) e.classList.toggle('is-now', e.dataset.step === step); dom.step = step; }
+  if (buildCue) {                                   // "keep scrolling" while parts are still to come; gone as the saddle lands
+    const o = (1 - smooth(0.86, 0.96, tb)).toFixed(3);
+    if (buildCue.style.opacity !== o) buildCue.style.opacity = o;
+  }
   const fp = damped.front ?? 0;                     // the hero figure rises and fades; under reduced motion it only fades
   if (frontFigure) frontFigure.style.transform = RM.matches ? 'none' : `translate3d(0, ${(-fp * 14).toFixed(2)}vh, 0)`, frontFigure.style.opacity = (1 - smooth(0.2, 0.8, fp)).toFixed(3);
   syncPosters();

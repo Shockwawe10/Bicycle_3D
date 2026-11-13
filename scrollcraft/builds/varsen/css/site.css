@@ -265,6 +265,22 @@ main { padding-left: var(--folio-w); }
 }
 @media (hover: hover) and (pointer: fine) { .scroll-cue:hover { color: var(--sc-ink); } }
 .scroll-cue:focus-visible { opacity: 1 !important; }   /* faded after scrolling, but a keyboard focus shows it again */
+/* The same cue, smaller, in the build: bottom right of the assembly plate, opposite its caption. app.js fades it out
+   as the last part lands. Hidden where nothing builds (no WebGL, no script: the plate is a still). */
+.build-cue {
+  position: absolute; z-index: 3; right: var(--sc-gutter); bottom: calc(var(--sc-6) - 9px); margin: 0;
+  display: inline-flex; align-items: center; gap: var(--sc-2);
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sc-ink-soft);
+  pointer-events: none;
+}
+.build-cue .scroll-cue__arrow { width: 10px; height: 22px; }
+.build-cue__short { display: none; }
+@media (max-width: 600px) {                         /* narrow: the cue says it, so the caption drops its last sentence */
+  .plate__cap-more, .build-cue__long { display: none; }
+  .build-cue__short { display: inline; }
+}
+.no-webgl .build-cue { display: none; }
+@media (scripting: none) { .build-cue { display: none; } }
 .drag-hint { color: var(--sc-ink); }
 .no-webgl .drag-hint { display: none; }
 .drag-hint__keys { display: none; }

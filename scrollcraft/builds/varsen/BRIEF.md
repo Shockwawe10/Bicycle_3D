@@ -89,6 +89,11 @@ scrolling builds the bike. The cue says what scrolling does ("Scroll to see it b
 as a quieter second link, fades once the visitor scrolls, and links to the build; the build's caption adds "It builds
 as you scroll".
 
+Then: "the scroll also needs to be kind of presented on the build. Maybe the smaller ... Not something big." Done: a
+smaller "Keep scrolling" with the same arrow at the bottom right of the assembly plate, opposite its caption, visible
+while parts are still to come and gone as the saddle lands. Phones say "Scroll", and the caption drops its last
+sentence there so the two never collide.
+
 ## Journey (authored, revised 2026-11-13)
 
 ```
