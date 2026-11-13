@@ -95,8 +95,10 @@ to 46 svh so the peak keeps the most room.
 | Atmosphere | The key light sweeping the clearcoat on arrival | once, then follows the turn | none |
 
 Opening: three-quarter view, the key light sweeps across the paint, "56" behind. Midpoint: halfway
-to profile, the figure risen and dim, the headline leaving. Exit: pure profile, which is where
-chapter I picks the bike up with its dimension lines.
+to profile, the figure risen and dim. Exit: pure profile, which is where chapter I picks the bike up
+with its dimension lines. The headline, lede and action stay for the whole pin (revised 2026-11-13:
+when they faded at 0.6, the rest of the pin was the bike over an empty half screen, a gap on phones);
+only the scroll cue beside the action fades, once the visitor has scrolled.
 
 ## Rendering
 
