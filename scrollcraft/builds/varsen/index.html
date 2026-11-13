@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-calendly="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Varsen R1, a carbon road bike built to the millimetre</title>
+<meta name="description" content="A carbon road bike built in your browser from its published geometry chart, in all seven sizes. Give your height and it rebuilds itself at yours.">
+<meta name="theme-color" content="#0c0c0d">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Varsen R1, built to the millimetre">
+<meta property="og:description" content="A carbon road bike that rebuilds itself at your size, from its published geometry chart.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/archivo-expanded.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/archivo-text.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="modulepreload" href="vendor/three@0.185.1/three.core.min.js">
+<link rel="modulepreload" href="vendor/three@0.185.1/three.module.min.js">
+<link rel="stylesheet" href="css/scrollcraft.css">
+<link rel="stylesheet" href="css/site.css">
+<script src="js/scrollcraft.js" defer></script>
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#book">Skip to booking</a>
+<div class="sc-grain" aria-hidden="true"></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<nav class="folio" aria-label="Chapters">
+  <a class="folio__mark" href="#top" aria-label="Varsen, back to the top">
+    <svg viewBox="-8.14 8 116.28 84" aria-hidden="true"><path d="M-8.14 8.00 L7.51 8.00 L26.84 73.28 L87.64 8.00 L108.14 8.00 L29.91 92.00 L16.75 92.00 Z"/></svg>
+  </a>
+  <ol class="folio__list">
+    <li><a href="#chart" data-folio="chart"><span class="folio__n">I</span><span class="folio__t">The chart</span></a></li>
+    <li><a href="#build" data-folio="build"><span class="folio__n">II</span><span class="folio__t">The build</span></a></li>
+    <li><a href="#detail" data-folio="detail"><span class="folio__n">III</span><span class="folio__t">In detail</span></a></li>
+    <li><a href="#yours" data-folio="yours"><span class="folio__n">IV</span><span class="folio__t">Find yours</span></a></li>
+    <li><a href="#book" data-folio="book"><span class="folio__n">V</span><span class="folio__t">Book a fitting</span></a></li>
+  </ol>
+</nav>
+
+<main id="top">
+
+  <!-- FRONTISPIECE: the bike first, cinematic; the title beneath it, never over it -->
+  <section id="front" class="ch ch--front" data-sc-act="pin" data-sc-span="1.8">
+    <div data-sc-stage class="front">
+      <header class="masthead">
+        <span class="masthead__word">Varsen</span>
+      </header>
+      <p class="front__figure" aria-hidden="true">56</p>
+      <figure class="plate plate--front" data-plate="front">
+        <div class="plate__poster" aria-hidden="true"></div>
+        <figcaption class="plate__cap">Plate 1. Varsen R1, size 56. <span class="drag-hint"><span class="drag-hint__pointer">Drag to turn it.</span><span class="drag-hint__keys">Turn it with the arrow keys.</span></span></figcaption>
+      </figure>
+      <div class="front__copy" data-sc-cue="0 0.6 0">
+        <h1 class="front__title" data-sc-kinetic="lines">Built to the millimetre</h1>
+        <p class="front__lede">A carbon road bike placed tube by tube from a published geometry chart, in all seven sizes.</p>
+        <a class="action" href="#book">Book a fitting</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- I. THE CHART: a hard cut to graphite; the numbers draw themselves onto the side elevation -->
+  <section id="chart" class="ch ch--graphite" data-sc-act="flow" data-chapter="chart">
+    <div class="spread spread--chart">
+      <header class="ch__head" data-sc-in>
+        <p class="ch__n">I</p>
+        <h2 class="ch__title">Every number is published</h2>
+      </header>
+      <figure class="plate plate--chart" data-plate="chart">
+        <div class="plate__poster" aria-hidden="true"></div>
+        <svg class="dims" aria-hidden="true"></svg>
+        <figcaption class="plate__cap">Plate 2. Side elevation with the chart's own dimensions.</figcaption>
+      </figure>
+      <div class="ch__body sc-stack" data-sc-in data-sc-stagger="60">
+        <p class="ch__lede">The size 56 has a 555&nbsp;mm stack, a 398&nbsp;mm reach and a 73.5° head angle. The model is built from those numbers and nothing else, then measured back against them before this page shows it.</p>
+        <dl class="sheet">
+          <div><dt>Stack</dt><dd>555 mm</dd></div>
+          <div><dt>Reach</dt><dd>398 mm</dd></div>
+          <div><dt>Head angle</dt><dd>73.5°</dd></div>
+          <div><dt>Seat angle</dt><dd>73.5°</dd></div>
+          <div><dt>Chainstay</dt><dd>410 mm</dd></div>
+          <div><dt>Bottom-bracket drop</dt><dd>72 mm</dd></div>
+          <div><dt>Wheelbase</dt><dd>991 mm</dd></div>
+          <div><dt>Trail</dt><dd>53.5 mm</dd></div>
+        </dl>
+        <p class="note">Geometry: the Specialized Tarmac SL7 frameset, 2022, as listed by <a href="https://bikeinsights.com/bikes/5c670d973584300017e37aa3-specialized-bicycles-tarmac?build=sl7-frameset&amp;version=2022" rel="noopener" target="_blank">Bike Insights</a>. Varsen is a concept; the chart is its engineering input.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- II. THE BUILD: the plate holds while the text column is read; parts arrive in workshop order -->
+  <section id="build" class="ch ch--black build" data-sc-act="flow" data-chapter="build">
+    <div class="build__grid">
+      <div class="build__hold">
+        <figure class="plate plate--build" data-plate="build">
+          <div class="plate__poster" aria-hidden="true"></div>
+          <figcaption class="plate__cap">Plate 3. The assembly, size 56.</figcaption>
+        </figure>
+      </div>
+      <div class="build__text">
+        <header class="ch__head" data-sc-in>
+          <p class="ch__n">II</p>
+          <h2 class="ch__title">Built in the order a mechanic would</h2>
+        </header>
+        <ol class="steps">
+          <li class="step" data-step="frame" data-sc-in><h3>Frame</h3><p>Carbon, aero-profiled. The down tube deepens from 49 to 62&nbsp;mm into the bottom bracket.</p></li>
+          <li class="step" data-step="fork" data-sc-in><h3>Fork</h3><p>Slides up into the head tube from below: 44.4&nbsp;mm of offset, 53.5&nbsp;mm of trail.</p></li>
+          <li class="step" data-step="wheels" data-sc-in><h3>Wheels</h3><p>Rolled in along the ground, the front from ahead, the rear from behind with its cassette on. 45&nbsp;mm rims, 26&nbsp;mm tyres.</p></li>
+          <li class="step" data-step="drivetrain" data-sc-in><h3>Drivetrain</h3><p>52/36 rings and 170&nbsp;mm cranks that pedal forward as they arrive. The chain is solved link by link: 112 links, every roller seated.</p></li>
+          <li class="step" data-step="cockpit" data-sc-in><h3>Cockpit</h3><p>A one-piece bar and stem, 100&nbsp;mm at −6°, lowered onto the steerer as it turns into line.</p></li>
+          <li class="step" data-step="saddle" data-sc-in><h3>Saddle</h3><p>725&nbsp;mm from the bottom bracket, along the seat tube. The bike is whole.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- III. IN DETAIL: the peak. A held hero frame first (the quiet), then one orbit round the bike, holding on each
+       part while its caption is read, and out to the profile that chapter IV opens on -->
+  <section id="detail" class="ch ch--graphite" data-sc-act="pin" data-sc-span="4.4" data-chapter="detail">
+    <div data-sc-stage class="detail">
+      <figure class="plate plate--detail" data-plate="detail">
+        <div class="plate__poster" aria-hidden="true"></div>
+        <figcaption class="plate__cap">Plate 4. Size 56, at close range.</figcaption>
+      </figure>
+      <div class="detail__copy detail__intro" data-sc-cue="0 0.17 0 0">
+        <p class="ch__n">III</p>
+        <h2 class="ch__title">In detail</h2>
+        <p class="detail__lede">Close enough to count the chain links. Every part is modelled, down to the bolts.</p>
+      </div>
+      <div class="detail__copy detail__cap" data-sc-cue="0.17 0.41 0 0">
+        <h3>Drivetrain</h3>
+        <p>52/36 chainrings on 170&nbsp;mm cranks, into an 11–30 twelve-speed cassette. The chain is solved link by link: 112 links, every roller seated.</p>
+      </div>
+      <div class="detail__copy detail__cap" data-sc-cue="0.41 0.63 0 0">
+        <h3>Rear end</h3>
+        <p>The brake side: a 140&nbsp;mm rotor and its caliper, and a 142&nbsp;mm thru-axle through slotted dropouts.</p>
+      </div>
+      <div class="detail__copy detail__cap" data-sc-cue="0.63 0.86 0 0">
+        <h3>Cockpit</h3>
+        <p>One piece of carbon: a 100&nbsp;mm stem at −6° and a 420&nbsp;mm bar, taped through the drops.</p>
+      </div>
+      <div class="detail__copy detail__cap" data-sc-cue="0.86 1 0 0">
+        <h3>The whole</h3>
+        <p>That is the size 56. Next, it rebuilds itself at yours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- IV. YOURS: give a height or pick a size; the bike rebuilds itself at it, and the size goes into the booking -->
+  <section id="yours" class="ch ch--black" data-sc-act="flow" data-chapter="yours">
+    <div class="spread spread--yours">
+      <figure class="plate plate--yours" data-plate="yours">
+        <div class="plate__poster" aria-hidden="true"></div>
+        <svg class="dims" aria-hidden="true"></svg>
+        <figcaption class="plate__cap" data-yours-cap>Plate 5. Size 56, rebuilt from its chart.</figcaption>
+      </figure>
+      <div class="yours__panel sc-stack" data-sc-in data-sc-stagger="60">
+        <p class="ch__n">IV</p>
+        <h2 class="ch__title" id="yours-title">Find yours</h2>
+        <!-- a group, not a form: there is nothing to submit, and a form without script would put the height in the URL -->
+        <div class="chooser" data-chooser role="group" aria-labelledby="yours-title">
+          <label class="chooser__label" for="height">Your height</label>
+          <div class="chooser__field">
+            <input id="height" name="height" type="number" inputmode="numeric" min="140" max="200" step="1" placeholder="176" autocomplete="off" aria-describedby="height-out">
+            <span class="chooser__unit">cm</span>
+          </div>
+          <output id="height-out" class="chooser__out" for="height" aria-live="polite">Or pick a size below.</output>
+          <fieldset class="picker">
+            <legend class="chooser__label">Size</legend>
+            <div class="picker__row">
+              <label><input type="radio" name="size" value="44"><span>44</span></label>
+              <label><input type="radio" name="size" value="49"><span>49</span></label>
+              <label><input type="radio" name="size" value="52"><span>52</span></label>
+              <label><input type="radio" name="size" value="54"><span>54</span></label>
+              <label><input type="radio" name="size" value="56" checked><span>56</span></label>
+              <label><input type="radio" name="size" value="58"><span>58</span></label>
+              <label><input type="radio" name="size" value="61"><span>61</span></label>
+            </div>
+          </fieldset>
+        </div>
+        <dl class="sheet sheet--yours" data-sheet>
+          <div><dt>Stack</dt><dd><span data-sheet="stack">555</span> mm</dd></div>
+          <div><dt>Reach</dt><dd><span data-sheet="reach">398</span> mm</dd></div>
+          <div><dt>Effective top tube</dt><dd><span data-sheet="ett">563</span> mm</dd></div>
+          <div><dt>Seat tube</dt><dd><span data-sheet="seatTube">496</span> mm</dd></div>
+          <div><dt>Standover</dt><dd><span data-sheet="standover">786</span> mm</dd></div>
+          <div><dt>Wheelbase</dt><dd><span data-sheet="wheelbase">991</span> mm</dd></div>
+          <div><dt>Head angle</dt><dd><span data-sheet="headAngle">73.5</span>°</dd></div>
+          <div><dt>Trail</dt><dd><span data-sheet="trail">53.5</span> mm</dd></div>
+        </dl>
+        <p class="note">Rider heights come from a retailer's reference chart (<a href="https://www.bikemart.com/collections/non-electric-adult-bikes/products/tarmac-sl7-sport-performance-road-bikes" rel="noopener" target="_blank">Bike Mart</a>), not the maker's. Cockpit and cranks are shown as on the size 56. A fitting confirms all of it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSE: the booking, with the chosen size already in it; then the colophon -->
+  <section id="book" class="ch ch--yellow book" data-sc-act="flow" data-chapter="book">
+    <div class="book__grid">
+      <div class="book__lead" data-sc-in>
+        <p class="ch__n">V</p>
+        <h2 class="ch__title">Book a fitting</h2>
+        <p class="book__size">Size <b data-your-size>56</b> goes into the booking with you.</p>
+      </div>
+      <div class="book__cal" data-sc-reveal="up" data-sc-reveal-at="0.1 0.4">
+        <p class="book__state" data-cal-state>Online booking opens here once the calendar is connected.</p>
+        <button class="action action--solid" type="button" data-cal-open disabled>Book a fitting</button>
+        <div class="book__frame" data-cal-frame hidden></div>
+      </div>
+    </div>
+    <footer class="colophon">
+      <p><b>Varsen</b> is a concept brand and a web portfolio piece. The bike is generated in your browser from published numbers; no image on this page is a photograph or a generated picture.</p>
+      <p>Geometry: <a href="https://bikeinsights.com/bikes/5c670d973584300017e37aa3-specialized-bicycles-tarmac?build=sl7-frameset&amp;version=2022" rel="noopener" target="_blank">Bike Insights</a>, Specialized Tarmac SL7 frameset, 2022. Rider heights: <a href="https://www.bikemart.com/collections/non-electric-adult-bikes/products/tarmac-sl7-sport-performance-road-bikes" rel="noopener" target="_blank">Bike Mart</a> reference chart. Type: Archivo, SIL Open Font License. Rendering: three.js.</p>
+      <p>© 2026 Varsen</p>
+    </footer>
+  </section>
+
+</main>
+</body>
+</html>

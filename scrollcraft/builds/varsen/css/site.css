@@ -1,0 +1,391 @@
+/* Varsen. One family (Archivo, OFL) in two widths: expanded caps for the voice, normal width for reading.
+   Yellow and black. Chapters are opaque grounds that change on a hard edge (chaptered editorial: no drift). */
+@font-face {
+  font-family: "Archivo Text";
+  src: url("../fonts/archivo-text.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {                                   /* the width is baked in: no engine has to interpolate the wdth axis */
+  font-family: "Archivo Expanded";
+  src: url("../fonts/archivo-expanded.woff2") format("woff2");
+  font-weight: 600 800;
+  font-display: swap;
+}
+
+:root {
+  --sc-canvas: #0c0c0d;
+  --sc-surface: #161618;
+  --sc-ink: #f3f1ea;
+  --sc-ink-soft: #aba79c;                 /* warm, tinted toward the paint */
+  --sc-accent: #ffc21a;
+  --sc-accent-ink: #0c0c0d;
+  --sc-font-display: "Archivo Expanded", "Arial Black", system-ui, sans-serif;
+  --sc-font-text: "Archivo Text", system-ui, sans-serif;
+  --sc-font-mono: "Archivo Text", system-ui, sans-serif;
+  --sc-shadow-color: 240 6% 3%;
+
+  --graphite: #131315;
+  --folio-w: 4.75rem;
+  --hair: color-mix(in oklab, var(--sc-ink) 16%, transparent);
+}
+@media (max-width: 860px) { :root { --folio-w: 0px; } }
+
+html { background: var(--sc-canvas); }
+::selection { background: var(--sc-accent); color: var(--sc-accent-ink); }
+
+/* ------------------------------------------------------------------ type */
+.ch__title, .front__title, .masthead__word, .front__figure, .folio__n, .step h3, .detail__cap h3, .ch__n {
+  font-family: var(--sc-font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.front__title {
+  font-size: clamp(2.6rem, 1.2rem + 5.6vw, 6.4rem);
+  line-height: 0.9;
+  letter-spacing: -0.012em;
+  margin: 0;
+  max-width: 11ch;
+  text-wrap: balance;
+}
+.ch__title {
+  font-size: clamp(1.9rem, 1.1rem + 2.9vw, 3.9rem);
+  line-height: 0.94;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+.ch__n {
+  margin: 0 0 var(--sc-4);
+  font-size: var(--sc-t-sm);
+  letter-spacing: 0.14em;
+  color: var(--sc-accent);
+}
+.ch__lede, .front__lede, .detail__lede {
+  font-size: var(--sc-t-lg);
+  line-height: 1.5;
+  letter-spacing: 0;
+  font-weight: 450;
+  color: var(--sc-ink);
+  max-width: 34ch;
+  margin: 0;
+  text-wrap: pretty;
+}
+.note { font-size: var(--sc-t-sm); line-height: 1.6; color: var(--sc-ink-soft); max-width: 52ch; margin: 0; }
+.note a, .colophon a { text-underline-offset: 0.2em; }
+
+/* the one action, set as a line of text with a rule, not a button island */
+.action {
+  display: inline-flex; align-items: center; gap: var(--sc-3);
+  min-height: 48px; padding: 0 0 2px;
+  font-family: var(--sc-font-display); font-weight: 700;
+  font-size: var(--sc-t-sm); letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+  color: var(--sc-accent);
+  border-bottom: 2px solid currentColor;
+  transition: color var(--sc-d-fast) var(--sc-ease-out), transform 120ms var(--sc-ease-out);
+}
+.action::after { content: "→"; font-family: var(--sc-font-text); transition: transform var(--sc-d-fast) var(--sc-ease-out); }
+@media (hover: hover) and (pointer: fine) { .action:hover::after { transform: translateX(4px); } }
+.action:active { transform: translateY(1px); }
+.action--solid {
+  padding: 0 var(--sc-5); border: 0; border-radius: 2px; cursor: pointer;
+  background: var(--sc-accent-ink); color: var(--sc-accent);
+}
+.action[disabled] { opacity: 0.55; cursor: not-allowed; }
+
+.skip { position: fixed; z-index: 80; left: var(--sc-4); top: -6rem; padding: var(--sc-3) var(--sc-4);
+  background: var(--sc-accent); color: var(--sc-accent-ink); font-weight: 700; text-decoration: none; }
+.skip:focus { top: var(--sc-4); }
+
+/* --------------------------------------------------------------- chrome */
+#gl {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh;
+  z-index: 2; pointer-events: none; display: block;
+  opacity: 0; transition: opacity 600ms var(--sc-ease-out);
+}
+.gl-ready #gl { opacity: 1; }
+
+.folio {
+  position: fixed; z-index: 60; inset: 0 auto 0 0; width: var(--folio-w);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: var(--sc-5) 0;
+  border-right: 1px solid var(--hair);
+  background: color-mix(in oklab, var(--sc-canvas) 88%, transparent);
+}
+.folio__mark { display: block; width: 2.3rem; padding: var(--sc-2) 0; }
+.folio__mark svg { width: 100%; height: auto; fill: var(--sc-accent); }
+.folio__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sc-2); }
+.folio__list a {
+  position: relative; display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  text-decoration: none; color: var(--sc-ink-soft); border-radius: 2px;
+  transition: color var(--sc-d-fast) var(--sc-ease-out);
+}
+.folio__n { font-size: 0.8rem; letter-spacing: 0.04em; }
+.folio__t {
+  position: absolute; left: calc(100% + var(--sc-3)); white-space: nowrap;
+  font-size: var(--sc-t-xs); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+  color: var(--sc-ink); opacity: 0; transform: translateX(-4px);
+  transition: opacity var(--sc-d-fast) var(--sc-ease-out), transform var(--sc-d-fast) var(--sc-ease-out);
+  pointer-events: none;
+}
+.folio__list a[aria-current="true"] { color: var(--sc-accent); }
+.folio__list a[aria-current="true"]::before {
+  content: ""; position: absolute; left: -0.95rem; top: 50%; width: 3px; height: 1.4rem; translate: 0 -50%;
+  background: var(--sc-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .folio__list a:hover { color: var(--sc-ink); }
+  .folio__list a:hover .folio__t { opacity: 1; transform: none; }
+}
+.folio__list a:focus-visible .folio__t { opacity: 1; transform: none; }
+@media (max-width: 860px) {
+  .folio { inset: 0 0 auto 0; width: auto; height: 3.25rem; flex-direction: row; padding: 0 var(--sc-gutter);
+    border-right: 0; border-bottom: 1px solid var(--hair);
+    background: var(--sc-canvas); }   /* opaque: captions and dimension labels pass under the bar on phones */
+  .folio__mark { width: 2rem; }
+  .folio__list { flex-direction: row; gap: 0; }
+  .folio__list a { width: 2.5rem; }
+  .folio__t { display: none; }
+  .folio__list a[aria-current="true"]::before { left: 50%; top: auto; bottom: 0.15rem; width: 1.1rem; height: 2px; translate: -50% 0; }
+}
+
+main { padding-left: var(--folio-w); }
+
+/* -------------------------------------------------------------- grounds */
+.ch { position: relative; }
+/* The engine sizes a pinned act (span x 100vh, inline) and makes its stage sticky when it starts. The same layout is
+   reserved here, so the page does not jump by a screen and more when it does. Keep these in step with data-sc-span. */
+[data-sc-act="pin"][data-sc-span="1.8"] { height: 180vh; }
+[data-sc-act="pin"][data-sc-span="4.4"] { height: 440vh; }
+[data-sc-act="pin"] > [data-sc-stage] {
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; z-index: var(--sc-z-stage);
+}
+.ch--front, .ch--black { background: var(--sc-canvas); }
+.ch--graphite { background: var(--graphite); }
+.ch--yellow {
+  background: var(--sc-accent);
+  --sc-ink: #0c0c0d; --sc-ink-soft: #3d3524; --hair: color-mix(in oklab, #0c0c0d 22%, transparent);
+  color: var(--sc-ink);
+}
+.ch--yellow .ch__n { color: #0c0c0d; }
+.ch--yellow :focus-visible { outline-color: #0c0c0d; }
+
+/* ---------------------------------------------------------------- plates */
+.plate { position: relative; margin: 0; }
+.plate__cap {
+  position: absolute; left: 0; bottom: var(--sc-4);
+  font-size: var(--sc-t-xs); letter-spacing: 0.06em; color: var(--sc-ink-soft);
+  z-index: 3;
+}
+.plate__poster { position: absolute; inset: 0; background: center / contain no-repeat; display: none; }
+.no-webgl .plate__poster { display: block; }
+/* Posters rendered from the same scene (tools/render-posters.mjs). The tour and the chooser switch theirs in app.js. */
+.plate--front .plate__poster { background-image: url(../assets/posters/front.webp); }
+.plate--chart .plate__poster { background-image: url(../assets/posters/chart.webp); }
+.plate--build .plate__poster { background-image: url(../assets/posters/build.webp); }
+.plate--detail .plate__poster { background-image: url(../assets/posters/tour-0.webp); }
+.plate--yours .plate__poster { background-image: url(../assets/posters/size-56.webp); }   /* the chooser's default */
+/* Without JavaScript nothing scroll-driven runs: every cue and reveal rests visible, the posters stand in, and the
+   tour (four captions on one pinned stage) unpins into a plain column so its captions do not stack on each other. */
+@media (scripting: none) {
+  [data-sc-cue], [data-sc-in], [data-sc-stagger] > * { opacity: 1; transform: none; }
+  .plate__poster { display: block; }
+  .drag-hint { display: none; }
+  #detail[data-sc-act="pin"] { height: auto; }
+  #detail > [data-sc-stage] { position: relative; height: auto; overflow: visible; padding: var(--sc-section) var(--sc-gutter); display: grid; gap: var(--sc-6); }
+  #detail .plate--detail, #detail .detail__copy { position: relative; inset: auto; translate: none; width: auto; max-width: 40rem; }
+  #detail .plate--detail { aspect-ratio: 16 / 10; max-width: none; }
+}
+/* The dimension lines ride a fixed layer just above the canvas (#gl, z 2); app.js lays each one over its plate. */
+.dims-layer {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh;
+  z-index: 3; pointer-events: none; overflow: hidden;
+}
+.no-webgl .dims-layer { display: none; }
+.dims { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; visibility: hidden; }
+/* A drawing, not a sticker: hairlines, faint dashed extensions, small nodes on the measured points, quiet labels */
+.dims line { fill: none; vector-effect: non-scaling-stroke; shape-rendering: geometricPrecision; }
+.dims .dims__line { stroke: var(--sc-accent); stroke-width: 1; }
+.dims .dims__tick { stroke: var(--sc-accent); stroke-width: 1; }
+.dims .dims__ext { stroke: color-mix(in oklab, var(--sc-ink) 34%, transparent); stroke-width: 0.75; stroke-dasharray: 2 3; }
+.dims .dims__node { fill: var(--sc-canvas); stroke: var(--sc-accent); stroke-width: 1.25; }   /* open ring: reads on paint and on ground */
+.dims--graphite .dims__node { fill: var(--graphite); }
+.dims text { font-family: var(--sc-font-text); paint-order: stroke; stroke: var(--sc-canvas); stroke-width: 3px; stroke-linejoin: round; }
+.dims--graphite text { stroke: var(--graphite); }
+.dims .dims__name { fill: var(--sc-ink-soft); font-size: 9.5px; font-weight: 600; letter-spacing: 0.18em; }
+.dims .dims__value { fill: var(--sc-ink); font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------ frontispiece */
+.ch--front .sc-stage,
+.front {
+  background:
+    radial-gradient(60% 34% at 56% 70%, color-mix(in oklab, var(--sc-ink) 9%, transparent), transparent 70%),
+    var(--sc-canvas);
+}
+.masthead {
+  position: absolute; z-index: 5; top: var(--sc-5); left: var(--sc-gutter);
+  display: flex; align-items: center; gap: var(--sc-3);
+}
+.masthead__mark { width: 2.6rem; height: auto; fill: var(--sc-accent); }
+.masthead__word { font-size: 1.05rem; letter-spacing: 0.16em; }
+.front__figure {
+  position: absolute; z-index: 0; margin: 0; pointer-events: none; user-select: none;
+  line-height: 0.8; letter-spacing: -0.04em;
+  color: color-mix(in oklab, var(--sc-ink) 6%, var(--sc-canvas));
+}
+.front__figure { font-size: clamp(14rem, 36vw, 36rem); right: 3vw; top: 4vh; }
+/* The plate stops above the copy: app.js measures the copy into --front-copy, so a short screen keeps the caption clear */
+.plate--front { position: absolute; inset: 6vh var(--sc-gutter) max(31vh, calc(clamp(2rem, 6vh, 4.5rem) + var(--front-copy, 12rem) + 3rem)) var(--sc-gutter); }
+.plate--front .plate__cap { left: auto; right: 0; bottom: calc(-1 * var(--sc-5)); }
+.front__copy {
+  position: absolute; z-index: 5; left: var(--sc-gutter); right: var(--sc-gutter); bottom: clamp(2rem, 6vh, 4.5rem);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 25rem); grid-template-areas: "title lede" "title action";
+  align-items: end; gap: var(--sc-4) var(--sc-8);
+}
+.front__copy .front__title { grid-area: title; font-size: clamp(2.6rem, 0.8rem + 4.6vw, 5.8rem); max-width: 14ch; }
+.front__lede { grid-area: lede; max-width: 30ch; }
+.front__copy .action { grid-area: action; justify-self: start; }
+.drag-hint { color: var(--sc-ink); }
+.no-webgl .drag-hint { display: none; }
+.drag-hint__keys { display: none; }
+.plate--front:focus-visible .drag-hint__pointer { display: none; }
+.plate--front:focus-visible .drag-hint__keys { display: inline; }
+.plate--front { cursor: grab; touch-action: pan-y; }
+.spinning .plate--front { cursor: grabbing; }
+
+/* ----------------------------------------------------------- spreads */
+.spread { display: grid; gap: var(--sc-6) var(--sc-7); padding: var(--sc-section) var(--sc-gutter); }
+.ch__head { align-self: start; }
+.spread--chart { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); grid-template-areas: "head head" "plate body"; align-items: center; }
+.spread--chart .ch__head { grid-area: head; }
+.plate--chart { grid-area: plate; aspect-ratio: 16 / 10; }
+/* The dimensioned plates set their caption under the figure, clear of the wheelbase line */
+.plate--chart .plate__cap, .plate--yours .plate__cap { top: 100%; bottom: auto; padding-top: var(--sc-3); }
+.spread--chart .ch__body { grid-area: body; }
+
+.sheet { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-top: 1px solid var(--hair); }
+.sheet > div { padding: var(--sc-3) 0; border-bottom: 1px solid var(--hair); display: flex; justify-content: space-between; gap: var(--sc-3); }
+.sheet > div:nth-child(odd) { padding-right: var(--sc-4); }
+.sheet > div:nth-child(even) { padding-left: var(--sc-4); border-left: 1px solid var(--hair); }
+.sheet dt { color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }
+.sheet dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- build */
+.build__grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+.build__hold { position: relative; }
+.plate--build { position: sticky; top: 0; height: 100vh; height: 100svh; }
+.plate--build .plate__cap { left: var(--sc-gutter); bottom: var(--sc-6); }
+.build__text { padding: var(--sc-section) var(--sc-gutter) 30svh; }
+.build__text .ch__title { font-size: clamp(1.7rem, 0.9rem + 1.8vw, 2.7rem); }
+.steps { list-style: none; margin: var(--sc-8) 0 0; padding: 0; }
+.step { min-height: 46svh; display: grid; align-content: center; border-top: 1px solid var(--hair); padding: var(--sc-6) 0; }
+.step h3 { margin: 0 0 var(--sc-3); font-size: var(--sc-t-xl); letter-spacing: 0; color: var(--sc-ink-soft); transition: color var(--sc-d-base) var(--sc-ease-out); }
+.step p { margin: 0; max-width: 36ch; color: var(--sc-ink-soft); transition: color var(--sc-d-base) var(--sc-ease-out); }
+.step.is-now h3 { color: var(--sc-accent); }
+.step.is-now p { color: var(--sc-ink); }
+
+/* ------------------------------------------------- in detail (III, the peak) */
+/* One pinned stage: the copy column on the left over bare ground, the plate on the right running to the edge.
+   The type never sits on the bike: the plate starts where the column ends. */
+.detail { background: var(--graphite); }   /* flat: the fade over the plate's inner edge is this colour */
+.plate--detail { position: absolute; inset: 0 0 0 38%; }
+/* the caption sits in the copy column's foot, on bare ground (in the plate it would be under the close-ups) */
+.plate--detail .plate__cap { left: calc(var(--sc-gutter) - 61.29%); right: auto; bottom: var(--sc-5); }   /* 61.29% = 38 / 62 of the plate */
+.plate--detail .plate__poster { background-size: cover; -webkit-mask-image: linear-gradient(to right, transparent, #000 17%); mask-image: linear-gradient(to right, transparent, #000 17%); }
+.sc-grain { z-index: 4; }   /* the film grain lies over everything drawn, the dims layer and this fade included, so no edge shows where it stops */
+.plate-fade {
+  position: absolute; left: 0; top: 0; visibility: hidden; pointer-events: none;
+  --g: var(--graphite);
+  background: linear-gradient(to right, var(--g) 0%, color-mix(in oklab, var(--g) 88%, transparent) 20%, color-mix(in oklab, var(--g) 55%, transparent) 48%, color-mix(in oklab, var(--g) 20%, transparent) 76%, transparent 100%);
+}
+.plate-fade--bottom { background: linear-gradient(to top, var(--g) 0%, color-mix(in oklab, var(--g) 88%, transparent) 20%, color-mix(in oklab, var(--g) 55%, transparent) 48%, color-mix(in oklab, var(--g) 20%, transparent) 76%, transparent 100%); }
+.detail__copy {
+  position: absolute; z-index: 5; left: var(--sc-gutter); top: 50%; translate: 0 -50%;
+  width: calc(38% - 2 * var(--sc-gutter)); max-width: 27rem;
+}
+.detail__intro .ch__title { font-size: clamp(2.4rem, 1.2rem + 3.6vw, 4.6rem); }
+.detail__lede { margin-top: var(--sc-5); }
+.detail__cap h3 { margin: 0 0 var(--sc-4); font-size: var(--sc-t-xl); letter-spacing: 0; color: var(--sc-accent); }
+.detail__cap p { margin: 0; font-size: var(--sc-t-lg); line-height: 1.5; max-width: 30ch; color: var(--sc-ink); text-wrap: pretty; }
+
+/* ---------------------------------------------------------------- yours */
+.spread--yours { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: center; }
+.plate--yours { aspect-ratio: 16 / 11; }
+.chooser { display: grid; gap: var(--sc-3); }
+.chooser__label { font-size: var(--sc-t-xs); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--sc-ink-soft); padding: 0; }
+.chooser__field { display: flex; align-items: baseline; gap: var(--sc-2); border-bottom: 2px solid var(--sc-ink); max-width: 14rem; }
+.chooser__field input {
+  width: 100%; min-height: 3.25rem; border: 0; background: transparent; outline: none;
+  font-family: var(--sc-font-display); font-weight: 800; font-size: var(--sc-t-2xl); line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--sc-ink); -moz-appearance: textfield;
+}
+.chooser__field input::-webkit-outer-spin-button, .chooser__field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.chooser__field input::placeholder { color: color-mix(in oklab, var(--sc-ink) 16%, transparent); }
+.chooser__field:focus-within { border-color: var(--sc-accent); }
+.chooser__field:has(input:focus-visible) { outline: 2px solid var(--sc-accent); outline-offset: 6px; }
+.chooser__unit { color: var(--sc-ink-soft); font-weight: 600; }
+.chooser__out { min-height: 1.6em; color: var(--sc-ink); font-size: var(--sc-t-base); }
+.picker { border: 0; margin: var(--sc-4) 0 0; padding: 0; min-inline-size: 0; }
+.picker__row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: var(--sc-2); }
+.picker label { position: relative; }
+.picker input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.picker span {
+  display: grid; place-items: center; min-height: 48px; border: 1px solid var(--hair); border-radius: 2px;
+  font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sc-ink-soft);
+  transition: background-color var(--sc-d-fast) var(--sc-ease-out), color var(--sc-d-fast) var(--sc-ease-out), border-color var(--sc-d-fast) var(--sc-ease-out), transform 120ms var(--sc-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .picker label:hover span { color: var(--sc-ink); border-color: var(--sc-ink-soft); } }
+.picker input:checked + span { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
+.picker input:focus-visible + span { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
+.picker input:active + span { transform: translateY(1px); }
+.picker input.is-suggested:not(:checked) + span { border-color: var(--sc-accent); color: var(--sc-ink); }
+.sheet--yours { margin-top: var(--sc-5); }
+
+/* ---------------------------------------------------------------- book (close) */
+.book__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--sc-7); padding: var(--sc-section) var(--sc-gutter) var(--sc-8); align-items: start; }
+.book__size { margin: var(--sc-5) 0 0; font-size: var(--sc-t-lg); max-width: 26ch; }
+.book__size b { font-family: var(--sc-font-display); font-weight: 800; }
+.book__cal { display: grid; gap: var(--sc-4); justify-items: start; align-content: start; }
+.book__state { margin: 0; max-width: 40ch; }
+.book__frame { width: 100%; min-height: 690px; background: #fff; border-radius: 2px; box-shadow: var(--sc-e2); }
+.book__frame iframe { display: block; width: 100%; height: 690px; border: 0; }
+.colophon { padding: var(--sc-7) var(--sc-gutter) calc(var(--sc-7) + env(safe-area-inset-bottom)); border-top: 1px solid var(--hair); display: grid; gap: var(--sc-3); font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
+.colophon p { margin: 0; max-width: 78ch; }
+.colophon b { color: var(--sc-ink); }
+
+/* ---------------------------------------------------------------- phones */
+@media (max-width: 860px) {
+  main { padding-top: 0; }
+  .masthead { top: calc(3.25rem + var(--sc-3)); }
+  .front__figure { font-size: 62vw; right: 2vw; top: 14vh; }
+  .plate--front { inset: 15svh 0 max(38svh, calc(clamp(1.5rem, 4svh, 3rem) + var(--front-copy, 17rem) + 2.75rem)) 0; }
+  .plate--front .plate__cap { left: var(--sc-gutter); bottom: calc(-1 * var(--sc-5)); }
+  .front__copy { grid-template-columns: 1fr; grid-template-areas: "title" "lede" "action"; gap: var(--sc-3); bottom: clamp(1.5rem, 4svh, 3rem); }
+  .front__copy .front__title { font-size: clamp(2.3rem, 10.5vw, 3.4rem); }
+  .front__lede { font-size: var(--sc-t-base); }
+  .spread--chart, .spread--yours { grid-template-columns: 1fr; grid-template-areas: none; }
+  .spread--chart .ch__head, .plate--chart, .spread--chart .ch__body { grid-area: auto; }
+  .plate--chart, .plate--yours { aspect-ratio: 4 / 3; margin-inline: calc(-1 * var(--sc-gutter)); margin-bottom: var(--sc-4); }
+  /* full-bleed on phones: the caption steps out under the plate, back on the gutter, clear of the wheelbase label */
+  .plate--chart .plate__cap, .plate--yours .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); padding-top: var(--sc-2); }
+  .build__grid { grid-template-columns: 1fr; }
+  .build__hold { position: sticky; top: 3.25rem; z-index: 1; height: 46svh; background: var(--sc-canvas); }
+  .plate--build { position: absolute; inset: 0; height: auto; }
+  .build__text { padding-top: var(--sc-6); }
+  .step { min-height: 46svh; }
+  /* the tour on phones: the plate on top under the running head, the copy beneath it */
+  .plate--detail { inset: 3.25rem 0 auto 0; height: 56svh; }   /* starts under the running head: its top edge is the bar's */
+  .plate--detail .plate__cap { left: var(--sc-gutter); right: var(--sc-gutter); top: calc(100% + var(--sc-2)); bottom: auto; }
+  .plate--detail .plate__poster { -webkit-mask-image: linear-gradient(to top, transparent, #000 26%); mask-image: linear-gradient(to top, transparent, #000 26%); }
+  .detail__copy { top: auto; bottom: clamp(1.5rem, 5svh, 3rem); right: var(--sc-gutter); width: auto; max-width: none; translate: none; }
+  .detail__intro .ch__title { font-size: clamp(2.2rem, 10vw, 3.2rem); }
+  .detail__lede { margin-top: var(--sc-3); font-size: var(--sc-t-base); }
+  .detail__cap h3 { margin-bottom: var(--sc-2); }
+  .detail__cap p { font-size: var(--sc-t-base); }
+  .book__grid { grid-template-columns: 1fr; }
+  .picker__row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #gl { transition: none; }
+}
