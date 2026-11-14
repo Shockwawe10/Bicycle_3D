@@ -11,7 +11,7 @@ const p = await (await b.newContext({ viewport: { width: 1440, height: 900 } }))
 await p.goto(`http://127.0.0.1:${port}/?qa=1`);
 await p.waitForFunction(() => window.__bike?.ready === true, null, { timeout: 60000 });
 const out = await p.evaluate(({ ASPECTS }) => {
-  const B = window.__bike, T = B.THREE, gl = B.gl, base = gl.base, n = B.parts;
+  const B = window.__bike, T = B.THREE, gl = B.gl, base = gl.base, n = B.partCount;
   B.pose(1); base.root.updateMatrixWorld(true);
   const boxes = Object.entries(base.parts).map(([id, g]) => [id, new T.Box3().setFromObject(g)]);
   const floorY = base.box.min.y, flights = [];

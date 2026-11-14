@@ -920,7 +920,7 @@ defineLive(window.__bike, {
   trace: { start: () => { trace.frames = []; trace.on = true; }, stop: () => { trace.on = false; return trace.frames; } },
   // the camera on a flight in II: from view a to view b (-1 the overview), k in 0..1 along it
   detailCam: (a, b, k, aspect) => { applyView(gl.camera, mixView(resolveView(a, aspect), resolveView(b, aspect), smoother(k)), aspect); return { pos: gl.camera.position.toArray(), near: gl.camera.near }; },
-  parts: PARTS.length, openPart: i => openPart(i), closeParts: () => closeParts(), get detail() { return { cur: detail.cur, flying: !!detail.anim }; },
+  partCount: PARTS.length, openPart: i => openPart(i), closeParts: () => closeParts(), get detail() { return { cur: detail.cur, flying: !!detail.anim }; },
   // settled: no frame pending and no sharp-at-rest pass waiting, so a screenshot shows the final, full-resolution image
   settled: () => new Promise(res => { kick(); let n = 0; const chk = () => (++n > 3 && !raf && !restTimer ? res() : requestAnimationFrame(chk)); requestAnimationFrame(chk); }),
 });
