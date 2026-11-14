@@ -608,8 +608,9 @@ function preparePlate(name, r) {
   return spec;
 }
 /* Sharp at rest. While anything moves, plates draw at the adaptive level (QUALITY: at most 1.5x on phones, lower if
-   frames run slow). Once the page settles, the plates on screen are drawn once more at the screen's own resolution
-   (devicePixelRatio, at most 3, and at most REST_PX pixels a plate), so a still bike is as sharp as the screen allows
+   frames run slow). Once the page settles, the plates on screen are drawn once more: on a dense screen at its own
+   resolution (devicePixelRatio, at most 3, and at most REST_PX pixels a plate); on a 1x or 1.25x screen supersampled 2x
+   on the GPU (drawPlateSS), so a still bike is as sharp as the screen allows
    while scroll and flight frames cost what they did. A plate drawn this way keeps its image until its picture changes. */
 const REST_PX = 3.2e6;
 let restTimer = 0;
@@ -620,12 +621,21 @@ function restPass() {
   if (spin.drag) return;                            // a finger held still mid-drag is not rest: no sharp swap under it
   const t0 = performance.now();
   const { renderer, scene, camera, spinner } = gl, level = renderer.getPixelRatio(), H = innerHeight;
-  let resized = false;
+  let resized = false, ssDone = false;
   for (const [name, el] of Object.entries(plateEls)) {
     const r = el.getBoundingClientRect(), P = plateGL[name];
     if (r.bottom <= 0 || r.top >= H || r.width < 4 || r.height < 4) continue;          // on screen only
-    const pr = Math.min(devicePixelRatio || 1, 3, Math.sqrt(REST_PX / (r.width * r.height)));
-    if (pr < level * 1.2 || (P.rest && P.rest === P.sig)) continue;                    // little to gain, or done
+    if (P.rest && P.rest === P.sig) continue;                                          // done
+    const dpr = devicePixelRatio || 1;
+    if (dpr < 1.5) {                                // a low-density screen: supersample on the GPU, same canvas size
+      const spec = preparePlate(name, r); if (!spec) continue;
+      const sig = plateSignature(spec, r, level);
+      gl.contact.update(); drawPlateSS(P, r);
+      P.sig = sig; P.rest = sig; ssDone = true;
+      continue;
+    }
+    const pr = Math.min(dpr, 3, Math.sqrt(REST_PX / (r.width * r.height)));          // a dense screen: its own density
+    if (pr < level * 1.2) continue;                                                    // little to gain
     const spec = preparePlate(name, r); if (!spec) continue;
     const sig = plateSignature(spec, r, level);
     gl.contact.update();
@@ -642,7 +652,51 @@ function restPass() {
   }
   spinner.rotation.y = 0;
   if (resized) { renderer.setPixelRatio(level); sizeCanvas(); }   // back to the motion level and the screen's size
-  if (resized) (window.__bike.restMs ||= []).push(+(performance.now() - t0).toFixed(1));   // what a pass cost (QA reads it)
+  if (resized || ssDone) (window.__bike.restMs ||= []).push(+(performance.now() - t0).toFixed(1));   // what a pass cost (QA reads it)
+}
+/* Supersampling for 1x and 1.25x screens: the plate is rendered at twice its size into an off-screen target, then each
+   2x2 block is averaged into the normal-size image on the GPU (one bilinear read at the block's centre), and that is
+   copied as usual. Thin spokes, chain plates and lettering stop stair-stepping. The canvas and the copy stay their
+   normal size: resizing the drawing buffer up and back and copying a 2x image cost 35 to 110 ms a pass on desktop.
+   The target is flagged as XR, the one case where three.js applies tone mapping and sRGB output to a render target, so
+   its pixels are exactly what the canvas would hold. */
+const SS = { rt: null, scene: null, cam: null, mat: null };
+function drawPlateSS(P, r) {
+  const { renderer, scene, camera } = gl;
+  if (r.width > gl.cw || r.height > gl.ch) {
+    const w = Math.max(gl.cw, Math.ceil(r.width)), h = Math.max(gl.ch, Math.ceil(r.height));
+    renderer.setSize(w, h, false); gl.cw = w; gl.ch = h;
+  }
+  const y = gl.ch - r.height;
+  renderer.setViewport(0, y, r.width, r.height); renderer.getCurrentViewport(_vp);   // the normal image, buffer pixels
+  const w = _vp.z, h = _vp.w, W = w * 2, H2 = h * 2;
+  if (!SS.rt || SS.rt.width !== W || SS.rt.height !== H2) {
+    SS.rt?.dispose();
+    SS.rt = new THREE.WebGLRenderTarget(W, H2, { samples: 4 });
+    SS.rt.texture.colorSpace = THREE.SRGBColorSpace; SS.rt.isXRRenderTarget = true;
+    SS.rt.texture.internalFormat = 'RGBA8';        // plain 8-bit like its multisample buffer, or the resolve fails (sRGB storage)
+  }
+  if (!SS.scene) {
+    SS.mat = new THREE.ShaderMaterial({
+      uniforms: { tMap: { value: null } }, depthTest: false, depthWrite: false, blending: THREE.NoBlending, toneMapped: false,
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: 'uniform sampler2D tMap; varying vec2 vUv; void main() { gl_FragColor = texture2D(tMap, vUv); }',
+    });
+    SS.scene = new THREE.Scene(); SS.scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), SS.mat));
+    SS.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  }
+  SS.rt.viewport.set(0, 0, W, H2); SS.rt.scissorTest = false;
+  renderer.setRenderTarget(SS.rt);
+  PLATE_PX.value.set(0, 0, W, H2);
+  renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+  renderer.setViewport(0, y, r.width, r.height); renderer.setScissor(0, y, r.width, r.height); renderer.setScissorTest(true);
+  SS.mat.uniforms.tMap.value = SS.rt.texture;
+  renderer.render(SS.scene, SS.cam);
+  const srcY = canvas.height - (_vp.y + h);
+  if (P.cv.width !== w || P.cv.height !== h) { P.cv.width = w; P.cv.height = h; }
+  P.ctx ||= P.cv.getContext('2d');
+  P.ctx.clearRect(0, 0, w, h); P.ctx.drawImage(canvas, 0, srcY, w, h, 0, 0, w, h);
 }
 function renderPlates(rects) {
   const { renderer, camera, spinner } = gl, H = innerHeight, pr = renderer.getPixelRatio();
