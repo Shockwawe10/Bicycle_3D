@@ -996,21 +996,19 @@ heightIn.addEventListener('input', () => {
 });
 
 /* =====================================================================================
-   Booking: Calendly, loaded only when asked for, with the chosen size passed in.
+   Booking: Calendly, loaded only when asked for, with the chosen size passed in. The markup is a plain link to the
+   calendar (it works without scripts, in a new tab); with scripts the calendar opens inline instead.
    ===================================================================================== */
-const booking = { size: 56, url: (html.dataset.calendly || '').trim() };
 const calOpen = $('[data-cal-open]'), calFrame = $('[data-cal-frame]'), calState = $('[data-cal-state]');
-if (booking.url) {                                  // the markup starts honest (no calendar yet); a configured calendar opens it
-  calOpen.disabled = false;
-  calState.textContent = 'Pick a time and the fitting starts from your size.';
-}
-calOpen.addEventListener('click', () => {
-  if (!booking.url) return;
+const booking = { size: 56, url: calOpen.href };
+calState.textContent = 'Pick a time and the fitting starts from your size.';
+calOpen.addEventListener('click', (e) => {
+  e.preventDefault();
   const u = new URL(booking.url);
   u.searchParams.set('embed_type', 'Inline'); u.searchParams.set('embed_domain', location.host || 'localhost');
   u.searchParams.set('hide_gdpr_banner', '1'); u.searchParams.set('a1', `Frame size ${booking.size} (from the Varsen size chooser)`);
   const f = document.createElement('iframe');
-  f.src = u.toString(); f.title = 'Book a fitting'; f.loading = 'lazy'; f.referrerPolicy = 'strict-origin-when-cross-origin';
+  f.src = u.toString(); f.title = 'Book a fitting'; f.referrerPolicy = 'strict-origin-when-cross-origin';
   calFrame.replaceChildren(f); calFrame.hidden = false; calOpen.hidden = true;
   calState.textContent = `Size ${booking.size} is in the booking. Pick a time.`;
 });

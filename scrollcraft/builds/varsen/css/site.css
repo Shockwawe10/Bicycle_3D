@@ -92,6 +92,7 @@ html { background: var(--sc-canvas); }
   background: var(--sc-accent-ink); color: var(--sc-accent);
 }
 .action[disabled] { opacity: 0.55; cursor: not-allowed; }
+.action[hidden] { display: none; }                   /* .action's inline-flex would otherwise beat the attribute */
 
 .skip { position: fixed; z-index: 80; left: var(--sc-4); top: -6rem; padding: var(--sc-3) var(--sc-4);
   background: var(--sc-accent); color: var(--sc-accent-ink); font-weight: 700; text-decoration: none; }
@@ -475,8 +476,9 @@ main { padding-left: var(--folio-w); }
 .book__size b { font-family: var(--sc-font-display); font-weight: 800; }
 .book__cal { display: grid; gap: var(--sc-4); justify-items: start; align-content: start; }
 .book__state { margin: 0; max-width: 40ch; }
-.book__frame { width: 100%; min-height: 690px; background: #fff; border-radius: 2px; box-shadow: var(--sc-e2); }
-.book__frame iframe { display: block; width: 100%; height: 690px; border: 0; }
+.book__frame { position: relative; width: 100%; min-height: 690px; background: #fff; border-radius: 2px; box-shadow: var(--sc-e2); }
+.book__frame::before { content: "Loading the calendar…"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }   /* Calendly takes a few seconds to draw */
+.book__frame iframe { position: relative; display: block; width: 100%; height: 690px; border: 0; }
 .colophon { padding: var(--sc-7) var(--sc-gutter) calc(var(--sc-7) + env(safe-area-inset-bottom)); border-top: 1px solid var(--hair); display: grid; gap: var(--sc-3); font-size: var(--sc-t-sm); color: var(--sc-ink-soft); }
 .colophon p { margin: 0; max-width: 78ch; }
 .colophon b { color: var(--sc-ink); }

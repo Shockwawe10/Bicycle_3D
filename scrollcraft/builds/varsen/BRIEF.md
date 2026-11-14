@@ -46,8 +46,10 @@ The five highlights are acceptance criteria, checked in the verification pass.
    Lamborghini name, bull, shield or typeface. Yellow and black, the bike repainted gloss yellow.
 
 **Ending.** "Sixth, by the end, replace with some replace with something real trusted". Chosen:
-**"Calendly booking"**. The visitor's chosen size is carried into the booking. The owner's Calendly
-link is still to be supplied; the page must never show a booking it cannot actually make.
+**"Calendly booking"**. The visitor's chosen size is carried into the booking. The page must never
+show a booking it cannot actually make. 2026-11-14, the owner supplied the event: "https://calendly.com/johntraycey/30min
+add link to the book a fitting". The button is that link (a new tab without scripts); with scripts the
+calendar opens inline with the size prefilled.
 
 ## Honesty rules (from "trusted")
 
