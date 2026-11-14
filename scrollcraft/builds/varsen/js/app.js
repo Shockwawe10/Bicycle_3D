@@ -468,7 +468,7 @@ function plateSpec(name) {
   switch (name) {
     case 'front': {
       const p = RM.matches ? 0 : damped.front ?? 0;      // reduced motion: the camera holds its opening angle
-      return { bikes: [[gl.base, ASSEMBLED, 1]], yaw: spin.yaw * (1 - smooth(0.05, 0.85, p)), view: frontView(p) };
+      return { bikes: [[gl.base, ASSEMBLED, 1]], yaw: spin.yaw, view: frontView(p) };
     }
     case 'build': {
       const tb = damped.build ?? 0, tt = clamp01((tb - 0.06) / 0.86);
@@ -780,6 +780,7 @@ function frame(now) {
   const M = measure(), S = M.sec;
   const targets = { front: pinnedP(S.front), build: pinnedP(S.build) };
   for (const [k, v] of Object.entries(targets)) { const before = damped[k]; follow(k, v, dt); if (damped[k] !== v || dampedV[k]) moving = true; if (before !== damped[k]) dirty = true; }
+  unwind();
   if (!spin.drag && spin.vel !== 0) {
     spin.yaw += spin.vel * dt; spin.yaw = Math.atan2(Math.sin(spin.yaw), Math.cos(spin.yaw)); spin.vel *= Math.exp(-dt / 0.45);
     if (Math.abs(spin.vel) < 0.02) spin.vel = 0; moving = true; dirty = true;
@@ -802,6 +803,18 @@ function frame(now) {
   dirty = false;
   if (moving) { last = now; kick(); } else { last = 0; if (gl?.ready) scheduleRest(); }
   if (trace.on) trace.frames.push({ now, cost: performance.now() - t0, y: scrollY, p: { ...damped }, plates: trace.plates });
+}
+/* Scrolling down the hero turns the bike back to its opening angle, by turning the angle itself: each step down takes
+   the same share off what is left (all of it by p 0.85), and scrolling up leaves it where it is. The drawn angle was
+   spin.yaw x (1 - unwind), so with the page a little way down a drag turned the bike slower than the finger, and when
+   the angle wrapped at half a turn the drawn bike jumped back most of the way to straight. */
+let unwound = 0;
+function unwind() {
+  const u = RM.matches ? 0 : smooth(0.05, 0.85, damped.front ?? 0);
+  if (u > unwound && spin.yaw !== 0) {
+    spin.yaw = u >= 1 ? 0 : spin.yaw * (1 - u) / (1 - unwound); spin.vel = 0; dirty = true;
+  }
+  unwound = u;
 }
 addEventListener('scroll', () => { dirty = true; kick(); }, { passive: true });
 addEventListener('resize', () => { sizeCanvas(); kick(); }, { passive: true });
@@ -877,6 +890,9 @@ const endDrag = e => {
   spin.drag = null; html.classList.remove('spinning'); kick();
 };
 for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) frontPlate.addEventListener(ev, endDrag);
+// A second drag used to stop after its first move: the first had selected the plate, the press landed on the selection, and
+// the browser began dragging it as content, cancelling the pointer. Nothing in the plate is draggable content.
+frontPlate.addEventListener('dragstart', e => e.preventDefault());
 // The keyboard turns it too (the plate is focusable once WebGL is up): 15 degrees a press, a glide, or a step under reduced motion.
 const KEY_TURN = Math.PI / 12;
 frontPlate.addEventListener('keydown', e => {
@@ -1112,7 +1128,7 @@ defineLive(window.__bike, {
   get p() { return { shown: 1 } }, state: t => ({ parts: qaBike ? ASSEMBLED : assembly(t) }),
   pose: t => { const q = qaTarget(); for (const b of gl.all) b.root.visible = b === q; gl.spinner.rotation.y = 0; pose(q, qaBike ? ASSEMBLED : assembly(t)); q.posed = null; q.root.updateMatrixWorld(true); dirty = true; },
   useSize: s => { qaBike = s === 56 ? null : bikeOf(s); return s === 56 || !!qaBike; },
-  choose, ensureSize, bikeOf, get spin() { return { yaw: spin.yaw, vel: spin.vel } },
+  choose, ensureSize, bikeOf, get spin() { return { yaw: spin.yaw, vel: spin.vel, shown: plateSpec('front').yaw, p: damped.front ?? 0 } },
   poster: (kind, arg, cssW) => renderPoster(kind, arg, cssW),
   trace: { start: () => { trace.frames = []; trace.on = true; }, stop: () => { trace.on = false; return trace.frames; } },
   // the camera on a flight in II: from view a to view b (-1 the overview), k in 0..1 along it

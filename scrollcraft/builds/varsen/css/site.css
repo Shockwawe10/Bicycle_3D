@@ -299,7 +299,7 @@ main { padding-left: var(--folio-w); }
 .drag-hint__keys { display: none; }
 .plate--front:focus-visible .drag-hint__pointer { display: none; }
 .plate--front:focus-visible .drag-hint__keys { display: inline; }
-.plate--front { cursor: grab; touch-action: pan-y; }
+.plate--front { cursor: grab; touch-action: pan-y; -webkit-user-select: none; user-select: none; }   /* a drag must not select it */
 .spinning .plate--front { cursor: grabbing; }
 
 /* ----------------------------------------------------------- spreads */
