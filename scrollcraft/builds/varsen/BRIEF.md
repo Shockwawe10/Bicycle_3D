@@ -48,8 +48,8 @@ The five highlights are acceptance criteria, checked in the verification pass.
 **Ending.** "Sixth, by the end, replace with some replace with something real trusted". Chosen:
 **"Calendly booking"**. The visitor's chosen size is carried into the booking. The page must never
 show a booking it cannot actually make. 2026-11-14, the owner supplied the event: "https://calendly.com/johntraycey/30min
-add link to the book a fitting". The button is that link (a new tab without scripts); with scripts the
-calendar opens inline with the size prefilled.
+add link to the book a fitting". 2026-11-14, then: "just do an external page open". The button is a plain
+link that opens the calendar in a new tab, the chosen size added to it as a1.
 
 ## Honesty rules (from "trusted")
 

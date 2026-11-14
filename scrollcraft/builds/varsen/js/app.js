@@ -970,7 +970,7 @@ async function choose(size) {
   const c = BY_SIZE[size]; if (!c) return;
   for (const r of radios) r.checked = +r.value === size;
   setSheet(c);
-  booking.size = size;
+  setBookingSize(size);
   if (!gl?.ready) { yours.size = size; syncPosters(); return; }
   let target = bikeOf(size);
   if (!target) { target = await ensureSize(size); }
@@ -996,22 +996,13 @@ heightIn.addEventListener('input', () => {
 });
 
 /* =====================================================================================
-   Booking: Calendly, loaded only when asked for, with the chosen size passed in. The markup is a plain link to the
-   calendar (it works without scripts, in a new tab); with scripts the calendar opens inline instead.
+   Booking: a plain link to the Calendly event, opened in a new tab. The chosen size rides along as a1, the answer
+   Calendly prefills into the event's first question.
    ===================================================================================== */
-const calOpen = $('[data-cal-open]'), calFrame = $('[data-cal-frame]'), calState = $('[data-cal-state]');
-const booking = { size: 56, url: calOpen.href };
-calState.textContent = 'Pick a time and the fitting starts from your size.';
-calOpen.addEventListener('click', (e) => {
-  e.preventDefault();
-  const u = new URL(booking.url);
-  u.searchParams.set('embed_type', 'Inline'); u.searchParams.set('embed_domain', location.host || 'localhost');
-  u.searchParams.set('hide_gdpr_banner', '1'); u.searchParams.set('a1', `Frame size ${booking.size} (from the Varsen size chooser)`);
-  const f = document.createElement('iframe');
-  f.src = u.toString(); f.title = 'Book a fitting'; f.referrerPolicy = 'strict-origin-when-cross-origin';
-  calFrame.replaceChildren(f); calFrame.hidden = false; calOpen.hidden = true;
-  calState.textContent = `Size ${booking.size} is in the booking. Pick a time.`;
-});
+function setBookingSize(size) {
+  const a = $('[data-cal-open]'), u = new URL(a.href);
+  u.searchParams.set('a1', `Frame size ${size} (from the Varsen size chooser)`); a.href = u;
+}
 
 /* =====================================================================================
    Init: renderer, model, studio, then the other six sizes in the background.
