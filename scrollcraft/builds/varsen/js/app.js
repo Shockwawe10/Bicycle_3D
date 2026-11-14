@@ -4,7 +4,7 @@
 // and the booking. Render on demand only.
 import * as THREE from '../vendor/three@0.185.1/three.module.min.js';
 import { SIZES, BY_SIZE, sizesForHeight } from './sizes.js';
-import { makeMaterials, fadeSet, buildBike, buildSize, shadowBlob, measureBuilt, validateGeometry, assembly, assertStages, STAGES, CHART, yieldToMain, slice, EASE } from './bike.js';
+import { makeMaterials, fadeSet, buildBike, buildSize, measureBuilt, validateGeometry, assembly, assertStages, STAGES, CHART, yieldToMain, slice, EASE } from './bike.js';
 
 const Q = new URLSearchParams(location.search), QA = Q.has('qa');
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
@@ -66,7 +66,131 @@ function makeFader(g, FADE, skip = null) {
    ===================================================================================== */
 const STAGE_BY_ID = Object.fromEntries(STAGES.map(s => [s.id, { ...s, offV: new THREE.Vector3(...s.off), q0: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...s.axis).normalize(), rad(s.deg)), ndsV: s.nds ? new THREE.Vector3(...s.nds).sub(new THREE.Vector3(...s.off)) : null }]));
 const IDQ = new THREE.Quaternion();
+
+/* =====================================================================================
+   Contact shadow, rendered from the bike itself. An orthographic camera on the floor looks straight up; the depth test
+   keeps the lowest surface over each texel, and that surface's height sets how dark its shadow is (a tyre touching the
+   floor darkest, the frame faint). Two blur passes soften it and a floor quad shows it. It is redrawn with the plate it
+   lies in, so it turns with the bike, and in the build every part brings its own shadow, fading in with it.
+   (It replaced a canvas-drawn oval that was attached to the floor and cut straight across by a drawing bug.)
+   ===================================================================================== */
+const CONTACT = { size: 2.8, res: 320, height: 1.2, strength: 1.0 };   // metres of floor, texels, metres up, max darkness
+// what each texel keeps: the darkness of the lowest surface over it, scaled by that part's own fade (uOpacity)
+const SHADOW_DEPTH = new THREE.ShaderMaterial({
+  uniforms: { uOpacity: { value: 1 } },
+  vertexShader: `varying float vY;
+    void main() {
+      vec4 w = vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+        w = instanceMatrix * w;
+      #endif
+      w = modelMatrix * w; vY = w.y;
+      gl_Position = projectionMatrix * viewMatrix * w;
+    }`,
+  fragmentShader: `uniform float uOpacity; varying float vY;
+    void main() {
+      float h = max(vY, 0.0);
+      // red: contact, only what nearly touches the floor (blurred a little); green: the body's soft occlusion (blurred
+      // a lot), so the bike stands in a soft pool shaped like itself with darker patches under the tyres
+      gl_FragColor = vec4(exp(-h / 0.035) * uOpacity, exp(-h / 0.55) * uOpacity, 0.0, 1.0);
+    }`,
+  side: THREE.DoubleSide,
+});
+// per mesh, before it draws in the shadow pass: carry its fade into the shadow (three uploads a ShaderMaterial's
+// uniforms once per program unless asked to)
+function shadowOpacityHook(r, s, c, g, material) {
+  if (material !== SHADOW_DEPTH) return;
+  SHADOW_DEPTH.uniforms.uOpacity.value = this.material.opacity ?? 1; SHADOW_DEPTH.uniformsNeedUpdate = true;
+}
+function makeContactShadow() {
+  const { size, res, height } = CONTACT, half = size / 2;
+  const rtA = new THREE.WebGLRenderTarget(res, res, { depthBuffer: true }), rtB = new THREE.WebGLRenderTarget(res, res, { depthBuffer: false });
+  const cam = new THREE.OrthographicCamera(-half, half, half, -half, 0, height);
+  cam.position.set(0, 0, 0); cam.up.set(0, 0, 1); cam.lookAt(0, 1, 0); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const vp = new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+  // separable Gaussian, 9 taps as 5 bilinear reads
+  const blur = new THREE.ShaderMaterial({
+    uniforms: { tMap: { value: null }, uDir: { value: new THREE.Vector2() }, uDirG: { value: new THREE.Vector2() } }, depthTest: false, depthWrite: false,
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `uniform sampler2D tMap; uniform vec2 uDir, uDirG; varying vec2 vUv;
+      float g9(vec2 d, int ch) {                    // one channel, blurred along d
+        vec4 a = texture2D(tMap, vUv) * 0.2270270270;
+        a += (texture2D(tMap, vUv + d * 1.3846153846) + texture2D(tMap, vUv - d * 1.3846153846)) * 0.3162162162;
+        a += (texture2D(tMap, vUv + d * 3.2307692308) + texture2D(tMap, vUv - d * 3.2307692308)) * 0.0702702703;
+        return ch == 0 ? a.r : a.g;
+      }
+      void main() { gl_FragColor = vec4(g9(uDir, 0), g9(uDirG, 1), 0.0, 1.0); }`,
+  });
+  const quadScene = new THREE.Scene(), quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  quadScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), blur));
+  // the floor quad: samples the shadow at its own world position through the shadow camera, so orientation cannot slip
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.ShaderMaterial({
+    uniforms: { tMap: { value: rtA.texture }, uVP: { value: vp }, uPlate: PLATE_PX, uStrength: { value: CONTACT.strength } },
+    transparent: true, depthWrite: false,
+    vertexShader: 'varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: `uniform sampler2D tMap; uniform mat4 uVP; uniform vec4 uPlate; uniform float uStrength; varying vec3 vW;
+      void main() {
+        vec4 c = uVP * vec4(vW.x, 0.0, vW.z, 1.0); vec2 uv = c.xy / c.w * 0.5 + 0.5;
+        vec2 m = texture2D(tMap, uv).rg;
+        float a = clamp(m.r * 1.6 + m.g * 0.95, 0.0, 0.94) * uStrength;   // tuned so the tyre contact reads on the dark floor
+        vec2 e = smoothstep(vec2(0.0), vec2(0.08), uv) * smoothstep(vec2(0.0), vec2(0.08), 1.0 - uv);   // never a square edge
+        vec2 q = (gl_FragCoord.xy - uPlate.xy) / uPlate.zw, ramp = vec2(0.12, 0.08);
+        vec2 f = smoothstep(vec2(0.0), ramp, q) * smoothstep(vec2(0.0), ramp, 1.0 - q);           // fade at the plate's edges
+        gl_FragColor = vec4(0.012, 0.012, 0.014, a * e.x * e.y * f.x * f.y);
+      }`,
+  }));
+  mesh.rotation.x = -Math.PI / 2; mesh.position.y = 0.0015; mesh.renderOrder = 1; mesh.name = 'contactShadow';   // after the floor pool, or the pool lights it back up
+  const pass = (src, dst, dx, dy, gx, gy) => {
+    blur.uniforms.tMap.value = src.texture; blur.uniforms.uDir.value.set(dx / res, dy / res); blur.uniforms.uDirG.value.set(gx / res, gy / res);
+    gl.renderer.setRenderTarget(dst); gl.renderer.render(quadScene, quadCam);
+  };
+  return {
+    mesh, rt: rtA,                                  // rt: read by the QA hooks
+    /** Compile the shadow's programs off the main thread at start-up (the depth pass, plain and instanced, and the
+        blur), so its first draw does not stall: compiled on first use they were a 400 ms task in Lighthouse mobile. */
+    async warm(renderer) {
+      const depth = new THREE.Scene(), g = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+      depth.add(new THREE.Mesh(g, SHADOW_DEPTH), new THREE.InstancedMesh(g, SHADOW_DEPTH, 1));
+      try { await Promise.all([renderer.compileAsync(depth, cam), renderer.compileAsync(quadScene, quadCam)]); } catch { /* compiles on first use */ }
+      g.dispose();
+    },
+    /** First use, spread over short tasks, so no one-time GPU set-up lands in a long task at start-up: the first draw of
+        each mesh with the depth pass builds its GPU state (about 170 ms in one task under Lighthouse mobile), so the
+        bike's parts are drawn one per task, then each blur. */
+    async prime(renderer, bike) {
+      const { scene, floor } = gl, parts = Object.values(bike.parts);
+      floor.visible = false; scene.overrideMaterial = SHADOW_DEPTH;
+      renderer.setRenderTarget(rtA); renderer.clear(true, true, false);
+      for (const g of parts) {
+        for (const o of parts) o.visible = o === g;
+        renderer.setRenderTarget(rtA); renderer.render(scene, cam); renderer.setRenderTarget(null);
+        await yieldToMain();
+      }
+      for (const o of parts) o.visible = true;
+      scene.overrideMaterial = null; floor.visible = true;
+      pass(rtA, rtB, 1.6, 0, 6, 0); renderer.setRenderTarget(null); await yieldToMain();
+      pass(rtB, rtA, 0, 1.6, 0, 6); renderer.setRenderTarget(null); await yieldToMain();
+    },
+    live: false,                                    // off for the first frame (see initGL), then always on
+    /** Redraw the shadow of whatever bikes the scene shows now (posed, turned). Call before rendering a plate. */
+    update() {
+      if (!this.live) return;
+      const { renderer, scene, floor } = gl, clear = new THREE.Color(), alpha = renderer.getClearAlpha(); renderer.getClearColor(clear);
+      const scissor = renderer.getScissorTest();
+      renderer.setScissorTest(false);
+      floor.visible = false; scene.overrideMaterial = SHADOW_DEPTH;
+      renderer.setRenderTarget(rtA); renderer.setClearColor(0x000000, 1); renderer.clear(true, true, false);
+      renderer.render(scene, cam);
+      scene.overrideMaterial = null; floor.visible = true;
+      // contact: about 1.5 cm of softening; body: about 10 cm (two rounds of the wide blur)
+      pass(rtA, rtB, 1.6, 0, 6, 0); pass(rtB, rtA, 0, 1.6, 0, 6); pass(rtA, rtB, 0, 0, 6, 0); pass(rtB, rtA, 0, 0, 0, 6);
+      renderer.setRenderTarget(null); renderer.setClearColor(clear, alpha); renderer.setScissorTest(scissor);
+    },
+  };
+}
+
 function wrapBike(b, FADE) {
+  b.root.traverse(o => { if (o.isMesh) o.onBeforeRender = shadowOpacityHook; });   // its parts' fades reach their shadows
   const chain = b.parts.drivetrain.getObjectByName('chain');
   const faders = Object.fromEntries(Object.entries(b.parts).map(([k, g]) => [k, makeFader(g, FADE, k === 'drivetrain' ? chain : null)]));
   const w = { ...b, faders, chainFader: makeFader(chain, FADE), spins: { wheelF: b.parts.wheelF.getObjectByName('spin'), wheelR: b.parts.wheelR.getObjectByName('spin') },
@@ -226,12 +350,16 @@ async function buildEnvironment(r, scene) {       // PMREM without blocking: pre
   return env;
 }
 function floorPool() {                              // the pool of light the bike stands in (reads as the studio floor)
+  // Drawn as a smooth falloff that reaches zero well inside its square, on a square quad. (It was a radial gradient
+  // stretched onto a 3.2 x 1.3 m quad: the corners of the texture still carried light, so the quad's long edges
+  // showed on the floor as a straight line under the bike.)
   const c = document.createElement('canvas'); c.width = c.height = 256;
-  const x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
-  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.5, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  const x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 0, 128, 128, 120);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,0.55)'); g.addColorStop(0.7, 'rgba(255,255,255,0.14)'); g.addColorStop(1, 'rgba(255,255,255,0)');
   x.fillStyle = g; x.fillRect(0, 0, 256, 256);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.3), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.075, depthWrite: false, toneMapped: false }));
+  const pool = new THREE.PlaneGeometry(3.2, 3.2); pool.scale(1, 0.42, 1);   // an oval pool, its texture fully faded inside the quad
+  const m = new THREE.Mesh(pool, new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.075, depthWrite: false, toneMapped: false }));
   m.rotation.x = -Math.PI / 2; m.position.y = 0.0008; m.renderOrder = -2; m.name = 'floorPool';
   return fadeAtPlateEdges(m);
 }
@@ -454,6 +582,7 @@ function plateSignature(spec, r, pr) {
 /** Draw the scene (already posed and aimed) at the off-screen canvas's top-left, then copy it into the plate's canvas. */
 function drawPlate(P, r) {
   const { renderer, scene, camera } = gl;
+  gl.contact.update();                              // the floor shadow of the bike exactly as this plate poses it
   if (r.width > gl.cw || r.height > gl.ch) {        // a plate larger than the screen: grow the drawing buffer to hold it
     const w = Math.max(gl.cw, Math.ceil(r.width)), h = Math.max(gl.ch, Math.ceil(r.height));
     renderer.setSize(w, h, false); gl.cw = w; gl.ch = h;
@@ -498,6 +627,7 @@ function restPass() {
     if (pr < level * 1.2 || (P.rest && P.rest === P.sig)) continue;                    // little to gain, or done
     const spec = preparePlate(name, r); if (!spec) continue;
     const sig = plateSignature(spec, r, level);
+    gl.contact.update();
     const w = Math.ceil(r.width), h = Math.ceil(r.height);
     renderer.setPixelRatio(pr); renderer.setSize(w, h, false); resized = true;   // a buffer the plate's own size
     renderer.setViewport(0, 0, r.width, r.height); renderer.setScissor(0, 0, r.width, r.height); renderer.setScissorTest(true);
@@ -548,6 +678,7 @@ function renderPoster(kind, arg, cssW = 800) {
   for (const b of gl.all) b.root.visible = b === bike;
   pose(bike, ASSEMBLED, 1); gl.spinner.rotation.y = 0; light.t = 1; applyLight();
   if (typeof view === 'function') view(camera, aspect); else aim(camera, view, aspect);
+  gl.contact.update();
   renderer.setScissorTest(true); renderer.setViewport(0, y, cssW, cssH); renderer.setScissor(0, y, cssW, cssH);
   PLATE_PX.value.set(0, y * pr, cssW * pr, cssH * pr);
   renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
@@ -857,9 +988,9 @@ async function initGL() {
   const base = wrapBike(raw, FADE); spinner.add(base.root);
   const key = new THREE.DirectionalLight(0xfff6e8, 1.9), rim = new THREE.DirectionalLight(0xdfe8ff, 0.9);
   rim.position.set(1.4, 3.8, -4.4); scene.add(key, rim);
-  const floor = new THREE.Group(); floor.add(floorPool(), fadeAtPlateEdges(shadowBlob())); scene.add(floor);
+  const contact = makeContactShadow(), floor = new THREE.Group(); floor.add(floorPool(), contact.mesh); scene.add(floor);
   const camera = new THREE.PerspectiveCamera(24, 1, 0.05, 20);
-  Object.assign(gl, { scene, camera, spinner, base, base56: raw, bikes: new Map([[56, base]]), all: [base], M, FADE_A: FADE, FADE_B, key, rim, floor });
+  Object.assign(gl, { scene, camera, spinner, base, base56: raw, bikes: new Map([[56, base]]), all: [base], M, FADE_A: FADE, FADE_B, key, rim, floor, contact });
   // fits: the hero ring, the build's travel, the chooser's largest frame
   gl.ring = ringCorners(base.box); gl.ringTarget = new THREE.Vector3(0, (base.box.min.y + base.box.max.y) / 2, 0);
   gl.buildVols = buildVolumes(base);
@@ -875,6 +1006,8 @@ async function initGL() {
     try { await renderer.compileAsync(scene, camera); } catch { /* compiles on first use */ }
     await yieldToMain();
   }
+  await contact.warm(renderer); await yieldToMain();
+  base.posed = null; pose(base, ASSEMBLED); await contact.prime(renderer, base);
   for (const f of [...Object.values(base.faders), base.chainFader]) f(null);
   base.posed = null; pose(base, ASSEMBLED);
   // the tour's stops in world space, read off the assembled size 56 (the tour never shows another size)
@@ -888,6 +1021,9 @@ async function initGL() {
   light.t = QA || RM.matches ? 1 : 0;
   dirty = true; frame(performance.now());
   html.classList.add('gl-ready');
+  // The contact shadow joins after the first frame, in a task of its own: its one-time GPU set-up inside the start-up
+  // task cost Lighthouse mobile about 200 ms of blocking time. The plates fade in over 600 ms, so it is never seen arriving.
+  setTimeout(() => { contact.live = true; for (const P of Object.values(plateGL)) P.sig = ''; dirty = true; kick(); }, 0);
   window.__bike.initMs = Math.round(performance.now() - t0);
   // the other six sizes, one at a time, in the background, so the chooser answers at once; the largest first, so its fit is final early
   for (const s of [61, 44, 49, 52, 54, 58]) {

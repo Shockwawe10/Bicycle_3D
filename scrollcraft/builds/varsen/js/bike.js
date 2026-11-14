@@ -662,16 +662,6 @@ async function buildSaddle(J, M) {                // origin = STT
   }
   return g;
 }
-export function shadowBlob() {                    // the one contact shadow: a soft ellipse texture on a ground quad
-  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-  const x = c.getContext('2d'), gr = x.createRadialGradient(128, 32, 0, 128, 32, 128);
-  gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(0.45, 'rgba(0,0,0,0.22)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-  x.setTransform(1, 0, 0, 0.25, 0, 24); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.5), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false, color: 0x2b2a27 }));
-  m.rotation.x = -Math.PI / 2; m.position.y = 0.0015; m.renderOrder = -1; m.name = 'contactShadow';
-  return m;
-}
 // Builds run one at a time: every builder reads G0 (the joints of the size being built), so two interleaved async
 // builds would swap joints mid-build.
 let queueTail = Promise.resolve();
