@@ -617,6 +617,7 @@ function scheduleRest() { clearTimeout(restTimer); restTimer = setTimeout(restPa
 function restPass() {
   restTimer = 0;
   if (!gl?.ready || raf) return;                    // something moves again: the next settle schedules it
+  if (spin.drag) return;                            // a finger held still mid-drag is not rest: no sharp swap under it
   const t0 = performance.now();
   const { renderer, scene, camera, spinner } = gl, level = renderer.getPixelRatio(), H = innerHeight;
   let resized = false;
@@ -793,17 +794,34 @@ const frontCopy = $('.front__copy'), frontStage = frontPlate.closest('.front');
 if (frontCopy && frontStage && 'ResizeObserver' in window) new ResizeObserver(() => { frontStage.style.setProperty('--front-copy', `${frontCopy.offsetHeight}px`); kick(); }).observe(frontCopy);
 frontPlate.addEventListener('pointerdown', e => {
   if (!gl?.ready || (damped.front ?? 0) > 0.6 || (e.pointerType === 'mouse' && e.button !== 0)) return;
-  spin.drag = { id: e.pointerId, x: e.clientX, t: e.timeStamp }; spin.vel = 0;
+  spin.drag = { id: e.pointerId, x: e.clientX, t: e.timeStamp, samples: [[e.timeStamp, 0]], yaw: 0 }; spin.vel = 0;
   frontPlate.setPointerCapture?.(e.pointerId); html.classList.add('spinning');
 });
 frontPlate.addEventListener('pointermove', e => {
   const d = spin.drag; if (!d || e.pointerId !== d.id) return;
   const dx = e.clientX - d.x, dtm = Math.max(1, e.timeStamp - d.t), k = Math.PI * 2 / innerWidth;
   spin.yaw += dx * k; spin.yaw = Math.atan2(Math.sin(spin.yaw), Math.cos(spin.yaw));
-  spin.vel = 0.7 * spin.vel + 0.3 * (dx * k / dtm * 1000);
+  d.yaw += dx * k; d.samples.push([e.timeStamp, d.yaw]);                       // unwrapped turn so far, for the release speed
+  while (d.samples.length > 2 && e.timeStamp - d.samples[0][0] > 100) d.samples.shift();
   d.x = e.clientX; d.t = e.timeStamp; dirty = true; kick();
 });
-const endDrag = e => { if (!spin.drag || e.pointerId !== spin.drag.id) return; spin.drag = null; html.classList.remove('spinning'); if (RM.matches) spin.vel = 0; kick(); };
+/* The release spin is the finger's speed over its last 80 ms, measured at the moment it lets go: a finger that reversed
+   just before letting go flings the way it last moved, and one held still flings nothing. (It was a running blend of every
+   move, so it kept the old direction after a reversal, and kept spinning after the finger had stopped.) */
+function releaseVelocity(d, now) {
+  const recent = d.samples.filter(([t]) => now - t <= 80);
+  if (recent.length < 2) return 0;                  // still for 80 ms, or a single sample: no fling
+  // only the run since the last change of direction: a short reverse must not be cancelled by the motion before it
+  const n = recent.length, dir = Math.sign(recent[n - 1][1] - recent[n - 2][1]);
+  let i = n - 2; while (i > 0 && Math.sign(recent[i][1] - recent[i - 1][1]) === dir) i--;
+  const [t0, y0] = recent[i], [t1, y1] = recent[n - 1];
+  return t1 - t0 < 8 ? 0 : (y1 - y0) / (t1 - t0) * 1000;
+}
+const endDrag = e => {
+  const d = spin.drag; if (!d || e.pointerId !== d.id) return;
+  spin.vel = RM.matches || e.type !== 'pointerup' ? 0 : releaseVelocity(d, e.timeStamp);
+  spin.drag = null; html.classList.remove('spinning'); kick();
+};
 for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) frontPlate.addEventListener(ev, endDrag);
 // The keyboard turns it too (the plate is focusable once WebGL is up): 15 degrees a press, a glide, or a step under reduced motion.
 const KEY_TURN = Math.PI / 12;
